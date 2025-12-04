@@ -1,4 +1,6 @@
 // js/admin.js
+console.log("✅ admin.js loaded successfully");
+
 import { db } from './firebase-config.js';
 import { guardPage, logout } from './auth.js';
 import { renderCards } from './cards.js';

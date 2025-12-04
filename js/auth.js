@@ -75,3 +75,8 @@ export function guardPage(expectedRole, onReady) {
 export function logout() {
   return signOut(auth);
 }
+// ✅ AUTO-ATTACH ON LOGIN PAGE LOAD
+if (document.getElementById("loginForm")) {
+  attachLoginHandler();
+  autoRedirectIfLoggedIn();
+}
