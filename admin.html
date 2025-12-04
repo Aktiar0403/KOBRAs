@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Squad System – Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body class="bg">
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <h1>Admin Dashboard</h1>
+        <p class="muted small">Manage full squad roster, leaderboard & audit trail.</p>
+        <p class="muted xsmall">Logged in as: <span id="adminNameLabel">—</span></p>
+      </div>
+      <div class="topbar-actions">
+        <button id="btnLogout" class="btn">Logout</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="controls">
+        <div class="controls-row">
+          <button id="btnAddMember" class="btn primary">➕ Add Member</button>
+          <button id="btnExportCSV" class="btn">📤 Export CSV</button>
+          <button id="btnImportCSV" class="btn">📥 Import CSV</button>
+        </div>
+
+        <div class="controls-row">
+          <div class="stat-pill">Total: <span id="statTotal">0</span></div>
+          <div class="stat-pill">Avg Power: <span id="statAvg">0</span></div>
+          <div class="stat-pill">★★★★★: <span id="statFive">0</span></div>
+        </div>
+
+        <div class="controls-row">
+          <div class="filter-group">
+            <span class="muted xsmall">Filter:</span>
+            <button class="btn pill filter-btn" data-filter="RESET">All</button>
+            <button class="btn pill filter-btn" data-filter="TANK">TANK</button>
+            <button class="btn pill filter-btn" data-filter="AIR">AIR</button>
+            <button class="btn pill filter-btn" data-filter="MISSILE">MISSILE</button>
+            <button class="btn pill filter-btn" data-filter="R3">R3</button>
+            <button class="btn pill filter-btn" data-filter="R4">R4</button>
+            <button class="btn pill filter-btn" data-filter="R5">R5</button>
+          </div>
+
+          <div class="sort-group">
+            <span class="muted xsmall">Sort:</span>
+            <button class="btn pill sort-btn" data-sort="power-desc">Power ↓</button>
+            <button class="btn pill sort-btn" data-sort="power-asc">Power ↑</button>
+            <button class="btn pill sort-btn" data-sort="stars-desc">Activity ★↓</button>
+            <button class="btn pill sort-btn" data-sort="stars-asc">Activity ★↑</button>
+            <button class="btn pill sort-btn" data-sort="none">Clear</button>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <input id="searchInput" class="search-input" placeholder="Search name, role or squad..." />
+        </div>
+      </section>
+
+      <section class="layout">
+        <div class="cards-panel">
+          <div id="cardsGrid" class="cards-grid"></div>
+        </div>
+
+        <aside class="audit-panel">
+          <h2>Audit History</h2>
+          <p class="muted xsmall">Recent admin actions (cloud-stored).</p>
+          <div id="auditList" class="audit-list"></div>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+  <!-- CSV import hidden input -->
+  <input type="file" id="csvFileInput" accept=".csv" style="display:none" />
+
+  <!-- Modal for Add/Edit -->
+  <div id="memberModal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-box">
+      <h2 id="modalTitle">Add Member</h2>
+      <label class="field-label">Name</label>
+      <input id="fieldName" />
+
+      <label class="field-label">Role (e.g. R3 / R4 / R5 / R4 RECRUITER)</label>
+      <input id="fieldRole" />
+
+      <label class="field-label">Squad Type (TANK / AIR / MISSILE / HYBRID)</label>
+      <input id="fieldSquad" />
+
+      <label class="field-label">Power</label>
+      <input id="fieldPower" type="number" step="0.1" />
+
+      <label class="field-label">Activity Stars (1–5)</label>
+      <input id="fieldStars" type="number" min="1" max="5" />
+
+      <div class="modal-actions">
+        <button id="btnModalCancel" class="btn">Cancel</button>
+        <button id="btnModalSave" class="btn primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import './js/admin.js';
+  </script>
+</body>
+</html>
