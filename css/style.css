@@ -1,290 +1,349 @@
-/* =========================================================
-   GLOBAL THEME — Elegant Minimal Dashboard
-   ========================================================= */
-
 :root {
-  --bg: #f7f8fa;
-  --card: #ffffff;
-  --accent: #6366f1;
-  --accent-light: #eef2ff;
-  --text: #1f2937;
-  --text-light: #6b7280;
-  --border: #e5e7eb;
-  --radius: 14px;
-  --shadow: 0 4px 18px rgba(0,0,0,0.06);
-  --shadow-soft: 0 1px 4px rgba(0,0,0,0.05);
-  font-family: Inter, system-ui, sans-serif;
+  --bg: #050816;
+  --card: #0b1020;
+  --accent: #22c55e;
+  --accent-soft: #4ade80;
+  --danger: #ef4444;
+  --text: #f9fafb;
+  --muted: #9ca3af;
+  --border: #1f2933;
+  --radius: 16px;
 }
 
-/* =========================================================
-   PAGE LAYOUT
-   ========================================================= */
+* { box-sizing: border-box; }
 
-body {
+body.bg {
   margin: 0;
-  padding: 0;
-  background: var(--bg);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #111827 0, #020617 55%);
   color: var(--text);
-  font-size: 15px;
-  -webkit-font-smoothing: antialiased;
 }
 
-.container {
-  max-width: 1250px;
-  margin: auto;
-  padding: 26px 22px 80px;
-}
-
-/* =========================================================
-   TITLES
-   ========================================================= */
-
-h1 {
-  font-size: 1.9rem;
-  margin: 0;
-  font-weight: 600;
-}
-
-h2 {
-  font-size: 1.15rem;
-  margin: 0 0 6px;
-  font-weight: 600;
-}
-
-.subtitle {
-  font-size: 0.85rem;
-  margin-top: 4px;
-  color: var(--text-light);
-}
-
-/* =========================================================
-   BUTTONS
-   ========================================================= */
-
-.btn {
-  padding: 7px 16px;
-  border-radius: 10px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  font-size: 0.82rem;
-  color: var(--text);
-  cursor: pointer;
-  box-shadow: var(--shadow-soft);
-  transition: all 0.2s ease;
-}
-
-.btn:hover {
-  background: #f1f2f6;
-}
-
-.btn.accent {
-  background: var(--accent);
-  color: #fff;
-  border-color: var(--accent);
-}
-
-.btn.accent:hover {
-  background: #4f46e5;
-}
-
-.btn.danger {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #b91c1c;
-}
-
-.btn.pill {
-  border-radius: 20px;
-}
-
-/* =========================================================
-   SEARCH BOX
-   ========================================================= */
-
-.search-box input {
-  width: 100%;
-  max-width: 300px;
-  padding: 10px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  background: #fff;
-  box-shadow: var(--shadow-soft);
-  font-size: 0.9rem;
-  transition: 0.2s;
-}
-
-.search-box input:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-light);
-}
-
-/* =========================================================
-   CARD GRID
-   ========================================================= */
-
-.grid {
-  margin-top: 18px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 18px;
-}
-
-.card-item {
-  background: var(--card);
+/* Centered login */
+.center-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 16px;
-  border-radius: var(--radius);
+}
+
+.card {
+  background: var(--card);
+  border-radius: 18px;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  padding: 18px 16px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 20px 45px rgba(0,0,0,.6);
 }
 
-.card-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 22px rgba(0,0,0,0.12);
+.login-card h1 { margin: 0 0 6px; }
+.login-card input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: .85rem;
+  margin-bottom: 8px;
 }
 
-/* TOP ROW OF CARD */
-.card-top {
+/* App shell */
+
+.app-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.topbar {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Controls */
+
+.controls {
+  background: rgba(8,12,24,0.95);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.stat-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  font-size: .78rem;
+}
+
+.filter-group, .sort-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   align-items: center;
 }
 
+.search-input {
+  max-width: 320px;
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: .85rem;
+}
+
+/* Layout */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 1.2fr);
+  gap: 14px;
+}
+
+.layout.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cards-panel {
+  background: rgba(8,12,24,0.95);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 10px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.audit-panel {
+  background: rgba(8,12,24,0.95);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 10px 10px 6px;
+}
+
+.audit-panel h2 {
+  margin: 0 0 4px;
+}
+
+.audit-list {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.audit-item {
+  border-bottom: 1px solid rgba(148,163,184,.25);
+  padding: 4px 0;
+}
+
+.audit-item:last-child {
+  border-bottom: none;
+}
+
+/* Card */
+
+.card-item {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .card-name {
-  font-size: 1rem;
   font-weight: 600;
+  font-size: .95rem;
 }
 
 .card-power {
-  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--accent);
+  font-size: 1.05rem;
+  color: #a5b4fc;
 }
 
-/* STAR RATINGS */
 .card-stars {
-  margin-top: 6px;
-  font-size: 1rem;
+  font-size: .85rem;
   letter-spacing: 2px;
-  color: #fbbf24;
 }
 
-/* META TEXT */
 .card-meta {
-  margin-top: 4px;
-  font-size: 0.78rem;
-  color: var(--text-light);
+  font-size: .75rem;
+  color: var(--muted);
 }
 
-/* TAGS */
 .card-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 .tag-pill {
-  background: var(--accent-light);
-  padding: 4px 10px;
+  font-size: .65rem;
+  padding: 2px 7px;
   border-radius: 999px;
-  color: var(--accent);
-  font-size: 0.72rem;
-  border: 1px solid var(--accent-light);
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--muted);
 }
 
-/* ADMIN BUTTONS BELOW EACH CARD */
 .card-admin-actions {
   display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
+  margin-top: 6px;
 }
 
-/* =========================================================
-   SIDE PANELS (AUDIT + ONLINE USERS)
-   ========================================================= */
+/* Buttons */
 
-.audit-panel {
-  background: var(--card);
+.btn {
+  border-radius: 999px;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  border-radius: var(--radius);
-  padding: 18px 16px;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.audit-item {
-  background: #fafafa;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  margin-bottom: 10px;
-  font-size: 0.8rem;
-  color: var(--text-light);
-}
-
-.audit-item strong {
-  font-weight: 600;
+  background: #020617;
   color: var(--text);
+  padding: 6px 12px;
+  font-size: .78rem;
+  cursor: pointer;
 }
 
-/* =========================================================
-   MODAL UI (ADD / EDIT MEMBER)
-   ========================================================= */
+.btn.primary {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.btn.pill {
+  padding: 4px 10px;
+}
+
+.btn.full {
+  width: 100%;
+}
+
+.btn:hover {
+  background: #111827;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small { font-size: .82rem; }
+.xsmall { font-size: .72rem; }
+
+.error {
+  color: var(--danger);
+}
+
+/* Modal */
+
+.modal.hidden {
+  display: none;
+}
 
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: none;
-  place-items: center;
-  z-index: 1000;
+  z-index: 9999;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.65);
 }
 
 .modal-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: var(--card);
-  padding: 22px;
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 380px;
-  box-shadow: var(--shadow);
+  border-radius: 16px;
   border: 1px solid var(--border);
+  padding: 14px 14px 10px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.7);
+}
+
+.modal-box h2 {
+  margin: 0 0 6px;
+}
+
+.field-label {
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 2px;
+  font-size: .75rem;
+  color: var(--muted);
 }
 
 .modal-box input {
   width: 100%;
-  padding: 10px 14px;
-  border-radius: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
   border: 1px solid var(--border);
-  margin-top: 6px;
-  margin-bottom: 6px;
-  font-size: 0.85rem;
+  background: #020617;
+  color: var(--text);
+  font-size: .8rem;
 }
 
 .modal-actions {
   display: flex;
-  justify-content: space-between;
-  margin-top: 14px;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
 }
 
-/* =========================================================
-   ONLINE USERS LIST
-   ========================================================= */
+/* Responsive */
 
-#onlineUsersList {
-  margin-top: 12px;
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.online-user-item {
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: #fafafa;
-  margin-bottom: 8px;
-  font-size: 0.78rem;
-  color: var(--text-light);
+@media (max-width: 600px) {
+  .controls-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
-
