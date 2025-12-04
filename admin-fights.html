@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Admin War Builder</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    /* Minimal styles for the page. Tweak to match your app's theme */
+    body { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; margin:0; padding:16px; background:#f6f7fb; color:#111; }
+    .container { max-width:1200px; margin:0 auto; }
+    .grid { display:flex; gap:16px; align-items:flex-start; }
+    .panel { background:#fff; border-radius:10px; box-shadow:0 6px 18px rgba(20,20,40,0.06); padding:16px; }
+    .left { width:320px; flex:0 0 320px; }
+    .right { flex:1; overflow:auto; }
+    h2 { margin:0 0 12px 0; font-size:18px; }
+    label { display:block; font-size:13px; margin-top:8px; color:#444; }
+    input[type="text"], input[type="number"], select { width:100%; padding:8px 10px; border-radius:6px; border:1px solid #e0e4ef; margin-top:6px; box-sizing:border-box; }
+    button { margin-top:10px; padding:8px 12px; border-radius:8px; border:0; cursor:pointer; background:#2b6ef6; color:white; }
+    .muted { color:#666; font-size:13px; }
+    .roster-list, .teams-grid { margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:66vh; overflow:auto; }
+    .player-card { display:flex; align-items:center; gap:10px; background:#fafbfd; padding:8px; border-radius:8px; border:1px solid #eef2ff; }
+    .player-avatar { width:40px; height:40px; border-radius:6px; background:#ddd; display:inline-flex; align-items:center; justify-content:center; font-weight:600; }
+    .player-meta { flex:1; }
+    .player-actions { display:flex; gap:6px; }
+    .slot { min-height:52px; background:#fff; border:1px dashed #e6e9fb; border-radius:8px; padding:8px; display:flex; gap:8px; align-items:center; }
+    .slot.empty { color:#999; font-size:13px; justify-content:center; }
+    .team-column { min-width:280px; background:linear-gradient(180deg,#fff,#fbfdff); padding:12px; border-radius:10px; }
+    .team-title { font-weight:700; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+    .counters { font-size:13px; color:#555; }
+    .small { font-size:13px; color:#666; }
+    .controls { display:flex; gap:8px; align-items:center; margin-top:8px; }
+    .top-actions { display:flex; gap:8px; margin-bottom:12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Admin — War Builder</h1>
+
+    <div class="grid">
+      <!-- LEFT: Create / Edit form + Roster -->
+      <div class="panel left">
+        <h2>Create / Edit War</h2>
+
+        <label>Fight Name</label>
+        <input id="fightName" type="text" placeholder="Battle at Dawn" />
+
+        <label>Number of Teams</label>
+        <input id="numTeams" type="number" min="1" value="1" />
+
+        <label>Players per Team</label>
+        <input id="playersPerTeam" type="number" min="1" value="10" />
+
+        <label>Subs per Team</label>
+        <input id="subsPerTeam" type="number" min="0" value="0" />
+
+        <div id="teamNamesContainer" style="margin-top:10px"></div>
+
+        <div class="top-actions">
+          <button id="createFightBtn">Create Fight</button>
+          <button id="loadDraftsBtn" style="background:#0ea5a3">Load Drafts</button>
+        </div>
+
+        <hr style="margin:12px 0" />
+
+        <h2>Roster Pool</h2>
+        <label class="small">Search players</label>
+        <input id="rosterSearch" type="text" placeholder="Search by name, id..." />
+
+        <div class="roster-list panel" id="rosterPool">
+          <!-- filled by JS -->
+          <div class="muted small">No fight selected. Create or load a fight to start.</div>
+        </div>
+
+        <div style="margin-top:10px">
+          <button id="saveTeamsBtn" style="background:#16a34a">Save Teams</button>
+          <button id="finalizeBtn" style="background:#ef4444">Finalize (Lock)</button>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Dynamic teams grid -->
+      <div class="right">
+        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
+          <div>
+            <h2>Team Builder</h2>
+            <div class="muted small">Create a fight, add players to the roster pool, then drag players into slots.</div>
+          </div>
+          <div class="muted">Status: <span id="fightStatus">—</span></div>
+        </div>
+
+        <div id="teamsContainer" class="teams-grid" style="margin-top:12px; display:flex; gap:12px; flex-wrap:wrap;">
+          <!-- team columns are generated here -->
+        </div>
+
+      </div>
+    </div>
+
+    <hr style="margin:20px 0" />
+    <div class="muted small">Tip: Make sure firebase-config.js exports `db` and `auth` as named exports. See admin-fights.js comments.</div>
+  </div>
+
+  <!-- Sortable -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+  <!-- the admin fights logic -->
+  <script type="module" src="/js/admin-fights.js"></script>
+</body>
+</html>
