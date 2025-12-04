@@ -1,21 +1,10 @@
-/***********************************************
- * admin-fights.js
- *
- * Requirements:
- * - Your /js/firebase-config.js should export:
- *     export { db, auth };
- *   where `db` is a Firebase Firestore instance (getFirestore(app))
- *   and `auth` is the Firebase Auth instance (getAuth(app)).
- *
- * - You must enable appropriate Firestore rules / permissions
- *   (only admins should write fights). This code does client writes.
- ***********************************************/
 
-import { db, auth } from './firebase-config.js'; // <-- adjust path if needed
+
+import { db, auth } from './firebase-config.js'; 
 import {
   collection, addDoc, doc, getDoc, updateDoc, setDoc,
   onSnapshot, query, where, getDocs, arrayUnion, arrayRemove, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 // small helper to create elements
 const $ = (sel, ctx=document) => ctx.querySelector(sel);
