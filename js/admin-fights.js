@@ -28,7 +28,7 @@ const fightStatusEl = $('#fightStatus');
 /* --- State --- */
 let currentFightId = null;
 let currentFight = null; // object as in Firestore
-let rosterPlayersCache = []; // all players from /players collection (cache)
+let rosterMembersCache = []; // all players from /players collection (cache)
 let rosterPool = []; // UIDs in pool for current fight
 
 /* --- Generate team name inputs dynamically --- */
@@ -141,27 +141,27 @@ async function loadFight(fightId) {
 
 /* --- Load all players from /players (cache) --- */
 async function loadAllPlayers() {
-  // if already loaded, skip
-  if (rosterPlayersCache.length > 0) return;
   try {
-    const snap = await getDocs(collection(db, 'players'));
+    const snap = await getDocs(collection(db, 'members')); // <-- FIXED
     rosterPlayersCache = [];
     snap.forEach(s => {
       rosterPlayersCache.push({ id: s.id, ...s.data() });
     });
   } catch (e) {
     console.error('loadAllPlayers', e);
-    alert('Error loading players: ' + e.message);
+    alert('Error loading members: ' + e.message);
   }
 }
+
 
 /* --- Roster pool render --- */
 function renderRosterPool(filter='') {
   rosterPoolEl.innerHTML = '';
   const search = filter.trim().toLowerCase();
 
-  // show all players found in rosterPlayersCache; mark whether they are in pool
-  rosterPlayersCache.forEach(p => {
+  // show all players found in rosterMembersCache
+; mark whether they are in pool
+  rosterMembersCache.forEach(p => {
     const inPool = rosterPool.includes(p.id);
     const name = (p.name || p.displayName || p.username || p.id).toString();
     if (search && !name.toLowerCase().includes(search) && !p.id.includes(search)) return;
@@ -273,7 +273,7 @@ function renderTeams() {
       // fill with player if assigned
       const playerUid = (teamObj.main && teamObj.main[i]) || null;
       if (playerUid) {
-        const p = rosterPlayersCache.find(x => x.id === playerUid) || { id: playerUid, name: playerUid };
+        const p = rosterMembersCache.find(x => x.id === playerUid) || { id: playerUid, name: playerUid };
         slot.classList.remove('empty');
         slot.innerHTML = buildPlayerCardHtml(p);
       } else {
@@ -307,7 +307,7 @@ function renderTeams() {
         slot.dataset.slotIndex = i;
         const playerUid = (teamObj.subs && teamObj.subs[i]) || null;
         if (playerUid) {
-          const p = rosterPlayersCache.find(x => x.id === playerUid) || { id: playerUid, name: playerUid };
+          const p = rosterMembersCache.find(x => x.id === playerUid) || { id: playerUid, name: playerUid };
           slot.classList.remove('empty');
           slot.innerHTML = buildPlayerCardHtml(p);
         } else {
