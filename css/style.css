@@ -347,3 +347,83 @@ body.bg {
     align-items: flex-start;
   }
 }
+/* ------------------------------
+   CIRCLE MEMBER CARD (Style B)
+------------------------------ */
+.member-circle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 12px;
+  margin: 8px 0;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: 0.2s ease;
+}
+
+.member-circle-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255,255,255,0.08);
+}
+
+.circle-avatar {
+  width: 60px;
+  height: 60px;
+  background: #2b6ef6;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.circle-avatar.small {
+  width: 45px;
+  height: 45px;
+  font-size: 20px;
+}
+
+.circle-info {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.circle-info.small {
+  margin-bottom: 4px;
+}
+
+.member-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.member-sub {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.member-power {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Buttons inside cards */
+.togglePoolBtn, .circle-remove {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s ease;
+}
+
+.circle-remove {
+  background: #ef4444;
+}

@@ -229,19 +229,7 @@ function renderRosterPool(filter = "") {
     card.className = "player-card";
     card.dataset.uid = p.id;
 
-    card.innerHTML = `
-  <div class="player-avatar">${(p.name?.[0] || "?").toUpperCase()}</div>
-  <div class="player-meta">
-    <div style="font-weight:600">${p.name || p.id}</div>
-    <div class="small muted">${p.rank || ""} ${p.squad || ""}</div>
-    <div class="small muted">Power: ${p.power || 0}</div>
-  </div>
-
-  <button class="togglePoolBtn" style="background:${inPool ? "#ef4444" : "#2b6ef6"}">
-    ${inPool ? "Remove" : "Add"}
-  </button>
-`;
-
+  renderRosterPool()
 
     card.querySelector(".togglePoolBtn").onclick = async () => {
       if (inPool) {
@@ -343,15 +331,23 @@ function buildSlot(playerUid, teamKey, slotType, index) {
 
   const p = rosterPlayersCache.find((x) => x.id === playerUid);
 
-  slot.innerHTML = `
-  <div class="player-card" data-uid="${p.id}">
-    <div class="player-avatar">${(p.name?.[0] || "?").toUpperCase()}</div>
-    <div style="flex:1">
-      <div style="font-weight:600">${p.name}</div>
-      <div class="small muted">${p.rank || ""} ${p.squad || ""}</div>
-      <div class="small muted">Power: ${p.power || 0}</div>
+ card.innerHTML = `
+  <div class="member-circle-card">
+
+    <div class="circle-avatar">
+      ${(p.name?.[0] || "?").toUpperCase()}
     </div>
-    <button class="removeFromSlotBtn" style="background:#ef4444">X</button>
+
+    <div class="circle-info">
+      <div class="member-name">${p.name || p.id}</div>
+      <div class="member-sub">${p.squad || "—"} • ${"★".repeat(p.stars || 0)}</div>
+      <div class="member-power">Power: ${p.power || 0}</div>
+    </div>
+
+    <button class="togglePoolBtn" style="background:${inPool ? "#ef4444" : "#2b6ef6"}">
+      ${inPool ? "Remove" : "Add"}
+    </button>
+
   </div>
 `;
 
