@@ -3,12 +3,17 @@ import { auth, db } from './firebase-config.js';
 import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
-  signOut
+  signOut,
+  GoogleAuthProvider
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 import {
   doc,
-  getDoc
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+
 
 // Helper to get role from users collection
 export async function getUserRole(uid) {
@@ -45,6 +50,31 @@ export function attachLoginHandler() {
     }
   });
 }
+// Player-only Google login: creates a users/UID doc with role="player" if missing
+export async function loginPlayerWithGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+    const user = result.user;
+    // Firestore user doc reference
+    const userRef = doc(db, "users", user.uid);
+    const snap = await getDoc(userRef);
+
+    if (!snap.exists()) {
+      // First-time Google login → create player role
+      await setDoc(userRef, {
+        name: user.displayName || user.email || "",
+        role: "player"
+      });
+    }
+    // Always go to player dashboard
+    window.location.href = "/player.html";
+  } catch (err) {
+    console.error("Google login failed:", err);
+    alert("Google login failed: " + (err.message || err));
+  }
+}
+
 
 // If already logged in, send to correct dashboard
 export function autoRedirectIfLoggedIn() {
@@ -80,3 +110,8 @@ if (document.getElementById("loginForm")) {
   attachLoginHandler();
   autoRedirectIfLoggedIn();
 }
+// attach Google button handler if the button exists on the page
+document.getElementById("playerGoogleLogin")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  loginPlayerWithGoogle();
+});
