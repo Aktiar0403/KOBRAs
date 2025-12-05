@@ -159,8 +159,7 @@ function renderRosterPool(filter='') {
   rosterPoolEl.innerHTML = '';
   const search = filter.trim().toLowerCase();
 
-  // show all players found in rosterMembersCache
-; mark whether they are in pool
+  // show all players found in rosterMembersCachemark whether they are in pool
   rosterMembersCache.forEach(p => {
     const inPool = rosterPool.includes(p.id);
     const name = (p.name || p.displayName || p.username || p.id).toString();
