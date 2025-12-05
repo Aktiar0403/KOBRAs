@@ -28,7 +28,7 @@ const fightStatusEl = $('#fightStatus');
 /* --- State --- */
 let currentFightId = null;
 let currentFight = null; // object as in Firestore
-let rosterMembersCache = []; // all players from /players collection (cache)
+let rosterPlayersCache = []; // all players from /players collection (cache)
 let rosterPool = []; // UIDs in pool for current fight
 
 /* --- Generate team name inputs dynamically --- */
