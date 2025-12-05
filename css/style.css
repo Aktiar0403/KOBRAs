@@ -345,4 +345,56 @@ h2 {
   50% { transform: translateY(-3px) scale(1.02); opacity: 0.85; }
   100% { transform: translateY(-2px) scale(1); opacity: 1; }
 }
-grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+
+/* =========================================================
+   HEATMAP COLOR CARDS
+   ========================================================= */
+
+.heat-hot {
+  background: linear-gradient(135deg, #ff4f81, #ff7676);
+  color: white;
+}
+
+.heat-strong {
+  background: linear-gradient(135deg, #6a5af9, #9b7bff);
+  color: white;
+}
+
+.heat-good {
+  background: linear-gradient(135deg, #4fa3ff, #6ecbff);
+  color: white;
+}
+
+.heat-average {
+  background: linear-gradient(135deg, #4fd471, #84f19f);
+  color: white;
+}
+
+.heat-weak {
+  background: linear-gradient(135deg, #ffe45c, #ffeaa6);
+}
+
+.heat-low {
+  background: linear-gradient(135deg, #e5e7eb, #f3f4f6);
+}
+
+.card-item * {
+  z-index: 2;
+  position: relative;
+}
+
+.card-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+/* Slight gloss overlay */
+.card-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom right, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+  pointer-events: none;
+  border-radius: inherit;
+}
