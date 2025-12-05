@@ -19,23 +19,7 @@ export function renderCards(container, members, options = {}) {
 
   members.forEach((m) => {
     const card = document.createElement('div');
-card.className = 'card-item';
-
-// HEATMAP COLORING
-const p = Number(m.power || 0);
-
-if (p >= 55) card.classList.add("heat-hot");
-else if (p >= 50) card.classList.add("heat-strong");
-else if (p >= 45) card.classList.add("heat-good");
-else if (p >= 40) card.classList.add("heat-average");
-else if (p >= 35) card.classList.add("heat-weak");
-else card.classList.add("heat-low");
-
-// Top 10 glow still applies
-if (isTop) {
-  card.classList.add("top-player");
-}
-
+    card.className = 'card-item';
 
     const isTop = topNames.includes(m.name);
 
