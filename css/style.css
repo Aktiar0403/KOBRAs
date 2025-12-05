@@ -313,3 +313,32 @@ h2 {
   justify-content: space-between;
   margin-top: 20px;
 }
+/* =========================================================
+   TOP 10 PLAYER GLOW EFFECT
+   ========================================================= */
+
+.top-player {
+  position: relative;
+  border: none !important;
+  z-index: 2;
+  animation: topGlowPulse 3s ease-in-out infinite;
+}
+
+/* Glow aura */
+.top-player::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #6a5af9, #ff4f81, #00d2ff);
+  filter: blur(10px);
+  z-index: -1;
+  opacity: 0.55;
+}
+
+/* Animated pulse */
+@keyframes topGlowPulse {
+  0% { transform: translateY(-2px) scale(1); opacity: 1; }
+  50% { transform: translateY(-3px) scale(1.02); opacity: 0.85; }
+  100% { transform: translateY(-2px) scale(1); opacity: 1; }
+}
