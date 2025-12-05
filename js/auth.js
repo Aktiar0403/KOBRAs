@@ -1,10 +1,15 @@
 // js/auth.js
+import {
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 import { auth, db } from './firebase-config.js';
 import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
   signOut,
-  GoogleAuthProvider
+  
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 import {
