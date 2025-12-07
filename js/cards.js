@@ -1,5 +1,5 @@
 // js/cards.js
-// FINAL layout-fix version: names ALWAYS horizontal, NEVER collapse vertically.
+// FINAL version: names never break vertically, bracketed text goes to subtitle line.
 
 export function renderCards(gridEl, members, options = {}) {
   gridEl.innerHTML = "";
@@ -7,10 +7,15 @@ export function renderCards(gridEl, members, options = {}) {
 
   members.forEach((m) => {
     const id = m.id || "";
-    const name = m.name || "";
+    const fullName = m.name || "";
     const role = m.role || "";
     const squad = (m.squad || "").toUpperCase();
     const stars = Number(m.stars) || 1;
+
+    // --------- NAME SPLITTING LOGIC ----------
+    const mainName = fullName.replace(/\(.+\)/, "").trim();
+    const bracketName = (fullName.match(/\(.+\)/)?.[0] || "").trim(); // ex: "(Class 1)"
+
     const power =
       m.power !== undefined && m.power !== null
         ? Number(m.power).toFixed(1)
@@ -18,6 +23,7 @@ export function renderCards(gridEl, members, options = {}) {
 
     const powerType = m.powerType || "Precise";
 
+    // Timestamp
     let lastTsMs = "";
     if (m.lastUpdated?.toMillis) lastTsMs = m.lastUpdated.toMillis();
     const updatedLabel = lastTsMs
@@ -28,6 +34,7 @@ export function renderCards(gridEl, members, options = {}) {
     card.className = "member-card";
     card.dataset.id = id;
 
+    // Card base styling
     card.style.cssText = `
       margin:10px;
       padding:14px;
@@ -36,6 +43,7 @@ export function renderCards(gridEl, members, options = {}) {
       border:1px solid rgba(255,255,255,0.06);
       transition:0.15s;
     `;
+
     card.onmouseover = () => (card.style.transform = "translateY(-3px)");
     card.onmouseout = () => (card.style.transform = "translateY(0px)");
 
@@ -45,58 +53,73 @@ export function renderCards(gridEl, members, options = {}) {
         ? "color:rgba(255,210,0,0.95);font-weight:600;"
         : "color:rgba(0,255,180,0.9);font-weight:600;";
 
+    // ---------------- CARD HTML ----------------
     card.innerHTML = `
       <div style="display:flex; gap:0.75rem;">
-        
-        <!-- AVATAR LEFT -->
+
+        <!-- AVATAR -->
         <div style="
-          width:44px; height:44px; border-radius:50%;
-          background:#ccc; display:flex; align-items:center; justify-content:center;
-          font-weight:600; color:#222;">
-          ${generateInitialsAvatar(name)}
+          width:44px;height:44px;border-radius:50%;
+          background:#ccc;display:flex;align-items:center;justify-content:center;
+          font-weight:600;color:#222;">
+          ${generateInitialsAvatar(fullName)}
         </div>
 
-        <!-- MAIN RIGHT COLUMN -->
-        <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
-          
-          <!-- TOP ROW: NAME + POWER -->
+        <!-- MAIN RIGHT SIDE -->
+        <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+
+          <!-- NAME ROW (Main name on one line) -->
           <div style="
             display:flex;
             justify-content:space-between;
             align-items:center;
-            width:100%;
+            white-space:nowrap;
+            overflow:hidden;
+            text-overflow:ellipsis;
+            min-width:0;
           ">
-
-            <!-- NAME (FORCED SINGLE LINE) -->
             <div style="
               flex:1;
               min-width:0;
               font-size:1rem;
               font-weight:600;
-              white-space:nowrap;
               overflow:hidden;
               text-overflow:ellipsis;
+              white-space:nowrap;
             ">
-              ${escapeHtml(name)}
+              ${escapeHtml(mainName)}
             </div>
 
-            <!-- POWER BLOCK -->
-            <div style="flex-shrink:0; width:72px; text-align:right; margin-left:10px;">
-              <div style="font-weight:700; font-size:1.15rem; color:#fff;">
+            <div style="flex-shrink:0; width:75px; text-align:right; margin-left:8px;">
+              <div style="font-weight:700;font-size:1.15rem;color:#fff;">
                 ${escapeHtml(power)}
               </div>
-              <div style="font-size:0.72rem; margin-top:3px; ${powerTypeStyle}">
+              <div style="font-size:0.72rem;margin-top:3px;${powerTypeStyle}">
                 ${escapeHtml(powerType)}
               </div>
             </div>
           </div>
 
-          <!-- ROLE BELOW NAME -->
+          <!-- BRACKET NAME (NEW SUBTITLE LINE) -->
+          ${
+            bracketName
+              ? `
+          <div style="
+            font-size:0.85rem;
+            color:rgba(255,255,255,0.55);
+            margin-top:2px;
+          ">
+            ${escapeHtml(bracketName)}
+          </div>`
+              : ""
+          }
+
+          <!-- ROLE -->
           <div style="font-size:0.85rem; opacity:0.75; margin-top:2px;">
             ${escapeHtml(role)}
           </div>
 
-          <!-- SQUAD PILL BELOW ROLE -->
+          <!-- SQUAD PILL -->
           <div style="margin-top:5px;">
             <span style="
               padding:4px 8px;
@@ -110,7 +133,6 @@ export function renderCards(gridEl, members, options = {}) {
               ${escapeHtml(squadInfo.label)}
             </span>
           </div>
-
         </div>
       </div>
 
@@ -121,17 +143,19 @@ export function renderCards(gridEl, members, options = {}) {
         justify-content:space-between;
         align-items:center;
       ">
-        <div class="muted xsmall updated-label" data-lastts="${lastTsMs}" style="opacity:0.75;">
+        <div class="muted xsmall updated-label"
+             data-lastts="${lastTsMs}"
+             style="opacity:0.75;">
           ${escapeHtml(updatedLabel)}
         </div>
 
-        <div style="font-size:1rem; color:#f5d142; letter-spacing:1px;">
+        <div style="font-size:1rem;color:#f5d142;letter-spacing:1px;">
           ${renderStars(stars)}
         </div>
       </div>
 
       <!-- BUTTONS -->
-      <div style="margin-top:10px; display:flex; gap:0.5rem;">
+      <div style="margin-top:10px;display:flex;gap:0.5rem;">
         ${
           showAdminActions
             ? `<button class="btn btn-edit" data-id="${id}">Edit</button>
@@ -141,6 +165,7 @@ export function renderCards(gridEl, members, options = {}) {
       </div>
     `;
 
+    // Admin actions
     if (showAdminActions) {
       card
         .querySelector(".btn-edit")
@@ -154,7 +179,7 @@ export function renderCards(gridEl, members, options = {}) {
   });
 }
 
-/* ------------ HELPERS ---------------- */
+/* -------- HELPERS -------- */
 
 function timeAgoInitial(ms) {
   const now = Date.now();
@@ -209,12 +234,12 @@ function squadPillProps(squad) {
 
 function generateInitialsAvatar(name) {
   if (!name) return "";
-  const p = name.split(/\s+/);
+  const p = name.trim().split(/\s+/);
   return (p[0][0] + (p[1]?.[0] || "")).toUpperCase();
 }
 
 function escapeHtml(s) {
-  return String(s)
+  return String(s || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
