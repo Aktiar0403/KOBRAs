@@ -1,11 +1,10 @@
 // js/auth.js
 
-// =====================
+// ============================
 // FIREBASE IMPORTS
-// =====================
+// ============================
 import {
   GoogleAuthProvider,
-  OAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
   onAuthStateChanged,
@@ -21,26 +20,28 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
-// =====================
-// ENSURE USER PROFILE
-// =====================
+// ============================
+// ENSURE USER PROFILE EXISTS
+// ============================
 async function ensureUserProfile(user) {
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
+  const ref = doc(db, "users", user.uid);
+  const snap = await getDoc(ref);
 
+  // Create the user doc if missing
   if (!snap.exists()) {
-    await setDoc(userRef, {
+    await setDoc(ref, {
       name: user.displayName || user.email || "",
-      role: "player",        // default for Google/Apple login
+      email: user.email || "",
+      role: "player",   // default role
       createdAt: Date.now()
     });
   }
 }
 
 
-// =====================
+// ============================
 // GET USER ROLE
-// =====================
+// ============================
 export async function getUserRole(uid) {
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
@@ -49,9 +50,9 @@ export async function getUserRole(uid) {
 }
 
 
-// =====================
+// ============================
 // EMAIL/PASSWORD LOGIN
-// =====================
+// ============================
 export function attachLoginHandler() {
   const form = document.getElementById("loginForm");
   const emailEl = document.getElementById("loginEmail");
@@ -68,16 +69,10 @@ export function attachLoginHandler() {
       const cred = await signInWithEmailAndPassword(auth, emailEl.value, passEl.value);
 
       await ensureUserProfile(cred.user);
-
       const role = await getUserRole(cred.user.uid);
 
-      if (role === "admin") {
-        window.location.href = "/admin.html";
-      } else if (role === "player") {
-        window.location.href = "/player.html";
-      } else {
-        errorEl.textContent = "No role assigned. Contact admin.";
-      }
+      if (role === "admin") window.location.href = "/admin.html";
+      else window.location.href = "/player.html";
 
     } catch (err) {
       errorEl.textContent = err.message.replace("Firebase:", "").trim();
@@ -86,14 +81,16 @@ export function attachLoginHandler() {
 }
 
 
-// =====================
-// GOOGLE LOGIN (PLAYER)
-// =====================
+// ============================
+// GOOGLE LOGIN (PLAYER DEFAULT)
+// ============================
 export async function loginPlayerWithGoogle() {
   try {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
+
+    console.log("Google login:", user.uid);
 
     await ensureUserProfile(user);
 
@@ -106,38 +103,14 @@ export async function loginPlayerWithGoogle() {
 }
 
 
-// =====================
-// APPLE LOGIN (PLAYER)
-// =====================
-export async function loginPlayerWithApple() {
-  try {
-    const provider = new OAuthProvider("apple.com");
-    provider.addScope("email");
-    provider.addScope("name");
-
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
-
-    await ensureUserProfile(user);
-
-    window.location.href = "/player.html";
-
-  } catch (err) {
-    console.error("Apple login failed:", err);
-    alert("Apple login failed: " + (err.message || err));
-  }
-}
-
-
-// =====================
-// AUTO REDIRECT (IF LOGGED IN)
-// =====================
+// ============================
+// AUTO REDIRECT IF ALREADY LOGGED IN
+// ============================
 export function autoRedirectIfLoggedIn() {
   onAuthStateChanged(auth, async (user) => {
     if (!user) return;
 
     await ensureUserProfile(user);
-
     const role = await getUserRole(user.uid);
 
     if (role === "admin") window.location.href = "/admin.html";
@@ -146,9 +119,9 @@ export function autoRedirectIfLoggedIn() {
 }
 
 
-// =====================
-// PAGE GUARD (ADMIN/PLAYER PROTECTION)
-// =====================
+// ============================
+// PAGE GUARD (ADMIN/PLAYER)
+// ============================
 export function guardPage(expectedRole, onReady) {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -157,7 +130,6 @@ export function guardPage(expectedRole, onReady) {
     }
 
     await ensureUserProfile(user);
-
     const role = await getUserRole(user.uid);
 
     if (role !== expectedRole) {
@@ -170,17 +142,17 @@ export function guardPage(expectedRole, onReady) {
 }
 
 
-// =====================
+// ============================
 // LOGOUT
-// =====================
+// ============================
 export function logout() {
   return signOut(auth);
 }
 
 
-// =====================
-// AUTO-ATTACH LOGIN HANDLERS
-// =====================
+// ============================
+// AUTO ATTACH LOGIN HANDLERS
+// ============================
 if (document.getElementById("loginForm")) {
   attachLoginHandler();
   autoRedirectIfLoggedIn();
@@ -189,9 +161,4 @@ if (document.getElementById("loginForm")) {
 document.getElementById("playerGoogleLogin")?.addEventListener("click", (e) => {
   e.preventDefault();
   loginPlayerWithGoogle();
-});
-
-document.getElementById("playerAppleLogin")?.addEventListener("click", (e) => {
-  e.preventDefault();
-  loginPlayerWithApple();
 });

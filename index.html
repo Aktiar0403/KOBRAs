@@ -8,7 +8,7 @@
 
   <style>
     /* ========================================
-       🔥 BACKGROUND — COBRA SCALE + SHIMMER
+       🔥 COBRA SCALE BACKGROUND
     =========================================*/
     body {
       margin: 0;
@@ -19,38 +19,16 @@
       justify-content: center;
       align-items: center;
 
-      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format") 
+      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format")
         no-repeat center center/cover;
-      position: relative;
-
+      background-color: rgba(0, 0, 0, 0.55);
+      background-blend-mode: darken;
       overflow: hidden;
+      position: relative;
     }
-
-    /* Shimmer animation overlay */
-    body::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.15), transparent),
-                  linear-gradient(120deg,
-                    rgba(0, 255, 150, 0.12) 0%,
-                    transparent 40%,
-                    rgba(0, 255, 150, 0.12) 80%);
-      mix-blend-mode: overlay;
-      animation: shimmer 6s infinite linear;
-      pointer-events: none;
-    }
-
-    @keyframes shimmer {
-      0% { opacity: 0.4; transform: translateX(-30px); }
-      50% { opacity: 0.8; transform: translateX(30px); }
-      100% { opacity: 0.4; transform: translateX(-30px); }
-    }
-
-
 
     /* ========================================
-       🐍 GLOWING COBRA EYES BEHIND LOGIN CARD
+       🐍 COBRA EYES ANIMATION
     =========================================*/
     .cobra-eyes {
       position: absolute;
@@ -79,10 +57,8 @@
       100% { transform: scale(1.15); opacity: 0.6; }
     }
 
-
-
     /* ========================================
-       🐍 LOGIN CARD — VENOM UI
+       🐍 LOGIN CARD — VENOM PANEL
     =========================================*/
     .login-card {
       width: 360px;
@@ -114,37 +90,26 @@
       letter-spacing: 3px;
       color: #00ffae;
       font-family: "Orbitron", sans-serif;
-      text-shadow: 0 0 18px rgba(0, 255, 174, 0.95), 0 0 40px rgba(0, 255, 174, 0.8);
+      text-shadow: 0 0 25px rgba(0, 255, 174, 0.95);
     }
 
-
-
-    /* ========================================
-       🐍 INPUTS
-    =========================================*/
+    /* INPUTS */
     input {
       width: 100%;
       padding: 13px;
       margin-top: 12px;
       border-radius: 10px;
-
+      font-size: 15px;
       background: rgba(255, 255, 255, 0.07);
       border: 1px solid rgba(255, 255, 255, 0.15);
-
       color: white;
-      font-size: 15px;
     }
 
-
-
-    /* ========================================
-       🐍 TOXIC LOGIN BUTTON
-    =========================================*/
+    /* LOGIN BUTTON */
     .login-btn {
       width: 100%;
       padding: 13px;
       margin-top: 18px;
-
       font-size: 17px;
       font-weight: 700;
 
@@ -152,7 +117,6 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-
       color: #000;
 
       transition: 0.2s;
@@ -164,17 +128,13 @@
       box-shadow: 0 0 25px rgba(0, 255, 150, 0.8);
     }
 
-
     .divider {
       text-align: center;
       margin: 20px 0 10px;
       opacity: 0.7;
     }
 
-
-    /* ========================================
-       🐍 SOCIAL BUTTONS WITH HISS EFFECT
-    =========================================*/
+    /* SOCIAL BUTTONS */
     .social-btn {
       width: 100%;
       padding: 12px;
@@ -187,8 +147,8 @@
       justify-content: center;
       align-items: center;
       gap: 10px;
-
       transition: 0.25s ease;
+      font-size: 15px;
     }
 
     .social-btn:hover {
@@ -214,19 +174,57 @@
       min-height: 18px;
     }
 
+    /* ========================================
+       POPUP FOR APPLE LOGIN BLOCK
+    =========================================*/
+    .popup {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+    }
+
+    .popup.hidden {
+      display: none;
+    }
+
+    .popup-box {
+      background: #111;
+      padding: 25px;
+      width: 300px;
+      border-radius: 12px;
+      text-align: center;
+      border: 1px solid #00ffae;
+      box-shadow: 0 0 30px rgba(0,255,174,0.5);
+      color: white;
+    }
+
+    .close-btn {
+      background: #00ffae;
+      padding: 10px;
+      width: 100%;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
   </style>
 </head>
 
 <body>
 
-  <!-- COBRA EYES BEHIND LOGIN -->
+  <!-- COBRA EYES -->
   <div class="cobra-eyes">
     <div></div>
     <div></div>
   </div>
 
-
-  <!-- LOGIN CARD -->
+  <!-- LOGIN PANEL -->
   <div class="login-card">
 
     <div class="title">KOBRAS</div>
@@ -234,29 +232,50 @@
     <form id="loginForm">
       <input type="email" id="loginEmail" placeholder="Email Address" required>
       <input type="password" id="loginPassword" placeholder="Password" required>
+
       <button class="login-btn" type="submit">Enter The Lair</button>
       <div id="loginError"></div>
     </form>
 
-    <div class="divider">or approach with</div>
+    <div class="divider">or continue with</div>
 
     <!-- GOOGLE LOGIN -->
     <button id="playerGoogleLogin" class="social-btn google-btn">
       <img src="https://www.svgrepo.com/show/355037/google.svg" width="22">
-      Google Access
+      Login with Google
     </button>
 
-    <!-- APPLE LOGIN -->
-    <button id="playerAppleLogin" class="social-btn apple-btn">
+    <!-- FAKE APPLE LOGIN (SHOW POPUP) -->
+    <button id="showAppleInfo" class="social-btn apple-btn">
       <img src="https://www.svgrepo.com/show/448234/apple.svg" width="22">
-      Apple Access
+      Sign in with Apple
     </button>
 
   </div>
 
+  <!-- POPUP FOR APPLE -->
+  <div id="applePopup" class="popup hidden">
+    <div class="popup-box">
+      <h2>Apple Login Not Provided</h2>
+      <p>Apple login is not provided. You ask Rahul why?</p>
+      <p>You can login using Google.</p>
+      <p>If you don’t have Google, ask Akki for access.</p>
+      <button id="closePopup" class="close-btn">OK</button>
+    </div>
+  </div>
 
-  <!-- Firebase Auth -->
+  <!-- SCRIPTS -->
   <script type="module" src="./js/auth.js"></script>
+
+  <script>
+    document.getElementById("showAppleInfo").addEventListener("click", () => {
+      document.getElementById("applePopup").classList.remove("hidden");
+    });
+
+    document.getElementById("closePopup").addEventListener("click", () => {
+      document.getElementById("applePopup").classList.add("hidden");
+    });
+  </script>
 
 </body>
 
