@@ -1,6 +1,5 @@
 // js/cards.js
-// Responsible for rendering member cards used by admin.js
-// Updated: adds squad pill (color-coded) and themed powerType styling
+// Updated: Full names always stay in ONE LINE on top of card.
 
 export function renderCards(gridEl, members, options = {}) {
   gridEl.innerHTML = '';
@@ -12,11 +11,9 @@ export function renderCards(gridEl, members, options = {}) {
     const role = m.role || '';
     const squad = (m.squad || '').toUpperCase();
     const stars = Number(m.stars) || 1;
-
     const power = (m.power !== undefined && m.power !== null)
       ? Number(m.power).toFixed(1)
       : '0.0';
-
     const powerType = m.powerType || 'Precise';
 
     // timestamp
@@ -33,40 +30,30 @@ export function renderCards(gridEl, members, options = {}) {
     card.className = 'member-card';
     card.dataset.id = id;
 
-    // CARD STYLING
+    // CARD CONTAINER STYLE
     card.style.margin = "10px";
     card.style.padding = "14px";
     card.style.borderRadius = "14px";
     card.style.background = "#1b1d23";
     card.style.border = "1px solid rgba(255,255,255,0.06)";
-    card.style.transition = "transform 0.15s ease, box-shadow 0.15s ease";
-    card.style.boxShadow = "0 1px 0 rgba(0,0,0,0.25)";
+    card.style.transition = "0.15s ease";
 
-    // hover effect
-    card.onmouseover = () => {
-      card.style.transform = "translateY(-4px)";
-      card.style.boxShadow = "0 8px 30px rgba(0,0,0,0.6)";
-    };
-    card.onmouseout  = () => {
-      card.style.transform = "translateY(0px)";
-      card.style.boxShadow = "0 1px 0 rgba(0,0,0,0.25)";
-    };
+    card.onmouseover = () => card.style.transform = "translateY(-3px)";
+    card.onmouseout  = () => card.style.transform = "translateY(0px)";
 
-    // compute squad pill color
+    // squad pill colors
     const squadInfo = squadPillProps(squad);
 
-    // compute powerType style (subtle tint)
     const powerTypeStyle = powerType === 'Approx'
-      ? 'color: rgba(255,210,0,0.95); font-weight:600;' // warm/yellow for Approx
-      : 'color: rgba(0,255,180,0.9); font-weight:600;';  // greenish for Precise
+      ? 'color: rgba(255,210,0,0.95); font-weight:600;'
+      : 'color: rgba(0,255,180,0.9); font-weight:600;';
 
-    // card content
     card.innerHTML = `
-      <div class="card-top" style="display:flex; gap:0.75rem; align-items:center;">
+      <div class="card-top" style="display:flex; gap:0.75rem; align-items:flex-start;">
         
         <!-- AVATAR -->
         <div class="avatar"
-             style="width:44px;height:44px;border-radius:50%;background:#ccc;flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-weight:600;color:#222;">
+          style="width:44px;height:44px;border-radius:50%;background:#ccc;display:flex;align-items:center;justify-content:center;font-weight:600;color:#222;">
           ${generateInitialsAvatar(name)}
         </div>
 
@@ -118,51 +105,40 @@ export function renderCards(gridEl, members, options = {}) {
               background: ${squadInfo.bg};
               color: ${squadInfo.fg};
               border: 1px solid ${squadInfo.border};
-              display:inline-block;
-              ">
+            ">
               ${escapeHtml(squadInfo.label)}
-            </div>
+            </span>
           </div>
+
         </div>
 
-        <!-- POWER ON TOP RIGHT -->
-        <div style="text-align:right; width:84px; flex-shrink:0;">
-          <div style="font-weight:700; font-size:1.15rem; color: #fff;">
+        <!-- FIXED POWER BLOCK (keeps name from wrapping) -->
+        <div style="text-align:right; width:80px; flex-shrink:0;">
+          <div style="font-weight:700; font-size:1.15rem; color:#fff;">
             ${escapeHtml(power)}
           </div>
-          <div style="font-size:0.72rem; color: rgba(255,255,255,0.75); margin-top:3px; ${powerTypeStyle}">
+          <div style="font-size:0.72rem; margin-top:3px; ${powerTypeStyle}">
             ${escapeHtml(powerType)}
           </div>
         </div>
+
       </div>
 
-      <div class="card-body" style="margin-top:0.6rem;">
-        <div class="member-meta"
-             style="display:flex; gap:0.75rem; margin-top:0.5rem; align-items:center; justify-content:space-between;">
-          
-          <!-- Left: timestamp -->
-          <div style="display:flex; align-items:center; gap:0.5rem;">
-            <div class="muted xsmall updated-label"
-                 data-lastts="${lastTsMs || ''}"
-                 data-id="${id}"
-                 style="opacity:0.75;">
-              ${escapeHtml(updatedLabel)}
-            </div>
-          </div>
+      <!-- Bottom Section -->
+      <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+        <div class="muted xsmall updated-label"
+          data-lastts="${lastTsMs}"
+          style="opacity:0.75;">
+          ${escapeHtml(updatedLabel)}
+        </div>
 
-          <!-- Right: stars -->
-          <div style="display:flex; align-items:center; gap:0.5rem;">
-            <div class="xsmall"
-                 style="font-size:0.95rem; letter-spacing:1px; color:#f5d142;">
-              ${renderStars(stars)}
-            </div>
-          </div>
+        <div style="font-size:1rem; color:#f5d142; letter-spacing:1px;">
+          ${renderStars(stars)}
         </div>
       </div>
 
-      <!-- ACTION BUTTONS -->
-      <div class="card-actions"
-           style="margin-top:0.6rem; display:flex; gap:0.5rem;">
+      <!-- Buttons -->
+      <div style="margin-top:10px; display:flex; gap:0.5rem;">
         ${
           showAdminActions
             ? `<button class="btn btn-edit" data-id="${id}">Edit</button>
@@ -172,22 +148,18 @@ export function renderCards(gridEl, members, options = {}) {
       </div>
     `;
 
-    // Wire admin actions
+    // wire actions
     if (showAdminActions) {
-      const btnEdit = card.querySelector('.btn-edit');
-      const btnDelete = card.querySelector('.btn-delete');
-
-      btnEdit?.addEventListener('click', () => options.onEdit?.(m));
-      btnDelete?.addEventListener('click', () => options.onDelete?.(m));
+      card.querySelector('.btn-edit')?.addEventListener('click', () => options.onEdit?.(m));
+      card.querySelector('.btn-delete')?.addEventListener('click', () => options.onDelete?.(m));
     }
 
     gridEl.appendChild(card);
   });
 }
 
-/* ------------- HELPERS ------------- */
+/* ---------- helpers ---------- */
 
-// Initial time-ago (admin.js handles automatic refreshing)
 function timeAgoInitial(ms) {
   const now = Date.now();
   const sec = Math.floor((now - ms) / 1000);
@@ -197,47 +169,38 @@ function timeAgoInitial(ms) {
   return Math.floor(sec / 86400) + " days ago";
 }
 
-// STARS: ★ = filled, ☆ = empty
 function renderStars(count) {
-  const max = 5;
-  let out = "";
   count = Number(count) || 0;
-  for (let i = 1; i <= max; i++) {
+  let out = "";
+  for (let i = 1; i <= 5; i++) {
     out += i <= count ? "★" : "☆";
   }
   return out;
 }
 
-// Squad pill props (color mapping)
-function squadPillProps(squadKey) {
-  // defaults
+function squadPillProps(squad) {
   const map = {
-    'TANK': { label: 'TANK', bg: 'rgba(10,102,255,0.12)', fg: 'rgba(10,102,255,0.95)', border: 'rgba(10,102,255,0.25)' },
-    'MISSILE': { label: 'MISSILE', bg: 'rgba(255,50,50,0.10)', fg: 'rgba(255,80,80,0.95)', border: 'rgba(255,50,50,0.25)' },
-    'AIR': { label: 'AIR', bg: 'rgba(138,43,226,0.10)', fg: 'rgba(170,120,255,0.95)', border: 'rgba(138,43,226,0.25)' },
-    'HYBRID': { label: 'HYBRID', bg: 'rgba(255,140,0,0.10)', fg: 'rgba(255,170,60,0.95)', border: 'rgba(255,140,0,0.25)' }
+    'TANK': { bg:'rgba(10,102,255,0.12)', fg:'rgba(10,102,255,0.95)', border:'rgba(10,102,255,0.25)', label:'TANK' },
+    'MISSILE': { bg:'rgba(255,50,50,0.12)', fg:'rgba(255,80,80,0.95)', border:'rgba(255,50,50,0.25)', label:'MISSILE' },
+    'AIR': { bg:'rgba(138,43,226,0.12)', fg:'rgba(170,120,255,0.95)', border:'rgba(138,43,226,0.25)', label:'AIR' },
+    'HYBRID': { bg:'rgba(255,140,0,0.12)', fg:'rgba(255,170,60,0.95)', border:'rgba(255,140,0,0.25)', label:'HYBRID' }
   };
-  if (map[squadKey]) return map[squadKey];
-  // fallback: show squad text but muted
-  return { label: squadKey || '—', bg: 'rgba(255,255,255,0.03)', fg: 'rgba(255,255,255,0.65)', border: 'rgba(255,255,255,0.06)' };
+  return map[squad] || { bg:'rgba(255,255,255,0.05)', fg:'rgba(255,255,255,0.65)', border:'rgba(255,255,255,0.12)', label:squad || '—' };
 }
 
-// Simple initials generator for avatar placeholder (2 letters max)
-function generateInitialsAvatar(fullName) {
-  if (!fullName) return '';
-  const parts = fullName.trim().split(/\s+/);
+function generateInitialsAvatar(name) {
+  if (!name) return "";
+  const parts = name.trim().split(/\s+/);
   const first = parts[0]?.[0] || '';
-  const last = (parts.length > 1) ? (parts[parts.length-1]?.[0] || '') : '';
-  const initials = (first + last).toUpperCase().slice(0,2);
-  return `<span style="font-size:0.95rem;">${escapeHtml(initials)}</span>`;
+  const last  = parts.length > 1 ? parts[parts.length-1][0] : '';
+  return `<span style="font-size:0.95rem;">${(first + last).toUpperCase()}</span>`;
 }
 
-// escape HTML
-function escapeHtml(str) {
-  return String(str || '')
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
+function escapeHtml(s) {
+  return String(s || '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'","&#39;");
 }
