@@ -523,3 +523,19 @@ body.bg {
 .circle-remove {
   background: #ef4444;
 }
+.member-meta {
+  display:flex;
+  gap:0.5rem;
+  align-items:center;
+  font-size:0.85rem;
+  color:var(--muted-color, #666);
+}
+
+.power-type-pill {
+  padding:2px 6px;
+  border-radius:999px;
+  font-size:0.75rem;
+  background:rgba(0,0,0,0.06);
+  border:1px solid rgba(0,0,0,0.06);
+}
+.muted.xsmall { font-size:0.8rem; color:#777; }
