@@ -551,3 +551,32 @@ body.bg {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 16px;
 }
+.kobra-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg,
+      #00d4ff 0%,
+      #66f7ff 25%,
+      #ffffff 50%,
+      #00d4ff 75%,
+      #008cff 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+
+  text-shadow:
+      0 0 12px rgba(0, 212, 255, 0.75),
+      0 0 24px rgba(0, 212, 255, 0.55),
+      0 0 40px rgba(0, 212, 255, 0.45);
+
+  animation: shineSweep 4s linear infinite;
+  display: inline-block;
+}
+@keyframes shineSweep {
+  0% { filter: brightness(0.9); }
+  50% { filter: brightness(1.35); }
+  100% { filter: brightness(0.9); }
+}
