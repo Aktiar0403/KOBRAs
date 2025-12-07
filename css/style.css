@@ -327,3 +327,41 @@ body::after {
   pointer-events: none !important;
   z-index: -1 !important;
 }
+/* FORCE modal to be on top of everything */
+#memberModal.modal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fix backdrop */
+#memberModal .modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  z-index: 999998 !important;
+}
+
+/* Center modal box properly */
+#memberModal .modal-box {
+  position: relative !important;
+  z-index: 999999 !important;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90vh;       /* prevents cutoff */
+  overflow-y: auto;        /* allows scroll if content is long */
+}
+
+/* Make sure snake-skin & fog are BELOW everything */
+body.bg::before,
+body.bg::after {
+  z-index: -1 !important;
+  pointer-events: none !important;
+}
