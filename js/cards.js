@@ -255,39 +255,48 @@ function renderStars(count) {
 function squadPillProps(squad) {
   const map = {
     TANK: {
-      bg: "rgba(10,102,255,0.12)",
-      fg: "rgba(10,102,255,0.95)",
-      border: "rgba(10,102,255,0.25)",
-      label: "TANK",
+      bg:"rgba(10,102,255,0.12)",
+      fg:"rgba(10,102,255,0.95)",
+      border:"rgba(10,102,255,0.25)",
+      label:"TANK",
+      neon:"rgba(10,102,255,0.85)",
+      neonLight:"rgba(10,102,255,0.45)"
     },
     MISSILE: {
-      bg: "rgba(255,50,50,0.12)",
-      fg: "rgba(255,80,80,0.95)",
-      border: "rgba(255,50,50,0.25)",
-      label: "MISSILE",
+      bg:"rgba(255,50,50,0.12)",
+      fg:"rgba(255,80,80,0.95)",
+      border:"rgba(255,50,50,0.25)",
+      label:"MISSILE",
+      neon:"rgba(255,50,50,0.85)",
+      neonLight:"rgba(255,50,50,0.45)"
     },
     AIR: {
-      bg: "rgba(138,43,226,0.12)",
-      fg: "rgba(170,120,255,0.95)",
-      border: "rgba(138,43,226,0.25)",
-      label: "AIR",
+      bg:"rgba(138,43,226,0.12)",
+      fg:"rgba(170,120,255,0.95)",
+      border:"rgba(138,43,226,0.25)",
+      label:"AIR",
+      neon:"rgba(138,43,226,0.85)",
+      neonLight:"rgba(138,43,226,0.45)"
     },
     HYBRID: {
-      bg: "rgba(255,140,0,0.12)",
-      fg: "rgba(255,170,60,0.95)",
-      border: "rgba(255,140,0,0.25)",
-      label: "HYBRID",
-    },
-  };
-  return (
-    map[squad] || {
-      bg: "rgba(255,255,255,0.05)",
-      fg: "rgba(255,255,255,0.65)",
-      border: "rgba(255,255,255,0.12)",
-      label: squad || "—",
+      bg:"rgba(255,140,0,0.12)",
+      fg:"rgba(255,170,60,0.95)",
+      border:"rgba(255,140,0,0.25)",
+      label:"HYBRID",
+      neon:"rgba(255,140,0,0.85)",
+      neonLight:"rgba(255,140,0,0.45)"
     }
-  );
+  };
+  return map[squad] || {
+    bg:"rgba(255,255,255,0.05)",
+    fg:"rgba(255,255,255,0.65)",
+    border:"rgba(255,255,255,0.12)",
+    neon:"rgba(255,255,255,0.6)",
+    neonLight:"rgba(255,255,255,0.25)",
+    label:squad || "—"
+  };
 }
+
 
 function generateInitialsAvatar(name) {
   if (!name) return "";
