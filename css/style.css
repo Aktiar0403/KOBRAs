@@ -586,33 +586,33 @@ body.bg {
   overflow-x: hidden;
 }
 
-/* Snake skin subtle texture */
+/* PERMANENT WORKING snake-skin texture */
 body.bg::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: url("https://i.imgur.com/HVca0U3.png");
-  opacity: 0.03;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snakeskin-pattern.png");
+  opacity: 0.05;
   mix-blend-mode: overlay;
   pointer-events: none;
 }
 
-/* Moving venom energy fog */
+/* PERMANENT WORKING animated venom fog */
 body.bg::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: url("https://i.imgur.com/tC5qcqS.png") repeat;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/fog-soft.png") repeat;
   opacity: 0.12;
   animation: venomFog 22s linear infinite;
   pointer-events: none;
 }
-
 @keyframes venomFog {
   0%   { transform: translate(0,0) scale(1); }
-  50%  { transform: translate(-6%, 4%) scale(1.15); }
+  50%  { transform: translate(-6%,4%) scale(1.15); }
   100% { transform: translate(0,0) scale(1); }
 }
+
 .kobra-heading {
   font-size: 2.4rem;
   font-weight: 900;
@@ -708,4 +708,17 @@ body.bg::after {
   0% { transform: translateX(-50%) translateY(0); }
   50% { transform: translateX(-50%) translateY(6px); }
   100% { transform: translateX(-50%) translateY(0); }
+}
+.kobra-heading-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 220px;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/icons/main/cobra-emblem.png") center/contain no-repeat;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
+  animation: cobraInsigniaFloat 6s ease-in-out infinite;
 }
