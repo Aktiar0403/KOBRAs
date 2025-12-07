@@ -1,5 +1,6 @@
 // js/cards.js
 // Responsible for rendering member cards used by admin.js
+// Updated: adds squad pill (color-coded) and themed powerType styling
 
 export function renderCards(gridEl, members, options = {}) {
   gridEl.innerHTML = '';
@@ -9,7 +10,7 @@ export function renderCards(gridEl, members, options = {}) {
     const id = m.id || '';
     const name = m.name || '';
     const role = m.role || '';
-    const squad = m.squad || '';
+    const squad = (m.squad || '').toUpperCase();
     const stars = Number(m.stars) || 1;
 
     const power = (m.power !== undefined && m.power !== null)
@@ -37,12 +38,27 @@ export function renderCards(gridEl, members, options = {}) {
     card.style.padding = "14px";
     card.style.borderRadius = "14px";
     card.style.background = "#1b1d23";
-    card.style.border = "1px solid rgba(255,255,255,0.08)";
-    card.style.transition = "0.2s";
+    card.style.border = "1px solid rgba(255,255,255,0.06)";
+    card.style.transition = "transform 0.15s ease, box-shadow 0.15s ease";
+    card.style.boxShadow = "0 1px 0 rgba(0,0,0,0.25)";
 
     // hover effect
-    card.onmouseover = () => card.style.transform = "translateY(-3px)";
-    card.onmouseout  = () => card.style.transform = "translateY(0px)";
+    card.onmouseover = () => {
+      card.style.transform = "translateY(-4px)";
+      card.style.boxShadow = "0 8px 30px rgba(0,0,0,0.6)";
+    };
+    card.onmouseout  = () => {
+      card.style.transform = "translateY(0px)";
+      card.style.boxShadow = "0 1px 0 rgba(0,0,0,0.25)";
+    };
+
+    // compute squad pill color
+    const squadInfo = squadPillProps(squad);
+
+    // compute powerType style (subtle tint)
+    const powerTypeStyle = powerType === 'Approx'
+      ? 'color: rgba(255,210,0,0.95); font-weight:600;' // warm/yellow for Approx
+      : 'color: rgba(0,255,180,0.9); font-weight:600;';  // greenish for Precise
 
     // card content
     card.innerHTML = `
@@ -50,49 +66,76 @@ export function renderCards(gridEl, members, options = {}) {
         
         <!-- AVATAR -->
         <div class="avatar"
-             style="width:44px;height:44px;border-radius:50%;background:#ccc;flex:0 0 44px;">
+             style="width:44px;height:44px;border-radius:50%;background:#ccc;flex:0 0 44px;display:flex;align-items:center;justify-content:center;font-weight:600;color:#222;">
+          ${generateInitialsAvatar(name)}
         </div>
 
-        <!-- NAME + ROLE -->
-        <div style="flex:1;">
-          <div class="name" style="font-weight:600;font-size:1rem;">
-            ${escapeHtml(name)}
+        <!-- NAME + ROLE + SQUAD PILL -->
+        <div style="flex:1; min-width:0;">
+          <div style="display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
+            <div style="min-width:0;">
+              <div class="name" style="font-weight:600;font-size:1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                ${escapeHtml(name)}
+              </div>
+              <div class="muted xsmall" style="opacity:0.75; font-size:0.9rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(role)}
+              </div>
+            </div>
+            <div style="margin-left:8px; flex-shrink:0;">
+              <div style="font-size:0.82rem; color:rgba(255,255,255,0.7);">
+                ${escapeHtml(squad)}
+              </div>
+            </div>
           </div>
-          <div class="muted xsmall">${escapeHtml(role)}</div>
+
+          <!-- squad pill shown below name (left side) -->
+          <div style="margin-top:8px; display:flex; align-items:center; gap:6px;">
+            <div class="squad-pill" style="
+              padding:4px 8px;
+              border-radius:999px;
+              font-size:0.78rem;
+              font-weight:600;
+              background: ${squadInfo.bg};
+              color: ${squadInfo.fg};
+              border: 1px solid ${squadInfo.border};
+              display:inline-block;
+              ">
+              ${escapeHtml(squadInfo.label)}
+            </div>
+          </div>
         </div>
 
         <!-- POWER ON TOP RIGHT -->
-        <div style="text-align:right; width:60px;">
-          <div style="font-weight:700; font-size:1.1rem;">
+        <div style="text-align:right; width:84px; flex-shrink:0;">
+          <div style="font-weight:700; font-size:1.15rem; color: #fff;">
             ${escapeHtml(power)}
           </div>
-          <div style="
-    font-size:0.72rem;
-    color: rgba(255,255,255,0.65);
-    font-weight:500;
-    margin-top:2px;
-">
-  ${escapeHtml(powerType)}
-</div>
-
+          <div style="font-size:0.72rem; color: rgba(255,255,255,0.75); margin-top:3px; ${powerTypeStyle}">
+            ${escapeHtml(powerType)}
+          </div>
         </div>
       </div>
 
       <div class="card-body" style="margin-top:0.6rem;">
         <div class="member-meta"
-             style="display:flex; gap:0.75rem; margin-top:0.5rem; align-items:center;">
+             style="display:flex; gap:0.75rem; margin-top:0.5rem; align-items:center; justify-content:space-between;">
           
-          <!-- TIMESTAMP -->
-          <div class="muted xsmall updated-label"
-               data-lastts="${lastTsMs || ''}"
-               data-id="${id}">
-            ${escapeHtml(updatedLabel)}
+          <!-- Left: timestamp -->
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div class="muted xsmall updated-label"
+                 data-lastts="${lastTsMs || ''}"
+                 data-id="${id}"
+                 style="opacity:0.75;">
+              ${escapeHtml(updatedLabel)}
+            </div>
           </div>
 
-          <!-- STARS -->
-          <div class="xsmall"
-               style="font-size:0.95rem; letter-spacing:1px; color:#f5d142;">
-            ${renderStars(stars)}
+          <!-- Right: stars -->
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            <div class="xsmall"
+                 style="font-size:0.95rem; letter-spacing:1px; color:#f5d142;">
+              ${renderStars(stars)}
+            </div>
           </div>
         </div>
       </div>
@@ -138,10 +181,35 @@ function timeAgoInitial(ms) {
 function renderStars(count) {
   const max = 5;
   let out = "";
+  count = Number(count) || 0;
   for (let i = 1; i <= max; i++) {
     out += i <= count ? "★" : "☆";
   }
   return out;
+}
+
+// Squad pill props (color mapping)
+function squadPillProps(squadKey) {
+  // defaults
+  const map = {
+    'TANK': { label: 'TANK', bg: 'rgba(10,102,255,0.12)', fg: 'rgba(10,102,255,0.95)', border: 'rgba(10,102,255,0.25)' },
+    'MISSILE': { label: 'MISSILE', bg: 'rgba(255,50,50,0.10)', fg: 'rgba(255,80,80,0.95)', border: 'rgba(255,50,50,0.25)' },
+    'AIR': { label: 'AIR', bg: 'rgba(138,43,226,0.10)', fg: 'rgba(170,120,255,0.95)', border: 'rgba(138,43,226,0.25)' },
+    'HYBRID': { label: 'HYBRID', bg: 'rgba(255,140,0,0.10)', fg: 'rgba(255,170,60,0.95)', border: 'rgba(255,140,0,0.25)' }
+  };
+  if (map[squadKey]) return map[squadKey];
+  // fallback: show squad text but muted
+  return { label: squadKey || '—', bg: 'rgba(255,255,255,0.03)', fg: 'rgba(255,255,255,0.65)', border: 'rgba(255,255,255,0.06)' };
+}
+
+// Simple initials generator for avatar placeholder (2 letters max)
+function generateInitialsAvatar(fullName) {
+  if (!fullName) return '';
+  const parts = fullName.trim().split(/\s+/);
+  const first = parts[0]?.[0] || '';
+  const last = (parts.length > 1) ? (parts[parts.length-1]?.[0] || '') : '';
+  const initials = (first + last).toUpperCase().slice(0,2);
+  return `<span style="font-size:0.95rem;">${escapeHtml(initials)}</span>`;
 }
 
 // escape HTML
