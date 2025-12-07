@@ -72,21 +72,41 @@ export function renderCards(gridEl, members, options = {}) {
 
         <!-- NAME + ROLE + SQUAD PILL -->
         <div style="flex:1; min-width:0;">
-          <div style="display:flex; align-items:center; gap:0.5rem; justify-content:space-between;">
-            <div style="min-width:0;">
-              <div class="name" style="font-weight:600;font-size:1rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                ${escapeHtml(name)}
-              </div>
-              <div class="muted xsmall" style="opacity:0.75; font-size:0.9rem; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                ${escapeHtml(role)}
-              </div>
-            </div>
-            <div style="margin-left:8px; flex-shrink:0;">
-              <div style="font-size:0.82rem; color:rgba(255,255,255,0.7);">
-                ${escapeHtml(squad)}
-              </div>
-            </div>
-          </div>
+          <div style="display:flex; gap:0.5rem; justify-content:space-between; width:100%;">
+  
+  <!-- NAME + ROLE (full wrap) -->
+  <div style="flex:1; min-width:0;">
+    <div class="name"
+         style="
+           font-weight:600;
+           font-size:1rem;
+           line-height:1.2;
+           white-space:normal;       /* <-- allows wrapping */
+           word-break:break-word;    /* <-- prevents overflow */
+         ">
+      ${escapeHtml(name)}
+    </div>
+
+    <div class="muted xsmall"
+         style="
+           opacity:0.75;
+           font-size:0.9rem;
+           margin-top:2px;
+           white-space:normal;       /* <-- allow wrapping */
+           word-break:break-word;
+         ">
+      ${escapeHtml(role)}
+    </div>
+  </div>
+
+  <!-- SQUAD LABEL -->
+  <div style="margin-left:8px; flex-shrink:0; text-align:right;">
+    <div style="font-size:0.82rem; color:rgba(255,255,255,0.7);">
+      ${escapeHtml(squad)}
+    </div>
+  </div>
+</div>
+
 
           <!-- squad pill shown below name (left side) -->
           <div style="margin-top:8px; display:flex; align-items:center; gap:6px;">
