@@ -6,10 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KOBRAS — Login</title>
 
-  <!-- GOOGLE & APPLE SVGs LOAD EXTERNALLY -->
-
   <style>
-    /* ===== BODY BACKGROUND WITH COBRA SCALES ===== */
+    /* ========================================
+       🔥 BACKGROUND — COBRA SCALE + SHIMMER
+    =========================================*/
     body {
       margin: 0;
       padding: 0;
@@ -18,124 +18,193 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format") no-repeat center center/cover;
-      background-blend-mode: darken;
-      background-color: rgba(0, 0, 0, 0.55);
+
+      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format") 
+        no-repeat center center/cover;
+      position: relative;
+
+      overflow: hidden;
     }
 
-    /* Glass Cobra Card */
+    /* Shimmer animation overlay */
+    body::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(0, 255, 120, 0.15), transparent),
+                  linear-gradient(120deg,
+                    rgba(0, 255, 150, 0.12) 0%,
+                    transparent 40%,
+                    rgba(0, 255, 150, 0.12) 80%);
+      mix-blend-mode: overlay;
+      animation: shimmer 6s infinite linear;
+      pointer-events: none;
+    }
+
+    @keyframes shimmer {
+      0% { opacity: 0.4; transform: translateX(-30px); }
+      50% { opacity: 0.8; transform: translateX(30px); }
+      100% { opacity: 0.4; transform: translateX(-30px); }
+    }
+
+
+
+    /* ========================================
+       🐍 GLOWING COBRA EYES BEHIND LOGIN CARD
+    =========================================*/
+    .cobra-eyes {
+      position: absolute;
+      top: 18%;
+      display: flex;
+      justify-content: center;
+      gap: 120px;
+      opacity: 0.35;
+      z-index: 0;
+      animation: eyesGlow 3s infinite alternate;
+    }
+
+    .cobra-eyes div {
+      width: 60px;
+      height: 60px;
+      background: radial-gradient(circle,
+        rgba(0, 255, 120, 1),
+        rgba(0, 150, 70, 0.4),
+        transparent);
+      border-radius: 50%;
+      box-shadow: 0 0 25px rgba(0, 255, 120, 0.8);
+    }
+
+    @keyframes eyesGlow {
+      0% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.15); opacity: 0.6; }
+    }
+
+
+
+    /* ========================================
+       🐍 LOGIN CARD — VENOM UI
+    =========================================*/
     .login-card {
       width: 360px;
       padding: 30px;
       border-radius: 18px;
-      background: rgba(10, 14, 18, 0.75);
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(0, 255, 120, 0.25);
-      box-shadow: 0 0 40px rgba(0, 255, 120, 0.25);
-      animation: scaleIn 0.7s ease;
+
+      background: rgba(10, 14, 18, 0.7);
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(0, 255, 120, 0.35);
+      box-shadow: 0 0 45px rgba(0, 255, 120, 0.4);
+
+      position: relative;
+      z-index: 10;
+
+      animation: cobraPulse 2.5s infinite ease-in-out;
     }
 
-    @keyframes scaleIn {
-      0% {
-        transform: scale(0.9);
-        opacity: 0;
-      }
-
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
+    @keyframes cobraPulse {
+      0% { box-shadow: 0 0 25px rgba(0, 255, 120, 0.3); }
+      50% { box-shadow: 0 0 55px rgba(0, 255, 120, 0.7); }
+      100% { box-shadow: 0 0 25px rgba(0, 255, 120, 0.3); }
     }
 
-    /* Title */
     .title {
-      font-size: 30px;
+      font-size: 32px;
       font-weight: 900;
       text-align: center;
       margin-bottom: 20px;
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       color: #00ffae;
-      text-shadow: 0 0 18px rgba(0, 255, 174, 0.8);
       font-family: "Orbitron", sans-serif;
+      text-shadow: 0 0 18px rgba(0, 255, 174, 0.95), 0 0 40px rgba(0, 255, 174, 0.8);
     }
 
-    /* Inputs */
+
+
+    /* ========================================
+       🐍 INPUTS
+    =========================================*/
     input {
       width: 100%;
       padding: 13px;
       margin-top: 12px;
-      font-size: 15px;
       border-radius: 10px;
+
       background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+
       color: white;
+      font-size: 15px;
     }
 
-    input::placeholder {
-      color: #aaa;
-    }
 
-    /* Button */
+
+    /* ========================================
+       🐍 TOXIC LOGIN BUTTON
+    =========================================*/
     .login-btn {
       width: 100%;
-      margin-top: 18px;
       padding: 13px;
+      margin-top: 18px;
+
       font-size: 17px;
-      cursor: pointer;
       font-weight: 700;
-      border-radius: 10px;
+
       background: linear-gradient(90deg, #00ff9d, #00d47a);
       border: none;
+      border-radius: 10px;
+      cursor: pointer;
+
       color: #000;
-      transition: 0.25s;
+
+      transition: 0.2s;
     }
 
     .login-btn:hover {
+      transform: translateY(-3px) scale(1.03);
       background: #00e38a;
-      transform: translateY(-2px);
-      box-shadow: 0 0 12px rgba(0, 255, 150, 0.6);
+      box-shadow: 0 0 25px rgba(0, 255, 150, 0.8);
     }
+
 
     .divider {
       text-align: center;
       margin: 20px 0 10px;
-      opacity: 0.65;
-      font-size: 14px;
+      opacity: 0.7;
     }
 
-    /* Social Buttons */
+
+    /* ========================================
+       🐍 SOCIAL BUTTONS WITH HISS EFFECT
+    =========================================*/
     .social-btn {
       width: 100%;
       padding: 12px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
+      font-weight: 600;
+      margin-top: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 10px;
-      margin-top: 12px;
-      font-size: 15px;
-      font-weight: 600;
+
+      transition: 0.25s ease;
+    }
+
+    .social-btn:hover {
+      transform: scale(1.04);
+      filter: brightness(1.15);
     }
 
     .google-btn {
-      background: #ffffff;
+      background: white;
       color: #000;
     }
 
-    .google-btn:hover {
-      background: #e6e6e6;
-    }
-
     .apple-btn {
-      background: #000000;
+      background: #000;
       color: #fff;
       border: 1px solid #444;
-    }
-
-    .apple-btn:hover {
-      background: #121212;
     }
 
     #loginError {
@@ -150,34 +219,43 @@
 
 <body>
 
+  <!-- COBRA EYES BEHIND LOGIN -->
+  <div class="cobra-eyes">
+    <div></div>
+    <div></div>
+  </div>
+
+
+  <!-- LOGIN CARD -->
   <div class="login-card">
 
-    <div class="title">WELCOME TO 704 KOBRAs</div>
+    <div class="title">KOBRAS</div>
 
-    <!-- EMAIL LOGIN -->
     <form id="loginForm">
       <input type="email" id="loginEmail" placeholder="Email Address" required>
       <input type="password" id="loginPassword" placeholder="Password" required>
-      <button class="login-btn" type="submit">Sign In</button>
+      <button class="login-btn" type="submit">Enter The Lair</button>
       <div id="loginError"></div>
     </form>
 
-    <div class="divider">or continue with</div>
+    <div class="divider">or approach with</div>
 
-    <!-- GOOGLE LOGIN BUTTON -->
+    <!-- GOOGLE LOGIN -->
     <button id="playerGoogleLogin" class="social-btn google-btn">
       <img src="https://www.svgrepo.com/show/355037/google.svg" width="22">
-      Sign in with Google
+      Google Access
     </button>
 
-    <!-- APPLE LOGIN BUTTON -->
+    <!-- APPLE LOGIN -->
     <button id="playerAppleLogin" class="social-btn apple-btn">
       <img src="https://www.svgrepo.com/show/448234/apple.svg" width="22">
-      Sign in with Apple
+      Apple Access
     </button>
 
   </div>
 
+
+  <!-- Firebase Auth -->
   <script type="module" src="./js/auth.js"></script>
 
 </body>
