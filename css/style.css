@@ -1,85 +1,649 @@
-/* ============================================================================
-   KOBRA THEME — Cleaned & Consolidated (Option B — Medium Cobra)
-   - Unified variables
-   - Cobra background (snake-skin + venom fog)
-   - Glossy cards, neon accents, power glow
-   - Headings, buttons, controls, modals, responsive
-   ============================================================================ */
-
-/* -------------------------
-   Variables
-   ------------------------- */
-:root{
-  --bg-900: #050816;
-  --bg-800: #0a0f14;
+:root {
+  --bg: #050816;
   --card: #0b1020;
-  --card-2: rgba(8,12,24,0.95);
-  --accent-blue: #00eaff;
-  --accent-blue-2: #009dff;
-  --accent-soft: #6dfbff;
-  --accent-green: #22c55e;
+  --accent: #22c55e;
+  --accent-soft: #4ade80;
   --danger: #ef4444;
   --text: #f9fafb;
   --muted: #9ca3af;
-  --border: rgba(255,255,255,0.06);
-  --radius: 14px;
-  --glass-blur: 10px;
-  --card-shadow: 0 18px 40px rgba(0,0,0,0.7);
-  --glass-overlay-opacity: 0.06;
+  --border: #1f2933;
+  --radius: 16px;
 }
 
-/* -------------------------
-   Base / Reset
-   ------------------------- */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial;
-  color:var(--text);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  background: radial-gradient(circle at 30% 20%, var(--bg-800), #050709 60%, #000 100%);
-  position:relative;
-  overflow-x:hidden;
-  min-height:100vh;
+* { box-sizing: border-box; }
+
+body.bg {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #111827 0, #020617 55%);
+  color: var(--text);
 }
 
-/* subtle snake skin + fog (permanent hosted assets) */
-body::before, body::after{content:"";position:absolute;inset:0;pointer-events:none}
-body::before{
-  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snake-skin-dark.png") repeat;
-  opacity:0.055;
-  mix-blend-mode:overlay;
+/* Centered login */
+.center-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
 }
-body::after{
+
+.card {
+  background: var(--card);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  padding: 18px 16px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 20px 45px rgba(0,0,0,.6);
+}
+
+.login-card h1 { margin: 0 0 6px; }
+.login-card input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: .85rem;
+  margin-bottom: 8px;
+}
+
+/* App shell */
+
+.app-shell {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Controls */
+
+.controls {
+  background: rgba(8,12,24,0.95);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.stat-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  font-size: .78rem;
+}
+
+.filter-group, .sort-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.search-input {
+  max-width: 320px;
+  width: 100%;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: .85rem;
+}
+
+/* Layout */
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(260px, 1.2fr);
+  gap: 14px;
+}
+
+.layout.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.cards-panel {
+  background: rgba(8,12,24,0.95);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 10px;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.audit-panel {
+  background: rgba(8,12,24,0.95);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 10px 10px 6px;
+}
+
+.audit-panel h2 {
+  margin: 0 0 4px;
+}
+
+.audit-list {
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.audit-item {
+  border-bottom: 1px solid rgba(148,163,184,.25);
+  padding: 4px 0;
+}
+
+.audit-item:last-child {
+  border-bottom: none;
+}
+
+/* Card */
+
+.card-item {
+  background: var(--card);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.card-name {
+  font-weight: 600;
+  font-size: .95rem;
+}
+
+.card-power {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #a5b4fc;
+}
+
+.card-stars {
+  font-size: .85rem;
+  letter-spacing: 2px;
+}
+
+.card-meta {
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.tag-pill {
+  font-size: .65rem;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--muted);
+}
+
+.card-admin-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+/* Buttons */
+
+.btn {
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  padding: 6px 12px;
+  font-size: .78rem;
+  cursor: pointer;
+}
+
+.btn.primary {
+  border-color: var(--accent);
+  color: var(--accent-soft);
+}
+
+.btn.pill {
+  padding: 4px 10px;
+}
+
+.btn.full {
+  width: 100%;
+}
+
+.btn:hover {
+  background: #111827;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.small { font-size: .82rem; }
+.xsmall { font-size: .72rem; }
+
+.error {
+  color: var(--danger);
+}
+
+/* Modal */
+
+.modal.hidden {
+  display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.65);
+}
+
+.modal-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--card);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  padding: 14px 14px 10px;
+  width: 100%;
+  max-width: 360px;
+  box-shadow: 0 18px 40px rgba(0,0,0,.7);
+}
+
+.modal-box h2 {
+  margin: 0 0 6px;
+}
+
+.field-label {
+  display: block;
+  margin-top: 4px;
+  margin-bottom: 2px;
+  font-size: .75rem;
+  color: var(--muted);
+}
+
+.modal-box input {
+  width: 100%;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #020617;
+  color: var(--text);
+  font-size: .8rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .controls-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+/* ------------------------------
+   CIRCLE MEMBER CARD (Style B)
+------------------------------ */
+.member-circle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.05);
+  border-radius: 16px;
+  padding: 12px;
+  margin: 8px 0;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  transition: 0.2s ease;
+}
+
+.member-circle-card:hover {
+  transform: translateY(-3px);
+  background: rgba(255,255,255,0.08);
+}
+
+.circle-avatar {
+  width: 60px;
+  height: 60px;
+  background: #2b6ef6;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 26px;
+  color: white;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.circle-avatar.small {
+  width: 45px;
+  height: 45px;
+  font-size: 20px;
+}
+
+.circle-info {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.circle-info.small {
+  margin-bottom: 4px;
+}
+
+.member-name {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.member-sub {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.member-power {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* Buttons inside cards */
+.togglePoolBtn, .circle-remove {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s ease;
+}
+
+.circle-remove {
+  background: #ef4444;
+}
+/* ============================================================
+   COMPACT CIRCLE MEMBER CARDS (Style B)
+   ============================================================ */
+
+.member-circle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 10px;
+  margin: 6px 0;
+  width: 130px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: 0.2s ease;
+  cursor: grab;
+}
+
+.member-circle-card:hover {
+  background: rgba(255,255,255,0.10);
+  transform: translateY(-3px);
+}
+
+.circle-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SMALL VERSION (for team slots) */
+.member-circle-card.small {
+  width: 115px;
+  padding: 8px;
+  margin: 4px auto;
+}
+
+.circle-avatar.small {
+  width: 34px;
+  height: 34px;
+  font-size: 16px;
+}
+
+.circle-info {
+  text-align: center;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.circle-info.small {
+  font-size: 11px;
+}
+
+/* Text styles */
+.member-name {
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+
+.member-sub {
+  opacity: 0.7;
+  font-size: 11px;
+}
+
+.member-stars {
+  color: gold;
+  font-size: 12px;
+  margin: 1px 0;
+}
+
+.member-power {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+/* ACTION BUTTONS */
+.togglePoolBtn,
+.circle-remove {
+  margin-top: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #fff;
+}
+
+.circle-remove {
+  background: #ef4444;
+}
+.member-meta {
+  display:flex;
+  gap:0.5rem;
+  align-items:center;
+  font-size:0.85rem;
+  color:var(--muted-color, #666);
+}
+
+.power-type-pill {
+  padding:2px 6px;
+  border-radius:999px;
+  font-size:0.75rem;
+  background:rgba(0,0,0,0.06);
+  border:1px solid rgba(0,0,0,0.06);
+}
+.muted.xsmall { font-size:0.8rem; color:#777; }
+.member-card {
+  margin: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #1b1d23; /* or your theme */
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.kobra-title {
+  font-size: 2.4rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  background: linear-gradient(90deg,
+      #00d4ff 0%,
+      #66f7ff 25%,
+      #ffffff 50%,
+      #00d4ff 75%,
+      #008cff 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+
+  text-shadow:
+      0 0 12px rgba(0, 212, 255, 0.75),
+      0 0 24px rgba(0, 212, 255, 0.55),
+      0 0 40px rgba(0, 212, 255, 0.45);
+
+  animation: shineSweep 4s linear infinite;
+  display: inline-block;
+}
+@keyframes shineSweep {
+  0% { filter: brightness(0.9); }
+  50% { filter: brightness(1.35); }
+  100% { filter: brightness(0.9); }
+}
+body.bg {
+  background: radial-gradient(circle at 30% 20%, #0a0f14, #050709 60%, #000);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* PERMANENT WORKING snake-skin texture */
+body.bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snakeskin-pattern.png");
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* PERMANENT WORKING animated venom fog */
+body.bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
   background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/fog-soft.png") repeat;
-  opacity:0.10;
-  animation: venomFog 24s linear infinite;
+  opacity: 0.12;
+  animation: venomFog 22s linear infinite;
+  pointer-events: none;
 }
-@keyframes venomFog{
-  0%{transform:translate(0,0) scale(1)}
-  50%{transform:translate(-6%,4%) scale(1.12)}
-  100%{transform:translate(0,0) scale(1)}
+@keyframes venomFog {
+  0%   { transform: translate(0,0) scale(1); }
+  50%  { transform: translate(-6%,4%) scale(1.15); }
+  100% { transform: translate(0,0) scale(1); }
 }
 
-/* utility */
-.hidden{display:none}
-.muted{color:var(--muted)}
-.small{font-size:.86rem}
-.xsmall{font-size:.74rem}
-.center-shell{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+.kobra-heading {
+  font-size: 2.4rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4px;
 
-/* -------------------------
-   App shell / layout
-   ------------------------- */
-.app-shell{max-width:1400px;margin:0 auto;padding:16px}
-.topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px;position:relative}
-.topbar h1{margin:0;font-size:1.55rem}
-.topbar-actions{display:flex;gap:8px;align-items:center}
+  background: linear-gradient(90deg,
+    #00eaff 0%,
+    #6dfbff 25%,
+    #ffffff 50%,
+    #00caff 75%,
+    #008cff 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
 
-/* topbar accent line */
-.topbar::after{
+  text-shadow:
+    0 0 12px rgba(0, 212, 255, 0.75),
+    0 0 28px rgba(0, 212, 255, 0.55),
+    0 0 55px rgba(0, 212, 255, 0.35);
+
+  animation: cobraGlow 4s ease-in-out infinite;
+}
+
+@keyframes cobraGlow {
+  0%   { filter: brightness(0.9); }
+  50%  { filter: brightness(1.6); }
+  100% { filter: brightness(0.9); }
+}
+.topbar::after {
   content:"";
   position:absolute;
   bottom:-2px;
@@ -88,280 +652,91 @@ body::after{
   height:3px;
   background: linear-gradient(90deg, transparent, #ff3a3a, transparent);
   animation: strikePulse 3.5s ease-in-out infinite;
-  opacity:.22;
-}
-@keyframes strikePulse{0%{opacity:.22}50%{opacity:.9}100%{opacity:.22}}
-
-/* -------------------------
-   Cobra headings (epic)
-   ------------------------- */
-.kobra-heading{
-  font-size:2.2rem;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:2.8px;
-  background:linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-soft) 30%, #fff 50%, var(--accent-blue) 70%, #008cff 100%);
-  background-clip:text;
-  -webkit-background-clip:text;
-  color:transparent;
-  text-shadow: 0 0 10px rgba(0,212,255,0.62), 0 0 22px rgba(0,212,255,0.42);
-  animation:kobraGlow 4s ease-in-out infinite;
-  display:inline-block;
-}
-@keyframes kobraGlow{0%{filter:brightness(.9)}50%{filter:brightness(1.4)}100%{filter:brightness(.9)}}
-.kobra-heading.gold{ /* optional elite/gold variant */
-  background:linear-gradient(90deg, #ffd700 0%, #fff3a6 35%, #ffd700 100%);
-  text-shadow: 0 0 12px rgba(255,215,0,0.9);
 }
 
-/* optional insignia behind heading */
-.kobra-heading-wrapper{position:relative;display:inline-block}
-.kobra-heading-wrapper::before{
-  content:"";
-  position:absolute;
-  top:-45px;left:50%;transform:translateX(-50%);
-  width:220px;height:220px;background:url("https://raw.githubusercontent.com/ChatGPT-UX-Library/icons/main/cobra-emblem.png") center/contain no-repeat;
-  opacity:0.10;filter:drop-shadow(0 0 12px rgba(0,200,255,0.25));animation:cobraInsigniaFloat 6s ease-in-out infinite;
+@keyframes strikePulse {
+  0% { opacity:0.2; }
+  50% { opacity:1; }
+  100% { opacity:0.2; }
 }
-@keyframes cobraInsigniaFloat{0%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(6px)}100%{transform:translateX(-50%) translateY(0)}}
-
-/* -------------------------
-   Controls / toolbar / stats
-   ------------------------- */
-.controls{
-  background:var(--card-2);
-  border-radius:var(--radius);
-  border:1px solid var(--border);
-  padding:10px 12px;
-  margin-bottom:12px;
-}
-.controls-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px}
-.stat-pill{padding:6px 12px;border-radius:999px;border:1px solid var(--border);background:#020617;font-size:.78rem}
-.filter-group,.sort-group{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
-.search-input{max-width:320px;width:100%;padding:8px 16px;border-radius:999px;border:1px solid var(--border);background:#020617;color:var(--text);font-size:.85rem}
-
-/* -------------------------
-   Layout sections
-   ------------------------- */
-.layout{display:grid;grid-template-columns:minmax(0,3fr) minmax(260px,1.2fr);gap:14px}
-.layout.single{grid-template-columns:minmax(0,1fr)}
-.cards-panel{background:var(--card-2);border-radius:var(--radius);border:1px solid var(--border);padding:10px;position:relative}
-.cards-panel::before{content:"";position:absolute;inset:0;background:radial-gradient(circle, rgba(0,255,245,0.12), transparent 70%);opacity:0.3;pointer-events:none}
-.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-
-/* -------------------------
-   Generic card (glossy) — used by admin/player member cards
-   ------------------------- */
-.member-card{
-  margin:8px;
-  padding:14px;
-  border-radius:14px;
-  background: linear-gradient(145deg, rgba(30,33,40,0.75), rgba(18,20,24,0.75));
-  backdrop-filter: blur(var(--glass-blur));
-  -webkit-backdrop-filter: blur(var(--glass-blur));
-  border:2px solid rgba(255,255,255,0.04);
-  position:relative;
-  overflow:hidden;
-  transition: transform .22s ease, box-shadow .22s ease;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5), inset 0 0 20px rgba(255,255,255,var(--glass-overlay-opacity));
+.btn.primary {
+  background: linear-gradient(90deg, #009dff, #00eaff);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 0 12px rgba(0,200,255,0.7);
+  transition: 0.2s;
 }
 
-/* glossy overlay */
-.member-card .gloss-overlay{
-  position:absolute;top:-160%;left:-160%;width:400%;height:400%;pointer-events:none;
-  background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.18) 30%, transparent 55%);
-  transform:rotate(25deg);opacity:0;transition:opacity .28s ease;
+.btn.primary:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 22px rgba(0,200,255,1);
+}
+.cards-panel {
+  position: relative;
 }
 
-/* hover effects (3D tilt + glow) */
-.member-card:hover{
-  transform: translateY(-6px) rotateX(4deg) rotateY(4deg);
-}
-.member-card:hover .gloss-overlay{
-  animation: glossMove 1.4s linear forwards; opacity:1;
-}
-@keyframes glossMove{0%{top:-160%;left:-160%}100%{top:160%;left:160%}}
-
-/* right-side power block */
-.card-top{display:flex;gap:0.75rem;align-items:flex-start}
-.card-top .avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
-.card-top .main{flex:1;min-width:0;display:flex;flex-direction:column}
-.card-top .power-block{flex-shrink:0;width:80px;text-align:right}
-
-/* name / role / bracket handling */
-.card-name{
-  font-weight:700;font-size:1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  min-width:0;
-}
-.card-bracket{
-  font-size:.86rem;color:rgba(255,255,255,0.55);margin-top:4px;
-}
-.card-role{font-size:.88rem;opacity:0.75;margin-top:4px}
-
-/* squad pill */
-.squad-pill{
-  display:inline-block;padding:4px 8px;border-radius:999px;font-size:.78rem;font-weight:600;margin-top:6px;
-  border:1px solid rgba(255,255,255,0.06)
-}
-
-/* timestamp and stars row */
-.card-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px}
-.updated-label{font-size:.82rem;color:rgba(255,255,255,0.78)}
-.card-stars{font-size:1rem;color:#f5d142;letter-spacing:1px}
-
-/* -------------------------
-   Circle member variants (compact roster)
-   ------------------------- */
-.member-circle-card{
-  display:flex;flex-direction:column;align-items:center;background:rgba(255,255,255,0.03);border-radius:12px;padding:10px;width:130px;
-  box-shadow:0 6px 18px rgba(0,0,0,0.45);transition:transform .18s ease, background .18s ease;cursor:grab;
-}
-.member-circle-card:hover{transform:translateY(-4px);background:rgba(255,255,255,0.06)}
-.circle-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;background:linear-gradient(180deg,#2b6ef6,#234fd6)}
-.member-name{font-weight:700;margin-top:6px;font-size:.92rem}
-.member-sub{opacity:.75;font-size:.82rem}
-.member-stars{color:#f5d142;font-size:.95rem;margin-top:4px}
-
-/* -------------------------
-   Buttons
-   ------------------------- */
-.btn{border-radius:999px;border:1px solid var(--border);background:#020617;color:var(--text);padding:6px 12px;font-size:.82rem;cursor:pointer;transition:transform .12s ease,box-shadow .12s ease}
-.btn:hover{transform:translateY(-2px)}
-.btn.primary{background:linear-gradient(90deg,var(--accent-blue-2),var(--accent-blue));border:none;color:#fff;font-weight:700;box-shadow:0 0 12px rgba(0,200,255,0.65)}
-.btn.accent{background:linear-gradient(90deg,#ff5a6f,#ff8a5a);border:none;color:#fff}
-.btn.pill{padding:4px 10px}
-.btn.full{width:100%}
-.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.04)}
-
-/* -------------------------
-   Modal
-   ------------------------- */
-.modal{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center}
-.modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,0.64)}
-.modal-box{position:relative;background:var(--card);border-radius:14px;border:1px solid var(--border);padding:14px;width:100%;max-width:420px;box-shadow:var(--card-shadow)}
-.field-label{display:block;margin-top:6px;margin-bottom:6px;font-size:.78rem;color:var(--muted)}
-.modal-box input{width:100%;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:#020617;color:var(--text);font-size:.9rem}
-
-/* -------------------------
-   Audit panel
-   ------------------------- */
-.audit-panel{background:var(--card-2);border-radius:var(--radius);border:1px solid var(--border);padding:10px}
-.audit-list{max-height:520px;overflow:auto;padding-right:6px}
-.audit-item{border-bottom:1px solid rgba(148,163,184,0.06);padding:6px 0}
-.audit-item:last-child{border-bottom:none}
-
-/* -------------------------
-   Small utilities / helpers
-   ------------------------- */
-.flex{display:flex}
-.col{display:flex;flex-direction:column}
-.row{display:flex;align-items:center;gap:8px}
-.center{text-align:center}
-.badge{display:inline-block;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,0.03);font-size:.78rem}
-
-/* -------------------------
-   Squad neon color map (used by JS to style neon/borders)
-   ------------------------- */
-/* these are just CSS-friendly defaults — JS/templating should use the same mapping */
-.squad-TANK{ --neon: rgba(10,102,255,0.85); --neonLight: rgba(10,102,255,0.36); --pillBg: rgba(10,102,255,0.12); --pillFg: rgba(10,102,255,0.95); }
-.squad-MISSILE{ --neon: rgba(255,50,50,0.85); --neonLight: rgba(255,50,50,0.35); --pillBg: rgba(255,50,50,0.10); --pillFg: rgba(255,80,80,0.95); }
-.squad-AIR{ --neon: rgba(138,43,226,0.85); --neonLight: rgba(138,43,226,0.36); --pillBg: rgba(138,43,226,0.10); --pillFg: rgba(170,120,255,0.95); }
-.squad-HYBRID{ --neon: rgba(255,140,0,0.85); --neonLight: rgba(255,140,0,0.36); --pillBg: rgba(255,140,0,0.10); --pillFg: rgba(255,170,60,0.95); }
-
-/* You can apply the class like: <div class="member-card squad-TANK"> to inherit neon variables.
-   JS also sets inline styles for dynamic glow (preferred for cross-browser consistency). */
-
-/* -------------------------
-   Responsive
-   ------------------------- */
-@media (max-width: 900px){
-  .layout{grid-template-columns:1fr}
-  .cards-grid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-  .topbar h1{font-size:1.28rem}
-  .kobra-heading{font-size:1.6rem}
-}
-@media (max-width: 600px){
-  .controls-row{flex-direction:column;align-items:flex-start}
-  .member-circle-card{width:115px}
-  .card-top{gap:10px}
-  .card-top .power-block{width:72px}
-}
-
-/* -------------------------
-   Backwards compatibility small fixes (from your old CSS)
-   ------------------------- */
-.tag-pill{font-size:.72rem;padding:3px 8px;border-radius:999px;border:1px solid var(--border);background:#020617;color:var(--muted)}
-.power-type-pill{padding:2px 6px;border-radius:999px;font-size:.75rem;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.04)}
-
-/* -------------------------
-   Small accessibility / focus
-   ------------------------- */
-.btn:focus, .search-input:focus, .modal-box input:focus{outline:none;box-shadow:0 0 0 3px rgba(0,200,255,0.08)}
-
-/* -------------------------
-   End of CSS
-   ------------------------- */
-.modal {
-  z-index: 999999 !important;
-}
-.modal-backdrop {
-  z-index: 999998 !important;
-}
-.modal-box {
-  z-index: 999999 !important;
-}
-body::before,
-body::after {
-  pointer-events: none !important;
-}
-/* Always ensure modal is the topmost layer */
-.modal,
-.modal * {
-  z-index: 999999 !important;
-  pointer-events: auto !important;
-}
-
-/* Ensure background decorative layers NEVER block clicks */
-body::before,
-body::after {
-  pointer-events: none !important;
-  z-index: -1 !important;
-}
-/* FORCE modal to be on top of everything */
-#memberModal.modal {
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 999999 !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Fix backdrop */
-#memberModal .modal-backdrop {
+.cards-panel::before {
+  content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.65);
-  z-index: 999998 !important;
+  background: radial-gradient(circle, rgba(0,255,245,0.15), transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.kobra-heading-wrapper {
+  position: relative;
+  display: inline-block;
 }
 
-/* Center modal box properly */
-#memberModal .modal-box {
-  position: relative !important;
-  z-index: 999999 !important;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 18px;
-  width: 100%;
-  max-width: 360px;
-  max-height: 90vh;       /* prevents cutoff */
-  overflow-y: auto;        /* allows scroll if content is long */
+.kobra-heading-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 220px;
+  background: url("https://i.imgur.com/0uQGfXL.png") center/contain no-repeat;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
+  animation: cobraInsigniaFloat 6s ease-in-out infinite;
 }
 
-/* Make sure snake-skin & fog are BELOW everything */
-body.bg::before,
-body.bg::after {
-  z-index: -1 !important;
-  pointer-events: none !important;
+@keyframes cobraInsigniaFloat {
+  0% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+  100% { transform: translateX(-50%) translateY(0); }
+}
+.kobra-heading-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 220px;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/icons/main/cobra-emblem.png") center/contain no-repeat;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
+  animation: cobraInsigniaFloat 6s ease-in-out infinite;
+}
+/* ==== COBRA BACKGROUND WITH SNAKE SKIN (Texture A) ==== */
+body.bg {
+  background: radial-gradient(circle at 30% 20%, #0a0f14, #050709 60%, #000);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Snake skin texture (VERY subtle, clean, permanent URL) */
+body.bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snake-skin-dark.png");
+  background-size: repeat;
+  opacity: 0.055;                  /* adjust 0.03–0.08 depending on how visible you want it */
+  mix-blend-mode: overlay;
+  pointer-events: none;
 }
