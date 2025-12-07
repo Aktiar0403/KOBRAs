@@ -310,3 +310,7 @@ body::after{
 .modal-box {
   z-index: 999999 !important;
 }
+body::before,
+body::after {
+  pointer-events: none !important;
+}
