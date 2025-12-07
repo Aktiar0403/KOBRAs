@@ -4,142 +4,182 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KOBRA — Login</title>
+  <title>KOBRAS — Login</title>
 
-  <!-- Main Styles -->
+  <!-- GOOGLE & APPLE SVGs LOAD EXTERNALLY -->
+
   <style>
+    /* ===== BODY BACKGROUND WITH COBRA SCALES ===== */
     body {
       margin: 0;
       padding: 0;
       font-family: "Inter", sans-serif;
-      background: linear-gradient(135deg, #0d0f13, #13171f);
       height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      color: white;
+      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format") no-repeat center center/cover;
+      background-blend-mode: darken;
+      background-color: rgba(0, 0, 0, 0.55);
     }
 
+    /* Glass Cobra Card */
     .login-card {
       width: 360px;
-      padding: 28px;
+      padding: 30px;
       border-radius: 18px;
-      background: rgba(255, 255, 255, 0.05);
-      backdrop-filter: blur(12px);
-      box-shadow: 0 0 30px rgba(0, 255, 200, 0.15);
-      border: 1px solid rgba(0, 255, 200, 0.1);
+      background: rgba(10, 14, 18, 0.75);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 255, 120, 0.25);
+      box-shadow: 0 0 40px rgba(0, 255, 120, 0.25);
+      animation: scaleIn 0.7s ease;
     }
 
+    @keyframes scaleIn {
+      0% {
+        transform: scale(0.9);
+        opacity: 0;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    /* Title */
     .title {
-      font-size: 26px;
+      font-size: 30px;
+      font-weight: 900;
       text-align: center;
       margin-bottom: 20px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      color: #00ffc8;
-      text-shadow: 0 0 12px rgba(0, 255, 200, 0.6);
+      letter-spacing: 2px;
+      color: #00ffae;
+      text-shadow: 0 0 18px rgba(0, 255, 174, 0.8);
+      font-family: "Orbitron", sans-serif;
     }
 
+    /* Inputs */
     input {
       width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      border-radius: 10px;
-      border: none;
-      outline: none;
+      padding: 13px;
+      margin-top: 12px;
       font-size: 15px;
-      background: rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: white;
     }
 
+    input::placeholder {
+      color: #aaa;
+    }
+
+    /* Button */
     .login-btn {
       width: 100%;
-      padding: 12px;
-      background: #00ffc8;
-      border: none;
-      color: #000;
+      margin-top: 18px;
+      padding: 13px;
+      font-size: 17px;
+      cursor: pointer;
       font-weight: 700;
       border-radius: 10px;
-      margin-top: 18px;
-      cursor: pointer;
+      background: linear-gradient(90deg, #00ff9d, #00d47a);
+      border: none;
+      color: #000;
       transition: 0.25s;
     }
 
     .login-btn:hover {
-      background: #00e6b4;
+      background: #00e38a;
+      transform: translateY(-2px);
+      box-shadow: 0 0 12px rgba(0, 255, 150, 0.6);
     }
 
     .divider {
       text-align: center;
-      margin: 20px 0;
-      opacity: 0.6;
+      margin: 20px 0 10px;
+      opacity: 0.65;
       font-size: 14px;
     }
 
+    /* Social Buttons */
     .social-btn {
       width: 100%;
       padding: 12px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
-      font-weight: 600;
-      margin-top: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 10px;
+      margin-top: 12px;
       font-size: 15px;
+      font-weight: 600;
     }
 
     .google-btn {
-      background: white;
+      background: #ffffff;
       color: #000;
     }
 
+    .google-btn:hover {
+      background: #e6e6e6;
+    }
+
     .apple-btn {
-      background: #000;
+      background: #000000;
       color: #fff;
       border: 1px solid #444;
     }
 
+    .apple-btn:hover {
+      background: #121212;
+    }
+
     #loginError {
       margin-top: 10px;
-      color: rgb(255, 115, 115);
+      color: #ff5c5c;
       font-size: 14px;
       min-height: 18px;
     }
+
   </style>
 </head>
 
 <body>
 
   <div class="login-card">
-    <div class="title">WELCOME TO 704 KOBRA</div>
 
-    <!-- Email Login Form -->
+    <div class="title">KOBRAS</div>
+
+    <!-- EMAIL LOGIN -->
     <form id="loginForm">
       <input type="email" id="loginEmail" placeholder="Email Address" required>
       <input type="password" id="loginPassword" placeholder="Password" required>
-
       <button class="login-btn" type="submit">Sign In</button>
-
       <div id="loginError"></div>
     </form>
 
     <div class="divider">or continue with</div>
 
-    <!-- Google Login -->
+    <!-- GOOGLE LOGIN BUTTON -->
     <button id="playerGoogleLogin" class="social-btn google-btn">
-      <img src="https://www.svgrepo.com/show/355037/google.svg" width="22"> Sign in with Google
+      <img src="https://www.svgrepo.com/show/355037/google.svg" width="22">
+      Sign in with Google
     </button>
 
-    <!-- Apple Login -->
+    <!-- APPLE LOGIN BUTTON -->
     <button id="playerAppleLogin" class="social-btn apple-btn">
-      <img src="https://www.svgrepo.com/show/448234/apple.svg" width="22"> Sign in with Apple
+      <img src="https://www.svgrepo.com/show/448234/apple.svg" width="22">
+      Sign in with Apple
     </button>
+
   </div>
 
   <script type="module" src="./js/auth.js"></script>
+
 </body>
 
 </html>
