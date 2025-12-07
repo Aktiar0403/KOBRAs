@@ -580,3 +580,132 @@ body.bg {
   50% { filter: brightness(1.35); }
   100% { filter: brightness(0.9); }
 }
+body.bg {
+  background: radial-gradient(circle at 30% 20%, #0a0f14, #050709 60%, #000);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Snake skin subtle texture */
+body.bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://i.imgur.com/HVca0U3.png");
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Moving venom energy fog */
+body.bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://i.imgur.com/tC5qcqS.png") repeat;
+  opacity: 0.12;
+  animation: venomFog 22s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes venomFog {
+  0%   { transform: translate(0,0) scale(1); }
+  50%  { transform: translate(-6%, 4%) scale(1.15); }
+  100% { transform: translate(0,0) scale(1); }
+}
+.kobra-heading {
+  font-size: 2.4rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+
+  background: linear-gradient(90deg,
+    #00eaff 0%,
+    #6dfbff 25%,
+    #ffffff 50%,
+    #00caff 75%,
+    #008cff 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+
+  text-shadow:
+    0 0 12px rgba(0, 212, 255, 0.75),
+    0 0 28px rgba(0, 212, 255, 0.55),
+    0 0 55px rgba(0, 212, 255, 0.35);
+
+  animation: cobraGlow 4s ease-in-out infinite;
+}
+
+@keyframes cobraGlow {
+  0%   { filter: brightness(0.9); }
+  50%  { filter: brightness(1.6); }
+  100% { filter: brightness(0.9); }
+}
+.topbar::after {
+  content:"";
+  position:absolute;
+  bottom:-2px;
+  left:0;
+  width:100%;
+  height:3px;
+  background: linear-gradient(90deg, transparent, #ff3a3a, transparent);
+  animation: strikePulse 3.5s ease-in-out infinite;
+}
+
+@keyframes strikePulse {
+  0% { opacity:0.2; }
+  50% { opacity:1; }
+  100% { opacity:0.2; }
+}
+.btn.primary {
+  background: linear-gradient(90deg, #009dff, #00eaff);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 1px;
+  box-shadow: 0 0 12px rgba(0,200,255,0.7);
+  transition: 0.2s;
+}
+
+.btn.primary:hover {
+  transform: scale(1.06);
+  box-shadow: 0 0 22px rgba(0,200,255,1);
+}
+.cards-panel {
+  position: relative;
+}
+
+.cards-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(0,255,245,0.15), transparent 70%);
+  opacity: 0.4;
+  pointer-events: none;
+}
+.kobra-heading-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.kobra-heading-wrapper::before {
+  content: "";
+  position: absolute;
+  top: -45px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 220px;
+  height: 220px;
+  background: url("https://i.imgur.com/0uQGfXL.png") center/contain no-repeat;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
+  animation: cobraInsigniaFloat 6s ease-in-out infinite;
+}
+
+@keyframes cobraInsigniaFloat {
+  0% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+  100% { transform: translateX(-50%) translateY(0); }
+}
