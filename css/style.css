@@ -722,3 +722,21 @@ body.bg::after {
   filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
   animation: cobraInsigniaFloat 6s ease-in-out infinite;
 }
+/* ==== COBRA BACKGROUND WITH SNAKE SKIN (Texture A) ==== */
+body.bg {
+  background: radial-gradient(circle at 30% 20%, #0a0f14, #050709 60%, #000);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Snake skin texture (VERY subtle, clean, permanent URL) */
+body.bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snake-skin-dark.png");
+  background-size: repeat;
+  opacity: 0.055;                  /* adjust 0.03–0.08 depending on how visible you want it */
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
