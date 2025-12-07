@@ -539,3 +539,15 @@ body.bg {
   border:1px solid rgba(0,0,0,0.06);
 }
 .muted.xsmall { font-size:0.8rem; color:#777; }
+.member-card {
+  margin: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #1b1d23; /* or your theme */
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
