@@ -816,3 +816,51 @@ body.bg::before {
     align-items: flex-start;
   }
 }
+/* ===========================================
+   KOBRA CARD COBRA-SCALE BACKGROUND + NEON ENERGY
+   =========================================== */
+
+.member-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* COBRA SCALE TEXTURE */
+.member-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snake-scale-dark.png");
+  background-size: 180%;
+  background-position: center;
+  opacity: 0.35;                 /* strength of snake scales */
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* NEON ENERGY UNDERLIGHT MAP */
+.member-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      circle at 30% 20%,
+      rgba(0,255,255,0.25),
+      transparent 70%
+    ),
+    radial-gradient(
+      circle at 70% 80%,
+      rgba(0,120,255,0.3),
+      transparent 70%
+    );
+  opacity: 0.25;                 /* increase for more neon */
+  mix-blend-mode: screen;
+  pointer-events: none;
+  animation: neonPulse 6s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+  0%   { opacity: 0.22; transform: scale(1);   }
+  50%  { opacity: 0.32; transform: scale(1.05);}
+  100% { opacity: 0.22; transform: scale(1);   }
+}
