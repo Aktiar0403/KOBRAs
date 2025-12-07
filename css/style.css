@@ -314,3 +314,16 @@ body::before,
 body::after {
   pointer-events: none !important;
 }
+/* Always ensure modal is the topmost layer */
+.modal,
+.modal * {
+  z-index: 999999 !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure background decorative layers NEVER block clicks */
+body::before,
+body::after {
+  pointer-events: none !important;
+  z-index: -1 !important;
+}
