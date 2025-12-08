@@ -299,24 +299,25 @@ export function renderCards(gridEl, members, options = {}) {
           padding-left:6px;
         ">
           <div style="
-            width:50px;
-            height:50px;
-            border-radius:50%;
-            border:2px solid ${squadInfo.neon};
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            background:rgba(255,255,255,0.03);
-            box-shadow:0 0 8px ${squadInfo.neonLight};
-          ">
-            <img src="${squadInfo.icon}" 
-                 style="
-                   width:44px;
-                   height:44px;
-                   object-fit:contain;
-                   filter: drop-shadow(0 0 6px ${squadInfo.neon});
-                 ">
-          </div>
+  width:50px;
+  height:50px;
+  border-radius:6px;           /* SQUARE STYLE */
+  border:2px solid ${squadInfo.neon};
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,0.03);
+  box-shadow:0 0 8px ${squadInfo.neonLight};
+">
+  <img src="${squadInfo.icon}" 
+       style="
+         width:44px;
+         height:44px;
+         object-fit:contain;
+         filter: drop-shadow(0 0 6px ${squadInfo.neon});
+       ">
+</div>
+
         </div>
 
       </div>
