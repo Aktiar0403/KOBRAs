@@ -217,9 +217,7 @@ export function renderCards(gridEl, members, options = {}) {
           ${escapeHtml(updatedLabel)}
         </div>
 
-        <div style="font-size:1rem; color:#f5d142; letter-spacing:1px;">
-          ${renderStars(stars)}
-        </div>
+      
       </div>
 
       <!-- ADMIN BUTTONS -->
@@ -256,10 +254,6 @@ function timeAgoInitial(ms) {
   return Math.floor(sec / 86400) + " days ago";
 }
 
-function renderStars(count) {
-  count = Number(count) || 0;
-  return "★★★★★☆☆☆☆☆".slice(5 - count, 10 - count);
-}
 
 function squadPillProps(squad) {
   const map = {
