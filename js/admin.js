@@ -24,75 +24,74 @@ import {
 
 
 /* ==========================================================
-   APP STATE
+   GLOBAL STATE
 ========================================================== */
 const state = {
   members: [],
-  filter: 'RESET',
-  search: '',
-  sort: 'none',
-  currentAdminName: ''
+  filter: "RESET",
+  search: "",
+  sort: "none",
+  currentAdminName: ""
 };
 
 
 /* ==========================================================
-   DOM GETTER
+   DOM SHORTCUT
 ========================================================== */
-function $id(id) {
-  return document.getElementById(id);
-}
+const $ = (id) => document.getElementById(id);
 
 
 /* ==========================================================
-   DOM REFERENCES (UPDATED FOR NEW DROPDOWN + TOGGLE)
+   DOM ELEMENTS
 ========================================================== */
 const dom = {
-  btnLogout: $id('btnLogout'),
+  btnLogout: $("btnLogout"),
 
-  statTotal: $id('statTotal'),
-  statAvg: $id('statAvg'),
-  statFive: $id('statFive'),
-  statMissing: $id('statMissing'),
+  statTotal: $("statTotal"),
+  statAvg: $("statAvg"),
+  statFive: $("statFive"),
+  statMissing: $("statMissing"),
 
-  filterButtons: Array.from(document.querySelectorAll('.filter-btn') || []),
-  sortButtons: Array.from(document.querySelectorAll('.sort-btn') || []),
+  filterButtons: Array.from(document.querySelectorAll(".filter-btn")),
+  sortButtons: Array.from(document.querySelectorAll(".sort-btn")),
 
-  searchInput: $id('searchInput'),
+  searchInput: $("searchInput"),
 
-  btnAdd: $id('btnAddMember'),
-  btnExport: $id('btnExportCSV'),
-  btnImport: $id('btnImportCSV'),
-  csvInput: $id('csvFileInput'),
+  btnAdd: $("btnAddMember"),
+  btnExport: $("btnExportCSV"),
+  btnImport: $("btnImportCSV"),
+  csvInput: $("csvFileInput"),
 
-  grid: $id('cardsGrid'),
-  auditList: $id('auditList'),
+  grid: $("cardsGrid"),
+  auditList: $("auditList"),
 
-  modal: $id('memberModal'),
-  modalTitle: $id('modalTitle'),
-  fieldName: $id('fieldName'),
-  fieldRole: $id('fieldRole'),
+  modal: $("memberModal"),
+  modalTitle: $("modalTitle"),
+
+  fieldName: $("fieldName"),
+  fieldRole: $("fieldRole"),
 
   // NEW FIELDS
-  fieldSquadPrimary: $id('fieldSquadPrimary'),
-  fieldSquadHybrid: $id('fieldSquadHybrid'),
-  hybridLabel: $id('hybridLabel'),
+  fieldSquadPrimary: $("fieldSquadPrimary"),
+  fieldSquadHybrid: $("fieldSquadHybrid"),
+  hybridLabel: $("hybridLabel"),
 
-  fieldPower: $id('fieldPower'),
-  fieldPowerType: $id('fieldPowerType'),
-  fieldStars: $id('fieldStars'),
+  fieldPower: $("fieldPower"),
+  fieldPowerType: $("fieldPowerType"),
+  fieldStars: $("fieldStars"),
 
-  btnModalSave: $id('btnModalSave'),
-  btnModalCancel: $id('btnModalCancel'),
+  btnModalSave: $("btnModalSave"),
+  btnModalCancel: $("btnModalCancel"),
 };
 
 let editingDocId = null;
 
 
 /* ==========================================================
-   BACKWARD COMPATIBILITY: Parse old squad strings
+   OLD SQUAD PARSER FOR BACKWARD COMPATIBILITY
 ========================================================== */
-function parseOldSquad(str) {
-  const s = String(str || "").toUpperCase();
+function parseOldSquad(s) {
+  s = String(s || "").toUpperCase();
 
   let primary = null;
   if (s.includes("TANK")) primary = "TANK";
@@ -104,95 +103,82 @@ function parseOldSquad(str) {
   return { primary, hybrid };
 }
 
+
+/* ==========================================================
+   SEARCH + FILTER + SORT + ZERO LOGIC
+========================================================== */
+const isZeroPower = (v) => Number(v) === 0;
+
 function getMemberSquadLabel(m) {
   if (m.squadPrimary) {
     return m.squadHybrid ? `HYBRID (${m.squadPrimary})` : m.squadPrimary;
   }
-  const parsed = parseOldSquad(m.squad);
-  if (parsed.primary) {
-    return parsed.hybrid ? `HYBRID (${parsed.primary})` : parsed.primary;
-  }
-  return (m.squad || "—").toUpperCase();
+
+  const p = parseOldSquad(m.squad);
+  if (p.primary) return p.hybrid ? `HYBRID (${p.primary})` : p.primary;
+
+  return m.squad || "—";
 }
 
-function normalizeMemberLocal(m) {
-  if (!m.squadPrimary) {
-    const parsed = parseOldSquad(m.squad);
-    m.squadPrimary = parsed.primary || null;
-    m.squadHybrid = !!parsed.hybrid;
-  } else {
-    m.squadHybrid = !!m.squadHybrid;
-  }
-  return m;
-}
-
-
-/* ==========================================================
-   ZERO / MISSING LOGIC
-========================================================== */
-function isZeroPower(v) {
-  return Number(v) === 0;
-}
-
-
-/* ==========================================================
-   FILTER + SORT
-========================================================== */
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
-  const f = state.filter.toUpperCase();
 
+  // FILTERING
+  const f = state.filter.toUpperCase();
   if (f !== "RESET") {
 
     if (f === "MISSING_ZERO") {
-      arr = arr.filter(m => isZeroPower(m.power));
-    }
-
-    else if (f === "APPROX") {
-      arr = arr.filter(m => (m.powerType || "").toUpperCase() === "APPROX");
-    }
-
-    else if (f === "MISSING") {
-      arr = arr.filter(m =>
-        isZeroPower(m.power) ||
-        (m.powerType || "").toUpperCase() === "APPROX"
+      arr = arr.filter((m) => isZeroPower(m.power));
+    } else if (f === "APPROX") {
+      arr = arr.filter((m) => (m.powerType || "").toUpperCase() === "APPROX");
+    } else if (f === "MISSING") {
+      arr = arr.filter(
+        (m) =>
+          isZeroPower(m.power) ||
+          (m.powerType || "").toUpperCase() === "APPROX"
       );
-    }
-
-    else {
-      arr = arr.filter(m =>
-        ((m.role || "") + " " + getMemberSquadLabel(m)).toUpperCase().includes(f)
+    } else {
+      arr = arr.filter((m) =>
+        ((m.role || "") + " " + getMemberSquadLabel(m))
+          .toUpperCase()
+          .includes(f)
       );
     }
   }
 
+  // SEARCH
   const q = state.search.toLowerCase();
   if (q) {
-    arr = arr.filter(m =>
-      (m.name + " " + m.role + " " + getMemberSquadLabel(m))
+    arr = arr.filter((m) =>
+      (
+        m.name +
+        " " +
+        m.role +
+        " " +
+        getMemberSquadLabel(m)
+      )
         .toLowerCase()
         .includes(q)
     );
   }
 
+  // SORTING
   if (state.sort === "power-desc") {
     arr.sort((a, b) => Number(b.power) - Number(a.power));
-  }
-  else if (state.sort === "power-asc") {
+  } else if (state.sort === "power-asc") {
     arr.sort((a, b) => Number(a.power) - Number(b.power));
-  }
-  else if (state.sort === "stars-desc") {
+  } else if (state.sort === "stars-desc") {
     arr.sort((a, b) => Number(b.stars) - Number(a.stars));
-  }
-  else if (state.sort === "stars-asc") {
+  } else if (state.sort === "stars-asc") {
     arr.sort((a, b) => Number(a.stars) - Number(b.stars));
-  }
-  else if (state.sort === "missing") {
+  } else if (state.sort === "missing") {
     arr.sort((a, b) => {
-      const am = isZeroPower(a.power) || (a.powerType || "") === "Approx";
-      const bm = isZeroPower(b.power) || (b.powerType || "") === "Approx";
+      const am =
+        isZeroPower(a.power) || (a.powerType || "").toUpperCase() === "APPROX";
+      const bm =
+        isZeroPower(b.power) || (b.powerType || "").toUpperCase() === "APPROX";
       if (am !== bm) return bm - am;
-      return (Number(a.power) || 0) - (Number(b.power) || 0);
+      return Number(a.power) - Number(b.power);
     });
   }
 
@@ -204,15 +190,18 @@ function filteredAndSortedMembers() {
    STATS
 ========================================================== */
 function updateStats(view) {
-  let total = view.length;
-  let sum = 0;
-  let five = 0;
-  let missing = 0;
+  let total = view.length,
+    sum = 0,
+    five = 0,
+    missing = 0;
 
-  view.forEach(m => {
+  view.forEach((m) => {
     sum += Number(m.power) || 0;
     if (Number(m.stars) === 5) five++;
-    if (isZeroPower(m.power) || (m.powerType || "").toUpperCase() === "APPROX") {
+    if (
+      isZeroPower(m.power) ||
+      (m.powerType || "").toUpperCase() === "APPROX"
+    ) {
       missing++;
     }
   });
@@ -225,7 +214,7 @@ function updateStats(view) {
 
 
 /* ==========================================================
-   RENDER
+   RENDER CARDS
 ========================================================== */
 function render() {
   const view = filteredAndSortedMembers();
@@ -239,23 +228,12 @@ function render() {
 
 
 /* ==========================================================
-   MODAL SYSTEM
+   MODAL
 ========================================================== */
-function openModal() {
-  dom.modal.classList.remove("hidden");
-}
-
-function closeModal() {
+dom.btnModalCancel.addEventListener("click", () => {
   dom.modal.classList.add("hidden");
   editingDocId = null;
-}
-
-dom.btnModalCancel?.addEventListener("click", closeModal);
-
-
-/* ==========================================================
-   ADD / EDIT SYSTEM
-========================================================== */
+});
 
 function openAddModal() {
   editingDocId = null;
@@ -271,40 +249,37 @@ function openAddModal() {
   dom.fieldPowerType.value = "Precise";
   dom.fieldStars.value = 3;
 
-  openModal();
+  dom.modal.classList.remove("hidden");
 }
 
 function openEditModal(m) {
   editingDocId = m.id;
-
   dom.modalTitle.textContent = "Edit Member";
+
   dom.fieldName.value = m.name;
   dom.fieldRole.value = m.role;
 
-  if (m.squadPrimary) {
-    dom.fieldSquadPrimary.value = m.squadPrimary;
-    dom.fieldSquadHybrid.checked = !!m.squadHybrid;
-  } else {
-    const parsed = parseOldSquad(m.squad);
-    dom.fieldSquadPrimary.value = parsed.primary || "TANK";
-    dom.fieldSquadHybrid.checked = parsed.hybrid;
-  }
+  const parsed = parseOldSquad(m.squad);
 
+  dom.fieldSquadPrimary.value = m.squadPrimary || parsed.primary || "TANK";
+  dom.fieldSquadHybrid.checked =
+    m.squadHybrid || parsed.hybrid || false;
   dom.hybridLabel.textContent = dom.fieldSquadHybrid.checked ? "Yes" : "No";
 
   dom.fieldPower.value = m.power;
   dom.fieldPowerType.value = m.powerType || "Precise";
   dom.fieldStars.value = m.stars;
 
-  openModal();
+  dom.modal.classList.remove("hidden");
 }
 
 
-/* SAVE HANDLER */
-dom.btnModalSave?.addEventListener("click", async () => {
-
+/* ==========================================================
+   SAVE MEMBER
+========================================================== */
+dom.btnModalSave.addEventListener("click", async () => {
   if (!dom.fieldName.value.trim()) {
-    alert("Name is required.");
+    alert("Name required");
     return;
   }
 
@@ -323,7 +298,7 @@ dom.btnModalSave?.addEventListener("click", async () => {
 
     power: cleanNumber(dom.fieldPower.value),
     powerType: dom.fieldPowerType.value,
-    stars: Number(dom.fieldStars.value),
+    stars: Number(dom.fieldStars.value) || 3,
     lastUpdated: serverTimestamp()
   };
 
@@ -335,11 +310,12 @@ dom.btnModalSave?.addEventListener("click", async () => {
       await updateDoc(doc(db, "members", editingDocId), data);
       await logAudit("EDIT", data.name, "", state.currentAdminName);
     }
-    closeModal();
   } catch (err) {
     console.error(err);
-    alert("Save failed.");
+    alert("Save failed");
   }
+
+  dom.modal.classList.add("hidden");
 });
 
 
@@ -354,7 +330,7 @@ async function deleteMember(m) {
     await logAudit("DELETE", m.name, "", state.currentAdminName);
   } catch (err) {
     console.error(err);
-    alert("Delete failed.");
+    alert("Delete failed");
   }
 }
 
@@ -370,23 +346,25 @@ dom.btnImport.addEventListener("click", () =>
   dom.csvInput.click()
 );
 
-dom.csvInput?.addEventListener("change", (e) => {
+dom.csvInput.addEventListener("change", (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = async (evt) => {
-    const imported = utilsParseCSV(evt.target.result);
+  reader.onload = async (ev) => {
+    const imported = utilsParseCSV(ev.target.result);
     if (!confirm(`Replace with ${imported.length} rows?`)) return;
 
+    // Delete existing
     for (const m of state.members) {
       await deleteDoc(doc(db, "members", m.id));
     }
 
+    // Insert
     for (const m of imported) {
       const parsed = parseOldSquad(m.squad);
-      const primary = parsed.primary || "TANK";
-      const hybrid = parsed.hybrid;
+      const primary = parsed.primary || m.squadPrimary || "TANK";
+      const hybrid = parsed.hybrid || m.squadHybrid || false;
 
       await addDoc(collection(db, "members"), {
         name: m.name,
@@ -396,13 +374,14 @@ dom.csvInput?.addEventListener("change", (e) => {
         squad: hybrid ? `${primary} HYBRID` : primary,
         power: cleanNumber(m.power),
         powerType: m.powerType || "Precise",
-        stars: Number(m.stars),
+        stars: Number(m.stars) || 3,
         lastUpdated: serverTimestamp()
       });
     }
 
-    alert("Import complete.");
+    alert("Import complete");
   };
+
   reader.readAsText(file);
 });
 
@@ -436,19 +415,25 @@ dom.sortButtons.forEach((btn) =>
 function subscribeMembers() {
   const qRef = query(collection(db, "members"), orderBy("name"));
   onSnapshot(qRef, (snap) => {
-    state.members = snap.docs.map((d) =>
-      normalizeMemberLocal({ id: d.id, ...d.data() })
-    );
+    state.members = snap.docs.map((d) => ({
+      id: d.id,
+      ...d.data()
+    }));
     render();
   });
 }
 
 
 /* ==========================================================
-   INIT (ADMIN PROTECTED)
+   ADMIN AUTH & INIT
 ========================================================== */
-function initAdminPanel(user) {
-  state.currentAdminName = user.email || "Admin";
+import { auth } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) return;
+
+  state.currentAdminName = user.email;
 
   subscribeMembers();
   subscribeAudit(dom.auditList);
@@ -459,16 +444,4 @@ function initAdminPanel(user) {
   });
 
   dom.btnAdd.addEventListener("click", openAddModal);
-}
-
-
-/* ==========================================================
-   AUTH STATE
-========================================================== */
-import { auth } from "./firebase-config.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-onAuthStateChanged(auth, (user) => {
-  if (!user) return;
-  initAdminPanel(user);
 });
