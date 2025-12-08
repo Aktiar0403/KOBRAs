@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>KOBRA — ADMIN ACCESS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- FONTS -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: "Inter", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format")
+        no-repeat center center / cover;
+      background-color: rgba(0, 0, 0, 0.6);
+      background-blend-mode: darken;
+
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* COBRA EYES */
+    .cobra-eyes {
+      position: absolute;
+      top: 15%;
+      display: flex;
+      justify-content: center;
+      gap: 150px;
+      opacity: 0.32;
+      animation: eyesGlow 3s infinite alternate;
+      z-index: 0;
+    }
+
+    .cobra-eyes div {
+      width: 70px;
+      height: 70px;
+      background: radial-gradient(circle,
+          rgba(0, 255, 120, 1),
+          rgba(0, 150, 70, 0.4),
+          transparent);
+      border-radius: 50%;
+      box-shadow: 0 0 35px rgba(0, 255, 120, 0.7);
+    }
+
+    @keyframes eyesGlow {
+      0% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.2); opacity: 0.55; }
+    }
+
+    /* LOGIN CARD */
+    .login-card {
+      width: 380px;
+      padding: 32px;
+      border-radius: 20px;
+      background: rgba(10, 14, 18, 0.75);
+      border: 2px solid rgba(0, 255, 120, 0.4);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 0 75px rgba(0, 255, 120, 0.45);
+      position: relative;
+      z-index: 10;
+      animation: pulse 3.2s infinite ease-in-out;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 30px rgba(0, 255, 120, 0.3); }
+      50% { box-shadow: 0 0 70px rgba(0, 255, 120, 0.8); }
+      100% { box-shadow: 0 0 30px rgba(0, 255, 120, 0.3); }
+    }
+
+    .title {
+      font-family: "Orbitron", sans-serif;
+      font-size: 34px;
+      font-weight: 900;
+      text-align: center;
+      margin-bottom: 25px;
+      color: #00ffae;
+      letter-spacing: 3px;
+      text-shadow: 0 0 25px rgba(0, 255, 174, 1);
+    }
+
+    /* Inputs */
+    input {
+      width: 100%;
+      padding: 13px;
+      margin-top: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #e9ffe9;
+    }
+
+    input::placeholder {
+      color: rgba(255, 255, 255, 0.45);
+    }
+
+    /* LOGIN BUTTON */
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 22px;
+      font-size: 18px;
+      font-weight: 800;
+      border-radius: 10px;
+      cursor: pointer;
+      border: none;
+      background: linear-gradient(90deg, #00ff9d, #00d47a);
+      color: #000;
+      transition: 0.25s;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-3px) scale(1.05);
+      background: #00ffb0;
+      box-shadow: 0 0 30px rgba(0, 255, 150, 0.9);
+    }
+
+    /* ERROR TEXT */
+    #loginError {
+      margin-top: 12px;
+      color: #ff5252;
+      font-size: 14px;
+      text-shadow: 0 0 10px rgba(255, 0, 0, 0.7);
+      min-height: 20px;
+      transition: 0.3s;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- COBRA EYES -->
+  <div class="cobra-eyes">
+    <div></div>
+    <div></div>
+  </div>
+
+  <!-- LOGIN PANEL -->
+  <div class="login-card">
+
+    <div class="title">ADMIN ACCESS</div>
+
+    <form id="adminLoginForm">
+      <input type="email" id="adminEmail" placeholder="Admin Email" required />
+      <input type="password" id="adminPassword" placeholder="Password" required />
+      <button class="login-btn" type="submit">Enter Command Center</button>
+
+      <div id="loginError"></div>
+    </form>
+
+  </div>
+
+  <!-- SCRIPTS -->
+  <script type="module">
+    import { loginAdmin } from "./js/auth.js";
+
+    const form = document.getElementById("adminLoginForm");
+    const emailEl = document.getElementById("adminEmail");
+    const passEl = document.getElementById("adminPassword");
+    const errorEl = document.getElementById("loginError");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorEl.textContent = "";
+
+      const email = emailEl.value.trim();
+      const pass = passEl.value;
+
+      const result = await loginAdmin(email, pass);
+
+      if (result.success) {
+        window.location.href = "admin.html";
+      } else {
+        errorEl.textContent = result.message.replace("Firebase:", "").trim();
+        errorEl.style.opacity = 1;
+      }
+    });
+  </script>
+
+</body>
+</html>

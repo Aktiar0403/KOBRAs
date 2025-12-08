@@ -1,6 +1,6 @@
-// js/player.js
+// player.js (Public Mode – No Authentication)
+
 import { db } from './firebase-config.js';
-import { guardPage, logout } from './auth.js';
 import { renderCards } from './cards.js';
 import {
   collection,
@@ -13,13 +13,10 @@ const state = {
   members: [],
   filter: 'RESET',
   search: '',
-  sort: 'none',
-  playerName: ''
+  sort: 'none'
 };
 
 const dom = {
-  playerName: document.getElementById('playerNameLabel'),
-  btnLogout: document.getElementById('btnLogout'),
   grid: document.getElementById('cardsGrid'),
   statTotal: document.getElementById('statTotal'),
   statAvg: document.getElementById('statAvg'),
@@ -28,6 +25,8 @@ const dom = {
   filterButtons: Array.from(document.querySelectorAll('.filter-btn')),
   sortButtons: Array.from(document.querySelectorAll('.sort-btn'))
 };
+
+// ------------------ FILTER + SORT ------------------
 
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
@@ -59,18 +58,24 @@ function filteredAndSortedMembers() {
   return arr;
 }
 
+// ------------------ HEADER STATS ------------------
+
 function updateStats(view) {
   const total = view.length;
   let sum = 0;
   let five = 0;
+
   view.forEach(m => {
     if (m.power) sum += m.power;
     if (m.stars === 5) five++;
   });
+
   dom.statTotal.textContent = total;
   dom.statAvg.textContent = total ? (sum / total).toFixed(2) : '0.00';
   dom.statFive.textContent = five;
 }
+
+// ------------------ RENDER ------------------
 
 function render() {
   const view = filteredAndSortedMembers();
@@ -78,13 +83,10 @@ function render() {
   updateStats(view);
 }
 
-function attachEvents() {
-  dom.btnLogout.addEventListener('click', async () => {
-    await logout();
-    window.location.href = '/index.html';
-  });
+// ------------------ UI EVENTS ------------------
 
-  dom.searchInput.addEventListener('input', () => {
+function attachEvents() {
+  dom.searchInput?.addEventListener('input', () => {
     state.search = dom.searchInput.value;
     render();
   });
@@ -98,12 +100,13 @@ function attachEvents() {
 
   dom.sortButtons.forEach(btn => {
     btn.addEventListener('click', () => {
-      const s = btn.dataset.sort || 'none';
-      state.sort = s === 'none' ? 'none' : s;
+      state.sort = btn.dataset.sort || 'none';
       render();
     });
   });
 }
+
+// ------------------ FIRESTORE ------------------
 
 function subscribeMembers() {
   const qRef = query(collection(db, 'members'), orderBy('name'));
@@ -119,9 +122,9 @@ function subscribeMembers() {
   });
 }
 
-guardPage('player', (user, role) => {
-  state.playerName = user.email || 'Player';
-  if (dom.playerName) dom.playerName.textContent = state.playerName;
-  attachEvents();
-  subscribeMembers();
-});
+// ------------------ INIT ------------------
+
+attachEvents();
+subscribeMembers();
+
+console.log("Player page loaded in PUBLIC MODE (no login).");
