@@ -3,7 +3,11 @@ console.log("✅ admin.js loaded successfully");
 import { db } from './firebase-config.js';
 import { guardPage, logout } from './auth.js';
 import { renderCards } from './cards.js';
-import { exportMembersToCSV as utilsExportCSV, parseCSV as utilsParseCSV, cleanNumber } from './utils.js';
+import {
+  exportMembersToCSV as utilsExportCSV,
+  parseCSV as utilsParseCSV,
+  cleanNumber
+} from './utils.js';
 import { logAudit, subscribeAudit } from './audit.js';
 
 import {
@@ -19,7 +23,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ==========================================================
-   STATE
+   APP STATE
 ========================================================== */
 const state = {
   members: [],
@@ -30,7 +34,7 @@ const state = {
 };
 
 /* ==========================================================
-   SAFE DOM GET
+   SAFE DOM GETTER
 ========================================================== */
 function $id(id) {
   const el = document.getElementById(id);
@@ -42,7 +46,6 @@ function $id(id) {
    DOM REFERENCES
 ========================================================== */
 const dom = {
-  // Header
   btnLogout: $id('btnLogout'),
 
   // Stats
@@ -51,10 +54,8 @@ const dom = {
   statFive: $id('statFive'),
   statMissing: $id('statMissing'),
 
-  // Filters
+  // Filters + Sort
   filterButtons: Array.from(document.querySelectorAll('.filter-btn') || []),
-
-  // Sort
   sortButtons: Array.from(document.querySelectorAll('.sort-btn') || []),
 
   // Search
@@ -91,17 +92,16 @@ let editingDocId = null;
 /* ==========================================================
    TIMESTAMP UTILS
 ========================================================== */
-function timeAgoFromTimestamp(tsLike) {
-  if (!tsLike) return "never";
-
+function timeAgoFromTimestamp(ts) {
+  if (!ts) return "never";
   let ms;
-  if (typeof tsLike === "number") ms = tsLike;
-  else if (tsLike?.toMillis) ms = tsLike.toMillis();
-  else if (tsLike instanceof Date) ms = tsLike.getTime();
+
+  if (typeof ts === "number") ms = ts;
+  else if (ts?.toMillis) ms = ts.toMillis();
+  else if (ts instanceof Date) ms = ts.getTime();
   else return "never";
 
-  const now = Date.now();
-  const diffSec = Math.floor((now - ms) / 1000);
+  const diffSec = Math.floor((Date.now() - ms) / 1000);
 
   if (diffSec < 60) return "just now";
   if (diffSec < 3600) return `${Math.floor(diffSec / 60)} mins ago`;
@@ -112,42 +112,50 @@ function timeAgoFromTimestamp(tsLike) {
 function refreshAllTimestamps() {
   document.querySelectorAll("[data-lastts]").forEach(el => {
     const raw = el.getAttribute("data-lastts");
-    if (!raw) {
-      el.textContent = "Updated never";
-      return;
-    }
-    const ms = Number(raw);
-    el.textContent = "Updated " + timeAgoFromTimestamp(ms);
+    if (!raw) return el.textContent = "Updated never";
+    el.textContent = "Updated " + timeAgoFromTimestamp(Number(raw));
   });
 }
 setInterval(refreshAllTimestamps, 60000);
 
 /* ==========================================================
-   FILTER + SORT PROCESSING
+   FILTER + SORT ENGINE  (FULLY FIXED)
 ========================================================== */
+function isZeroPower(value) {
+  if (value === 0) return true;
+  if (value === "0") return true;
+  if (typeof value === "string" && value.trim() === "0") return true;
+  return Number(value) === 0;
+}
+
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
 
-  /* ---------------- FILTERS ---------------- */
+  /* ---------------- FILTERING ---------------- */
   if (state.filter !== "RESET") {
     const f = state.filter.toUpperCase();
 
-    // 1️⃣ Zero Power Only
+    // 🔴 0 Power Filter (FULL FIX)
     if (f === "MISSING_ZERO") {
-      arr = arr.filter(m => Number(m.power) === 0);
+      arr = arr.filter(m => isZeroPower(m.power));
     }
-    // 2️⃣ Approx Power Only
+
+    // ⚪ Approx Only
     else if (f === "APPROX") {
-      arr = arr.filter(m => (m.powerType || "").toUpperCase() === "APPROX");
-    }
-    // 3️⃣ Missing = 0 + Approx
-    else if (f === "MISSING") {
       arr = arr.filter(m =>
-        Number(m.power) === 0 ||
         (m.powerType || "").toUpperCase() === "APPROX"
       );
     }
-    // Role / Squad filters
+
+    // 🟣 Missing = 0 Power + Approx
+    else if (f === "MISSING") {
+      arr = arr.filter(m =>
+        isZeroPower(m.power) ||
+        (m.powerType || "").toUpperCase() === "APPROX"
+      );
+    }
+
+    // Normal Filters: Role / Squad
     else {
       arr = arr.filter(m =>
         ((m.role || "") + (m.squad || "")).toUpperCase().includes(f)
@@ -163,25 +171,24 @@ function filteredAndSortedMembers() {
     );
   }
 
-  /* ---------------- SORT ---------------- */
+  /* ---------------- SORTING ---------------- */
   if (state.sort === "power-desc") {
-    arr.sort((a, b) => (b.power || 0) - (a.power || 0));
+    arr.sort((a, b) => (Number(b.power) || 0) - (Number(a.power) || 0));
   }
   else if (state.sort === "power-asc") {
-    arr.sort((a, b) => (a.power || 0) - (b.power || 0));
+    arr.sort((a, b) => (Number(a.power) || 0) - (Number(b.power) || 0));
   }
   else if (state.sort === "stars-desc") {
-    arr.sort((a, b) => (b.stars || 0) - (a.stars || 0));
+    arr.sort((a, b) => (Number(b.stars) || 0) - (Number(a.stars) || 0));
   }
   else if (state.sort === "stars-asc") {
-    arr.sort((a, b) => (a.stars || 0) - (b.stars || 0));
+    arr.sort((a, b) => (Number(a.stars) || 0) - (Number(b.stars) || 0));
   }
-  // Missing First sort
   else if (state.sort === "missing") {
     arr.sort((a, b) => {
-      const aMiss = Number(a.power) === 0 || (a.powerType || "") === "Approx" ? 1 : 0;
-      const bMiss = Number(b.power) === 0 || (b.powerType || "") === "Approx" ? 1 : 0;
-      if (aMiss !== bMiss) return bMiss - aMiss;
+      const am = isZeroPower(a.power) || (a.powerType || "") === "Approx";
+      const bm = isZeroPower(b.power) || (b.powerType || "") === "Approx";
+      if (am !== bm) return bm - am;
       return (Number(a.power) || 0) - (Number(b.power) || 0);
     });
   }
@@ -190,33 +197,33 @@ function filteredAndSortedMembers() {
 }
 
 /* ==========================================================
-   UPDATE STAT CARDS
+   STATS UPDATE
 ========================================================== */
 function updateStats(viewMembers) {
   let total = viewMembers.length;
   let sum = 0;
-  let fiveStar = 0;
+  let fiveStars = 0;
   let missing = 0;
 
   viewMembers.forEach(m => {
     const p = Number(m.power) || 0;
     sum += p;
 
-    if (Number(m.stars) === 5) fiveStar++;
+    if (Number(m.stars) === 5) fiveStars++;
 
-    if (p === 0 || (m.powerType || "").toUpperCase() === "APPROX") {
+    if (isZeroPower(m.power) || (m.powerType || "").toUpperCase() === "APPROX") {
       missing++;
     }
   });
 
   dom.statTotal.textContent = total;
   dom.statAvg.textContent = total ? (sum / total).toFixed(2) : "0.00";
-  dom.statFive.textContent = fiveStar;
+  dom.statFive.textContent = fiveStars;
   dom.statMissing.textContent = missing;
 }
 
 /* ==========================================================
-   RENDER MEMBERS
+   RENDER ENGINE
 ========================================================== */
 function render() {
   const view = filteredAndSortedMembers();
@@ -232,7 +239,7 @@ function render() {
 }
 
 /* ==========================================================
-   MODAL HANDLING
+   MODAL SYSTEM
 ========================================================== */
 function ensureModalRefs() {
   dom.modalBackdrop = dom.modal.querySelector(".modal-backdrop");
@@ -242,7 +249,7 @@ function ensureModalRefs() {
 function openModal() {
   ensureModalRefs();
   dom.modal.classList.remove("hidden");
-  setTimeout(() => dom.fieldName.focus(), 50);
+  setTimeout(() => dom.fieldName?.focus(), 30);
 }
 
 function closeModal() {
@@ -258,25 +265,27 @@ dom.btnModalCancel?.addEventListener("click", closeModal);
 function openAddModal() {
   editingDocId = null;
   dom.modalTitle.textContent = "Add Member";
+
   dom.fieldName.value = "";
   dom.fieldRole.value = "";
   dom.fieldSquad.value = "";
   dom.fieldPower.value = "";
   dom.fieldPowerType.value = "Precise";
-  dom.fieldStars.value = "3";
+  dom.fieldStars.value = 3;
+
   openModal();
 }
 
-function openEditModalForMember(member) {
-  editingDocId = member.id;
-  dom.modalTitle.textContent = "Edit Member";
+function openEditModalForMember(m) {
+  editingDocId = m.id;
 
-  dom.fieldName.value = member.name || "";
-  dom.fieldRole.value = member.role || "";
-  dom.fieldSquad.value = member.squad || "";
-  dom.fieldPower.value = member.power ?? "";
-  dom.fieldPowerType.value = member.powerType || "Precise";
-  dom.fieldStars.value = member.stars ?? 3;
+  dom.modalTitle.textContent = "Edit Member";
+  dom.fieldName.value = m.name || "";
+  dom.fieldRole.value = m.role || "";
+  dom.fieldSquad.value = m.squad || "";
+  dom.fieldPower.value = m.power ?? "";
+  dom.fieldPowerType.value = m.powerType || "Precise";
+  dom.fieldStars.value = m.stars ?? 3;
 
   openModal();
 }
@@ -297,7 +306,7 @@ async function saveMemberFromModal() {
 
   try {
     if (!editingDocId) {
-      const ref = await addDoc(collection(db, "members"), data);
+      await addDoc(collection(db, "members"), data);
       await logAudit("ADD", name, "", state.currentAdminName);
     } else {
       await updateDoc(doc(db, "members", editingDocId), data);
@@ -305,12 +314,9 @@ async function saveMemberFromModal() {
     }
     closeModal();
   } catch (err) {
-    console.error(err);
     alert("Save failed.");
   }
 }
-
-dom.btnModalSave?.addEventListener("click", saveMemberFromModal);
 
 /* ==========================================================
    DELETE MEMBER
@@ -321,13 +327,12 @@ async function deleteMember(member) {
     await deleteDoc(doc(db, "members", member.id));
     await logAudit("DELETE", member.name, "", state.currentAdminName);
   } catch (err) {
-    console.error(err);
     alert("Delete failed.");
   }
 }
 
 /* ==========================================================
-   CSV IMPORT / EXPORT
+   IMPORT / EXPORT CSV
 ========================================================== */
 dom.btnExport?.addEventListener("click", () => utilsExportCSV(state.members));
 
@@ -339,34 +344,27 @@ dom.csvInput?.addEventListener("change", e => {
 
   const reader = new FileReader();
   reader.onload = async evt => {
-    try {
-      const imported = utilsParseCSV(evt.target.result);
+    const imported = utilsParseCSV(evt.target.result);
 
-      if (!confirm(`Replace data with ${imported.length} rows?`)) return;
+    if (!confirm(`Replace with ${imported.length} rows?`)) return;
 
-      // Delete existing
-      for (const m of state.members) {
-        await deleteDoc(doc(db, "members", m.id));
-      }
-
-      // Add new
-      for (const m of imported) {
-        await addDoc(collection(db, "members"), {
-          name: m.name,
-          role: m.role,
-          squad: m.squad,
-          power: cleanNumber(m.power),
-          powerType: m.powerType || "Precise",
-          stars: Number(m.stars) || 3,
-          lastUpdated: serverTimestamp()
-        });
-      }
-
-      alert("Import successful!");
-    } catch (err) {
-      console.error(err);
-      alert("Import failed!");
+    for (const m of state.members) {
+      await deleteDoc(doc(db, "members", m.id));
     }
+
+    for (const m of imported) {
+      await addDoc(collection(db, "members"), {
+        name: m.name,
+        role: m.role,
+        squad: m.squad,
+        power: cleanNumber(m.power),
+        powerType: m.powerType || "Precise",
+        stars: Number(m.stars) || 3,
+        lastUpdated: serverTimestamp()
+      });
+    }
+
+    alert("Import complete.");
   };
   reader.readAsText(file);
 });
@@ -394,7 +392,7 @@ dom.sortButtons.forEach(btn =>
 );
 
 /* ==========================================================
-   FIREBASE SUBSCRIBE
+   FIREBASE LIVE SYNC
 ========================================================== */
 function subscribeMembers() {
   const qRef = query(collection(db, "members"), orderBy("name"));
@@ -405,17 +403,18 @@ function subscribeMembers() {
 }
 
 /* ==========================================================
-   INITIALIZE PAGE
+   INIT
 ========================================================== */
-guardPage("admin", (user, role) => {
+guardPage("admin", (user) => {
   state.currentAdminName = user.email || "Admin";
+
   subscribeMembers();
   subscribeAudit(dom.auditList);
 
-  dom.btnLogout.addEventListener("click", async () => {
+  dom.btnLogout?.addEventListener("click", async () => {
     await logout();
     location.href = "/index.html";
   });
 
-  dom.btnAdd.addEventListener("click", openAddModal);
+  dom.btnAdd?.addEventListener("click", openAddModal);
 });
