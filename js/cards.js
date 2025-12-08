@@ -1,11 +1,10 @@
 // ==========================
 // FULL cards.js (FINAL BUILD)
-// Includes:
-// - Glossy Cards + Neon Border + Glow + 3D Tilt
-// - Squad Icon System (Thin Neon Ring, 44px)
-// - Right-Side Icon Placement Below POWER
-// - Auto-shrink on mobile (M1)
-// - Hybrid System + Backward Compatibility
+// - Square Icon
+// - G2 6px Gold Border for Hybrid
+// - Thick Gold Glow for Hybrid
+// - Normal squad glow for Tank / Air / Missile
+// - Gloss + 3D Tilt + Neon Effects
 // ==========================
 
 /* Add keyframes once */
@@ -15,76 +14,58 @@ styleTag.innerHTML = `
   0% { top:-160%; left:-160%; }
   100% { top:160%; left:160%; }
 }
-
-@keyframes neonPulse {
-  0% { transform:scale(1); opacity:1; }
-  50% { transform:scale(1.05); opacity:0.8; }
-  100% { transform:scale(1); opacity:1; }
-}
 `;
 document.head.appendChild(styleTag);
 
-/* ==============================
-   BACKWARD-COMPATIBLE SQUAD PARSER
-   ============================== */
+/* =======================================================
+   GOLD CONSTANTS FOR HYBRID (G2 THICK BORDER)
+======================================================= */
+const GOLD = {
+  neon: "rgba(255, 210, 60, 1)",
+  neonLight: "rgba(255, 210, 60, 0.85)",
+  border: "rgba(255, 210, 60, 1)"
+};
 
-function parseOldSquad(str) {
-  const s = String(str || "").toUpperCase();
-
-  let primary = null;
-  if (s.includes("TANK")) primary = "TANK";
-  else if (s.includes("AIR")) primary = "AIR";
-  else if (s.includes("MISSILE")) primary = "MISSILE";
-
-  const hybrid = s.includes("HYBRID");
-
-  return { primary, hybrid };
-}
-
-/* ==============================
-   NEW STRUCTURED PROPS
-   ============================== */
-
+/* =======================================================
+   SQUAD COLOR + ICON MAP
+======================================================= */
 function squadPillProps(primary, hybrid) {
+
   const base = {
     TANK: {
-      bg: "rgba(10,102,255,0.12)",
-      fg: "rgba(10,102,255,0.95)",
-      border: "rgba(10,102,255,0.25)",
+      icon: "/assets/squad-icons/tank.png",
       neon: "rgba(10,102,255,0.85)",
       neonLight: "rgba(10,102,255,0.45)",
-      icon: "/assets/squad-icons/tank.png"
-    },
-    MISSILE: {
-      bg: "rgba(255,50,50,0.12)",
-      fg: "rgba(255,80,80,0.95)",
-      border: "rgba(255,50,50,0.25)",
-      neon: "rgba(255,50,50,0.85)",
-      neonLight: "rgba(255,50,50,0.45)",
-      icon: "/assets/squad-icons/missile.png"
+      border: "rgba(10,102,255,0.25)",
+      bg: "rgba(10,102,255,0.12)",
+      fg: "rgba(10,102,255,0.95)"
     },
     AIR: {
-      bg: "rgba(138,43,226,0.12)",
-      fg: "rgba(170,120,255,0.95)",
-      border: "rgba(138,43,226,0.25)",
+      icon: "/assets/squad-icons/air.png",
       neon: "rgba(138,43,226,0.85)",
       neonLight: "rgba(138,43,226,0.45)",
-      icon: "/assets/squad-icons/air.png"
+      border: "rgba(138,43,226,0.25)",
+      bg: "rgba(138,43,226,0.12)",
+      fg: "rgba(170,120,255,0.95)"
+    },
+    MISSILE: {
+      icon: "/assets/squad-icons/missile.png",
+      neon: "rgba(255,50,50,0.85)",
+      neonLight: "rgba(255,50,50,0.45)",
+      border: "rgba(255,50,50,0.25)",
+      bg: "rgba(255,50,50,0.12)",
+      fg: "rgba(255,80,80,0.95)"
     }
   };
 
-  const hybridIcon = (p) =>
-    `/assets/squad-icons/hybrid-${p.toLowerCase()}.png`;
-
   if (primary && hybrid) {
-    const p = base[primary];
     return {
-      bg: p.bg,
-      fg: p.fg,
-      border: p.border,
-      neon: p.neon,
-      neonLight: p.neonLight,
-      icon: hybridIcon(primary),
+      icon: base[primary].icon,  // SAME ICON but GOLD glow
+      neon: GOLD.neon,
+      neonLight: GOLD.neonLight,
+      border: GOLD.border,
+      bg: "rgba(255,210,60,0.12)",
+      fg: "rgba(255,230,150,1)",
       label: `HYBRID (${primary})`
     };
   }
@@ -97,30 +78,35 @@ function squadPillProps(primary, hybrid) {
   }
 
   return {
-    bg: "rgba(255,255,255,0.05)",
-    fg: "rgba(255,255,255,0.65)",
-    border: "rgba(255,255,255,0.12)",
+    icon: "/assets/squad-icons/default.png",
     neon: "rgba(255,255,255,0.6)",
     neonLight: "rgba(255,255,255,0.25)",
-    icon: "/assets/squad-icons/default.png",
+    border: "rgba(255,255,255,0.12)",
+    bg: "rgba(255,255,255,0.05)",
+    fg: "rgba(255,255,255,0.65)",
     label: "—"
   };
 }
 
-/* Wrapper combining NEW + OLD compatibility */
-function getSquadInfo(m) {
-  if (m.squadPrimary) {
-    return squadPillProps(m.squadPrimary, !!m.squadHybrid);
-  }
+/* =======================================================
+   PARSE OLD SQUAD FIELD
+======================================================= */
+function parseOldSquad(str) {
+  const s = String(str || "").toUpperCase();
+  let primary = null;
 
-  const parsed = parseOldSquad(m.squad);
-  return squadPillProps(parsed.primary, parsed.hybrid);
+  if (s.includes("TANK")) primary = "TANK";
+  else if (s.includes("AIR")) primary = "AIR";
+  else if (s.includes("MISSILE")) primary = "MISSILE";
+
+  const hybrid = s.includes("HYBRID");
+
+  return { primary, hybrid };
 }
 
-/* ===========================
+/* =======================================================
    MAIN CARD RENDER FUNCTION
-   =========================== */
-
+======================================================= */
 export function renderCards(gridEl, members, options = {}) {
   gridEl.innerHTML = "";
   const showAdminActions = !!options.showAdminActions;
@@ -129,10 +115,11 @@ export function renderCards(gridEl, members, options = {}) {
     const id = m.id || "";
     const fullName = m.name || "";
     const role = m.role || "";
-    const stars = Number(m.stars) || 1;
 
-    const mainName = fullName.replace(/\(.+\)/, "").trim();
-    const bracketName = (fullName.match(/\(.+\)/)?.[0] || "").trim();
+    const primary = m.squadPrimary || parseOldSquad(m.squad).primary;
+    const hybrid = m.squadHybrid || parseOldSquad(m.squad).hybrid;
+
+    const squadInfo = squadPillProps(primary, hybrid);
 
     const power =
       m.power !== undefined && m.power !== null
@@ -141,15 +128,17 @@ export function renderCards(gridEl, members, options = {}) {
 
     const powerType = m.powerType || "Precise";
 
-    let lastTsMs = "";
-    if (m.lastUpdated?.toMillis) lastTsMs = m.lastUpdated.toMillis();
+    let lastTsMs = m.lastUpdated?.toMillis ? m.lastUpdated.toMillis() : "";
     const updatedLabel = lastTsMs
       ? "Updated " + timeAgoInitial(lastTsMs)
       : "Updated never";
 
-    const squadInfo = getSquadInfo(m);
+    const mainName = fullName.replace(/\(.+\)/, "").trim();
+    const bracketName = (fullName.match(/\(.+\)/)?.[0] || "").trim();
 
-    const glowIntensity = Math.min(45, Number(power) * 0.9);
+    const glowIntensity = hybrid
+      ? 55 // stronger for hybrid
+      : Math.min(45, Number(power) * 0.9);
 
     const card = document.createElement("div");
     card.className = "member-card";
@@ -160,18 +149,16 @@ export function renderCards(gridEl, members, options = {}) {
       padding:14px;
       border-radius:16px;
       background: linear-gradient(145deg, rgba(30,33,40,0.75), rgba(18,20,24,0.75));
-      backdrop-filter: blur(10px) saturate(180%);
       border: 2px solid ${squadInfo.neon};
       box-shadow:
-          0 0 ${glowIntensity}px ${squadInfo.neonLight},
-          inset 0 0 20px rgba(255,255,255,0.06);
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
+        0 0 ${glowIntensity}px ${squadInfo.neonLight},
+        inset 0 0 20px rgba(255,255,255,0.06);
       position: relative;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
       overflow: hidden;
-      display:flex;
-      flex-direction:column;
     `;
 
+    // GLOSS overlay
     const gloss = document.createElement("div");
     gloss.style.cssText = `
       position:absolute;
@@ -179,16 +166,15 @@ export function renderCards(gridEl, members, options = {}) {
       left:-160%;
       width:400%;
       height:400%;
+      opacity:0;
+      transform:rotate(25deg);
       background: linear-gradient(
         115deg,
         transparent 0%,
-        rgba(255,255,255,0.10) 20%,
-        rgba(255,255,255,0.22) 30%,
+        rgba(255,255,255,0.18) 20%,
+        rgba(255,255,255,0.28) 30%,
         transparent 60%
       );
-      opacity:0;
-      transform:rotate(25deg);
-      pointer-events:none;
       transition:opacity .3s ease;
     `;
     gloss.className = "gloss-overlay";
@@ -197,72 +183,68 @@ export function renderCards(gridEl, members, options = {}) {
     card.onmouseover = () => {
       gloss.style.animation = "glossMove 1.4s linear forwards";
       gloss.style.opacity = "1";
-      card.style.transform = "translateY(-6px) rotateX(6deg) rotateY(6deg)";
-      card.style.boxShadow = `
-        0 0 ${glowIntensity + 20}px ${squadInfo.neon},
-        0 12px 32px rgba(0,0,0,0.45)
-      `;
+      card.style.transform = "translateY(-6px) rotateX(6deg)";
     };
 
     card.onmouseout = () => {
       gloss.style.animation = "";
       gloss.style.opacity = "0";
       card.style.transform = "translateY(0)";
-      card.style.boxShadow = `
-        0 0 ${glowIntensity}px ${squadInfo.neonLight},
-        inset 0 0 20px rgba(255,255,255,0.06)
-      `;
     };
 
-    // ==========================================
-    // HTML Structure With Right-Side Icon
-    // ==========================================
-
-    card.innerHTML = `
+    // ================================
+    // CARD INNER HTML
+    // ================================
+    card.innerHTML += `
       <div style="display:flex;">
 
-        <!-- LEFT CONTENT -->
-        <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+        <!-- LEFT SIDE OF CARD -->
+        <div style="flex:1; min-width:0;">
 
           <div style="display:flex; gap:0.75rem;">
+
             <div style="
               width:44px;height:44px;border-radius:50%;
               background:#ccc;display:flex;align-items:center;justify-content:center;
-              font-weight:600;color:#222; flex-shrink:0;">
+              font-weight:600;color:#222; flex-shrink:0;
+            ">
               ${generateInitialsAvatar(fullName)}
             </div>
 
-            <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
+            <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
 
               <!-- NAME + POWER -->
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:1rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              <div style="display:flex; justify-content:space-between;">
+                <div style="
+                  font-size:1rem; font-weight:600;
+                  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+                ">
                   ${escapeHtml(mainName)}
                 </div>
 
-                <div style="flex-shrink:0; width:75px; text-align:right;">
+                <div style="width:75px; text-align:right;">
                   <div style="font-weight:700; font-size:1.15rem;">
                     ${escapeHtml(power)}
                   </div>
-                  <div style="font-size:0.72rem; margin-top:3px; color:${
-                    powerType === "Approx"
+                  <div style="
+                    font-size:0.72rem; margin-top:3px;
+                    color:${powerType === "Approx"
                       ? "rgba(255,210,0,0.95)"
-                      : "rgba(0,255,180,0.9)"
-                  }; font-weight:600;">
+                      : "rgba(0,255,180,0.9)"};
+                    font-weight:600;
+                  ">
                     ${escapeHtml(powerType)}
                   </div>
                 </div>
               </div>
 
-              ${
-                bracketName
-                  ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.55);margin-top:2px;">
-                       ${escapeHtml(bracketName)}
-                     </div>`
-                  : ""
-              }
+              ${bracketName
+                ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.55);">
+                     ${escapeHtml(bracketName)}
+                   </div>`
+                : ""}
 
-              <div style="font-size:0.85rem; opacity:0.75; margin-top:2px;">
+              <div style="font-size:0.85rem; opacity:0.75;">
                 ${escapeHtml(role)}
               </div>
 
@@ -270,11 +252,11 @@ export function renderCards(gridEl, members, options = {}) {
                 <span style="
                   padding:4px 8px;
                   border-radius:999px;
-                  font-size:0.78rem;
-                  font-weight:600;
                   background:${squadInfo.bg};
                   color:${squadInfo.fg};
                   border:1px solid ${squadInfo.border};
+                  font-size:0.78rem;
+                  font-weight:600;
                 ">
                   ${escapeHtml(squadInfo.label)}
                 </span>
@@ -288,9 +270,10 @@ export function renderCards(gridEl, members, options = {}) {
 
             </div>
           </div>
+
         </div>
 
-        <!-- RIGHT-SIDE BIG ICON AREA -->
+        <!-- RIGHT-SIDE ICON (SQUARE) -->
         <div style="
           width:70px;
           display:flex;
@@ -299,30 +282,29 @@ export function renderCards(gridEl, members, options = {}) {
           padding-left:6px;
         ">
           <div style="
-  width:50px;
-  height:50px;
-  border-radius:6px;           /* SQUARE STYLE */
-  border:2px solid ${squadInfo.neon};
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(255,255,255,0.03);
-  box-shadow:0 0 8px ${squadInfo.neonLight};
-">
-  <img src="${squadInfo.icon}" 
-       style="
-         width:44px;
-         height:44px;
-         object-fit:contain;
-         filter: drop-shadow(0 0 6px ${squadInfo.neon});
-       ">
-</div>
-
+            width:50px;
+            height:50px;
+            border-radius:6px;
+            border:${hybrid ? "6px" : "2px"} solid ${squadInfo.neon};
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(255,255,255,0.03);
+            box-shadow:0 0 16px ${hybrid ? GOLD.neonLight : squadInfo.neonLight};
+          ">
+            <img src="${squadInfo.icon}" 
+                 style="
+                   width:44px;
+                   height:44px;
+                   object-fit:contain;
+                   filter: drop-shadow(0 0 ${hybrid ? "10px" : "6px"} ${squadInfo.neon});
+                 ">
+          </div>
         </div>
 
       </div>
 
-      <!-- ADMIN BUTTONS -->
+      <!-- ADMIN BTNS -->
       ${
         showAdminActions
           ? `<div style="margin-top:10px; display:flex; gap:0.5rem;">
@@ -333,6 +315,7 @@ export function renderCards(gridEl, members, options = {}) {
       }
     `;
 
+    // Admin actions handlers
     if (showAdminActions) {
       card.querySelector(".btn-edit")
         ?.addEventListener("click", () => options.onEdit?.(m));
@@ -344,15 +327,15 @@ export function renderCards(gridEl, members, options = {}) {
   });
 }
 
-/* ================= HELPERS ================= */
-
+/* =======================================================
+   HELPERS
+======================================================= */
 function timeAgoInitial(ms) {
-  const now = Date.now();
-  const sec = (now - ms) / 1000;
-  if (sec < 60) return "just now";
-  if (sec < 3600) return Math.floor(sec / 60) + " mins ago";
-  if (sec < 86400) return Math.floor(sec / 3600) + " hrs ago";
-  return Math.floor(sec / 86400) + " days ago";
+  const diff = (Date.now() - ms) / 1000;
+  if (diff < 60) return "just now";
+  if (diff < 3600) return Math.floor(diff / 60) + " mins ago";
+  if (diff < 86400) return Math.floor(diff / 3600) + " hrs ago";
+  return Math.floor(diff / 86400) + " days ago";
 }
 
 function generateInitialsAvatar(name) {
