@@ -1,67 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>KOBRAs</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8" />
+  <title>KOBRA MEMBERS</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="./css/style.css" />
 </head>
 
 <body class="bg">
+
   <div class="app-shell">
 
-    <header class="topbar">
-      <div>
-        <h1 class="kobra-title">KOBRA Members</h1>
-        <p class="muted small">Manage full squad roster, leaderboard & audit trail.</p>
-        <p class="muted xsmall">Logged in as: <span id="adminNameLabel">—</span></p>
+    <!-- ================= HEADER (CENTERED) ================= -->
+    <header class="topbar" style="text-align:center; padding:20px 0;">
+
+      <h1 class="kobra-title" style="font-size:32px; margin:0;">KOBRA MEMBERS</h1>
+
+      <div style="
+          display:flex;
+          justify-content:center;
+          align-items:center;
+          gap:16px;
+          margin-top:10px;
+        ">
+        <button id="btnProfile" class="btn">User Profile</button>
+        <button id="btnLogout" class="btn danger">Logout</button>
       </div>
-      <div class="topbar-actions">
-        <button id="btnLogout" class="btn">Logout</button>
-      </div>
+
     </header>
 
     <main>
 
-      <!-- CONTROLS SECTION -->
+      <!-- ==============================================================
+           STATS ROW  (Option C → Total | Avg | ★★★★★ | Missing)
+      ============================================================== -->
       <section class="controls">
 
-        <!-- Action buttons -->
-        <div class="controls-row">
-          <button id="btnAddMember" class="btn primary">➕ Add Member</button>
-          <button id="btnExportCSV" class="btn">📤 Export CSV</button>
-          <button id="btnImportCSV" class="btn">📥 Import CSV</button>
-        </div>
+        <div class="controls-row stats-dashboard">
 
-        <!-- Stats pills -->
-        <div class="controls-row">
-          <div class="stat-pill">Total: <span id="statTotal">0</span></div>
-          <div class="stat-pill">Avg Power: <span id="statAvg">0</span></div>
-          <div class="stat-pill">★★★★★: <span id="statFive">0</span></div>
-        </div>
-
-        <!-- Missing / Approx Summary (NEW UI BLOCK) -->
-        <div class="controls-row">
-          <div class="stat-pill danger" id="summaryMissing">
-            Missing (0 Power): <span id="statZeroPower">0</span>
+          <div class="stat-card">
+            <div class="stat-label">Total</div>
+            <div class="stat-value" id="statTotal">0</div>
           </div>
 
-          <div class="stat-pill" style="background:#444;" id="summaryApprox">
-            Approx Power: <span id="statApprox">0</span>
+          <div class="stat-card">
+            <div class="stat-label">Avg Power</div>
+            <div class="stat-value" id="statAvg">0.00</div>
           </div>
 
-          <div class="stat-pill" id="summaryTotalUncertain">
-            Total Uncertain: <span id="statUncertain">0</span>
+          <div class="stat-card">
+            <div class="stat-label">★★★★★</div>
+            <div class="stat-value" id="statFive">0</div>
           </div>
+
+          <div class="stat-card danger">
+            <div class="stat-label">Missing (0 + Approx)</div>
+            <div class="stat-value" id="statMissing">0</div>
+          </div>
+
         </div>
 
-        <!-- Filters and Sorting -->
-        <div class="controls-row">
+        <!-- ==============================================================
+             MISSING FILTER ROW
+        ============================================================== -->
+        <div class="controls-row" style="justify-content:center; gap:14px;">
 
-          <!-- FILTERS including NEW special pills -->
+          <button class="btn pill filter-btn"
+            data-filter="MISSING_ZERO"
+            style="background:#8b0000;color:#fff;">
+            🔴 0 Power
+          </button>
+
+          <button class="btn pill filter-btn"
+            data-filter="APPROX"
+            style="background:#555;color:#fff;">
+            ⚪ Approx Power
+          </button>
+
+          <button class="btn pill filter-btn"
+            data-filter="MISSING"
+            style="background:#9b009b;color:#fff;">
+            🟣 Missing (0 + Approx)
+          </button>
+
+        </div>
+
+        <!-- ==============================================================
+             SEARCH + FILTERS + ADD + IMPORT/EXPORT
+        ============================================================== -->
+        <div class="controls-row">
+          <input id="searchInput" class="search-input"
+            placeholder="Search name, role or squad..." />
+        </div>
+
+        <div class="controls-row">
           <div class="filter-group">
             <span class="muted xsmall">Filter:</span>
-
             <button class="btn pill filter-btn" data-filter="RESET">All</button>
             <button class="btn pill filter-btn" data-filter="TANK">TANK</button>
             <button class="btn pill filter-btn" data-filter="AIR">AIR</button>
@@ -69,46 +103,18 @@
             <button class="btn pill filter-btn" data-filter="R3">R3</button>
             <button class="btn pill filter-btn" data-filter="R4">R4</button>
             <button class="btn pill filter-btn" data-filter="R5">R5</button>
-
-            <!-- NEW RED PILL: Missing -->
-            <button class="btn pill filter-btn" 
-              data-filter="MISSING_ZERO" 
-              style="background:#8b0000;color:#fff;">
-              🔴 0 Power
-            </button>
-
-            <!-- NEW GREY PILL: Approx -->
-            <button class="btn pill filter-btn" 
-              data-filter="APPROX" 
-              style="background:#555;color:#fff;">
-              ⚪ Approx Power
-            </button>
           </div>
 
-          <!-- SORT -->
-          <div class="sort-group">
-            <span class="muted xsmall">Sort:</span>
-            <button class="btn pill sort-btn" data-sort="power-desc">Power ↓</button>
-            <button class="btn pill sort-btn" data-sort="power-asc">Power ↑</button>
-            <button class="btn pill sort-btn" data-sort="stars-desc">Activity ★↓</button>
-            <button class="btn pill sort-btn" data-sort="stars-asc">Activity ★↑</button>
-
-            <!-- NEW SORT: Missing First -->
-            <button class="btn pill sort-btn" data-sort="missing">Missing First</button>
-
-            <button class="btn pill sort-btn" data-sort="none">Clear</button>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button id="btnAddMember" class="btn primary">➕ Add Member</button>
+            <button id="btnImportCSV" class="btn">📥 Import CSV</button>
+            <button id="btnExportCSV" class="btn">📤 Export CSV</button>
           </div>
-
-        </div>
-
-        <!-- SEARCH -->
-        <div class="controls-row">
-          <input id="searchInput" class="search-input" placeholder="Search name, role or squad..." />
         </div>
 
       </section>
 
-      <!-- MAIN LAYOUT -->
+      <!-- ================= MEMBERS LIST + AUDIT ================= -->
       <section class="layout">
 
         <div class="cards-panel">
@@ -126,10 +132,10 @@
     </main>
   </div>
 
-  <!-- CSV Import -->
-  <input type="file" id="csvFileInput" accept=".csv" style="display:none" />
+  <!-- CSV IMPORT -->
+  <input type="file" id="csvFileInput" accept=".csv" style="display:none;" />
 
-  <!-- Member Modal -->
+  <!-- ================= MEMBER MODAL ================= -->
   <div id="memberModal" class="modal hidden">
     <div class="modal-backdrop"></div>
     <div class="modal-box">
@@ -137,26 +143,25 @@
       <h2 id="modalTitle">Add Member</h2>
 
       <label class="field-label">Name</label>
-      <input id="fieldName" />
+      <input id="fieldName"/>
 
-      <label class="field-label">Role (e.g. R3 / R4 / R5 / R4 RECRUITER)</label>
-      <input id="fieldRole" />
+      <label class="field-label">Role (R3 / R4 / R5 / RECRUITER)</label>
+      <input id="fieldRole"/>
 
       <label class="field-label">Squad Type (TANK / AIR / MISSILE / HYBRID)</label>
-      <input id="fieldSquad" />
+      <input id="fieldSquad"/>
 
       <label class="field-label">Power</label>
-      <input id="fieldPower" type="number" step="0.1" />
+      <input id="fieldPower" type="number" step="0.1"/>
 
       <label class="field-label">Power Type</label>
       <select id="fieldPowerType">
         <option value="Precise">Precise</option>
         <option value="Approx">Approx</option>
       </select>
-      <p class="muted xsmall">Choose Approx Carefully, Better Ask the member for Accuracy.</p>
 
       <label class="field-label">Activity Stars (1–5)</label>
-      <input id="fieldStars" type="number" min="1" max="5" />
+      <input id="fieldStars" type="number" min="1" max="5"/>
 
       <div class="modal-actions">
         <button id="btnModalCancel" class="btn">Cancel</button>
@@ -165,8 +170,6 @@
 
     </div>
   </div>
-
-  <li><a href="/admin-fights.html">War Builder</a></li>
 
   <script type="module" src="/js/admin.js"></script>
 
