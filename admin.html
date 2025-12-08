@@ -141,8 +141,38 @@
       <label class="field-label">Role (R3 / R4 / R5 / RECRUITER)</label>
       <input id="fieldRole"/>
 
-      <label class="field-label">Squad Type (TANK / AIR / MISSILE / HYBRID)</label>
-      <input id="fieldSquad"/>
+      <!-- PRIMARY SQUAD TYPE -->
+<label class="field-label">Primary Squad Type</label>
+<select id="fieldSquadPrimary">
+  <option value="TANK">TANK</option>
+  <option value="AIR">AIR</option>
+  <option value="MISSILE">MISSILE</option>
+</select>
+
+<!-- HYBRID TOGGLE -->
+<label class="field-label" style="margin-top:12px;">Hybrid?</label>
+<div style="display:flex; align-items:center; gap:12px;">
+  
+  <label class="switch">
+    <input type="checkbox" id="fieldSquadHybrid">
+    <span class="slider round"></span>
+  </label>
+
+  <span id="hybridLabel" style="font-size:0.9rem; opacity:0.8;">No</span>
+</div>
+
+<script>
+  // This updates the Yes/No text beside toggle
+  document.addEventListener("DOMContentLoaded", () => {
+    const toggle = document.getElementById("fieldSquadHybrid");
+    const label = document.getElementById("hybridLabel");
+
+    toggle.addEventListener("change", () => {
+      label.textContent = toggle.checked ? "Yes" : "No";
+    });
+  });
+</script>
+
 
       <label class="field-label">Power</label>
       <input id="fieldPower" type="number" step="0.1"/>

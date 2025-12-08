@@ -44,7 +44,7 @@ function $id(id) {
 
 
 /* ==========================================================
-   DOM REFERENCES
+   DOM REFERENCES (UPDATED FOR NEW DROPDOWN + TOGGLE)
 ========================================================== */
 const dom = {
   btnLogout: $id('btnLogout'),
@@ -71,10 +71,16 @@ const dom = {
   modalTitle: $id('modalTitle'),
   fieldName: $id('fieldName'),
   fieldRole: $id('fieldRole'),
-  fieldSquad: $id('fieldSquad'),
+
+  // NEW FIELDS
+  fieldSquadPrimary: $id('fieldSquadPrimary'),
+  fieldSquadHybrid: $id('fieldSquadHybrid'),
+  hybridLabel: $id('hybridLabel'),
+
   fieldPower: $id('fieldPower'),
   fieldPowerType: $id('fieldPowerType'),
   fieldStars: $id('fieldStars'),
+
   btnModalSave: $id('btnModalSave'),
   btnModalCancel: $id('btnModalCancel'),
 };
@@ -83,10 +89,48 @@ let editingDocId = null;
 
 
 /* ==========================================================
+   BACKWARD COMPATIBILITY: Parse old squad strings
+========================================================== */
+function parseOldSquad(str) {
+  const s = String(str || "").toUpperCase();
+
+  let primary = null;
+  if (s.includes("TANK")) primary = "TANK";
+  else if (s.includes("AIR")) primary = "AIR";
+  else if (s.includes("MISSILE")) primary = "MISSILE";
+
+  const hybrid = s.includes("HYBRID");
+
+  return { primary, hybrid };
+}
+
+function getMemberSquadLabel(m) {
+  if (m.squadPrimary) {
+    return m.squadHybrid ? `HYBRID (${m.squadPrimary})` : m.squadPrimary;
+  }
+  const parsed = parseOldSquad(m.squad);
+  if (parsed.primary) {
+    return parsed.hybrid ? `HYBRID (${parsed.primary})` : parsed.primary;
+  }
+  return (m.squad || "—").toUpperCase();
+}
+
+function normalizeMemberLocal(m) {
+  if (!m.squadPrimary) {
+    const parsed = parseOldSquad(m.squad);
+    m.squadPrimary = parsed.primary || null;
+    m.squadHybrid = !!parsed.hybrid;
+  } else {
+    m.squadHybrid = !!m.squadHybrid;
+  }
+  return m;
+}
+
+
+/* ==========================================================
    ZERO / MISSING LOGIC
 ========================================================== */
 function isZeroPower(v) {
-  if (v === 0 || v === "0") return true;
   return Number(v) === 0;
 }
 
@@ -96,10 +140,8 @@ function isZeroPower(v) {
 ========================================================== */
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
-
   const f = state.filter.toUpperCase();
 
-  // FILTERING
   if (f !== "RESET") {
 
     if (f === "MISSING_ZERO") {
@@ -119,31 +161,31 @@ function filteredAndSortedMembers() {
 
     else {
       arr = arr.filter(m =>
-        ((m.role || "") + (m.squad || "")).toUpperCase().includes(f)
+        ((m.role || "") + " " + getMemberSquadLabel(m)).toUpperCase().includes(f)
       );
     }
   }
 
-  // SEARCH
   const q = state.search.toLowerCase();
   if (q) {
     arr = arr.filter(m =>
-      (m.name + " " + m.role + " " + m.squad).toLowerCase().includes(q)
+      (m.name + " " + m.role + " " + getMemberSquadLabel(m))
+        .toLowerCase()
+        .includes(q)
     );
   }
 
-  // SORTING
   if (state.sort === "power-desc") {
-    arr.sort((a, b) => (Number(b.power) || 0) - (Number(a.power) || 0));
+    arr.sort((a, b) => Number(b.power) - Number(a.power));
   }
   else if (state.sort === "power-asc") {
-    arr.sort((a, b) => (Number(a.power) || 0) - (Number(b.power) || 0));
+    arr.sort((a, b) => Number(a.power) - Number(b.power));
   }
   else if (state.sort === "stars-desc") {
-    arr.sort((a, b) => (Number(b.stars) || 0) - (Number(a.stars) || 0));
+    arr.sort((a, b) => Number(b.stars) - Number(a.stars));
   }
   else if (state.sort === "stars-asc") {
-    arr.sort((a, b) => (Number(a.stars) || 0) - (Number(b.stars) || 0));
+    arr.sort((a, b) => Number(a.stars) - Number(b.stars));
   }
   else if (state.sort === "missing") {
     arr.sort((a, b) => {
@@ -212,15 +254,19 @@ dom.btnModalCancel?.addEventListener("click", closeModal);
 
 
 /* ==========================================================
-   ADD / EDIT
+   ADD / EDIT SYSTEM
 ========================================================== */
+
 function openAddModal() {
   editingDocId = null;
   dom.modalTitle.textContent = "Add Member";
 
   dom.fieldName.value = "";
   dom.fieldRole.value = "";
-  dom.fieldSquad.value = "";
+  dom.fieldSquadPrimary.value = "TANK";
+  dom.fieldSquadHybrid.checked = false;
+  dom.hybridLabel.textContent = "No";
+
   dom.fieldPower.value = "";
   dom.fieldPowerType.value = "Precise";
   dom.fieldStars.value = 3;
@@ -232,16 +278,29 @@ function openEditModal(m) {
   editingDocId = m.id;
 
   dom.modalTitle.textContent = "Edit Member";
-  dom.fieldName.value = m.name || "";
-  dom.fieldRole.value = m.role || "";
-  dom.fieldSquad.value = m.squad || "";
-  dom.fieldPower.value = m.power ?? "";
+  dom.fieldName.value = m.name;
+  dom.fieldRole.value = m.role;
+
+  if (m.squadPrimary) {
+    dom.fieldSquadPrimary.value = m.squadPrimary;
+    dom.fieldSquadHybrid.checked = !!m.squadHybrid;
+  } else {
+    const parsed = parseOldSquad(m.squad);
+    dom.fieldSquadPrimary.value = parsed.primary || "TANK";
+    dom.fieldSquadHybrid.checked = parsed.hybrid;
+  }
+
+  dom.hybridLabel.textContent = dom.fieldSquadHybrid.checked ? "Yes" : "No";
+
+  dom.fieldPower.value = m.power;
   dom.fieldPowerType.value = m.powerType || "Precise";
-  dom.fieldStars.value = m.stars ?? 3;
+  dom.fieldStars.value = m.stars;
 
   openModal();
 }
 
+
+/* SAVE HANDLER */
 dom.btnModalSave?.addEventListener("click", async () => {
 
   if (!dom.fieldName.value.trim()) {
@@ -249,13 +308,22 @@ dom.btnModalSave?.addEventListener("click", async () => {
     return;
   }
 
+  const primary = dom.fieldSquadPrimary.value;
+  const hybrid = dom.fieldSquadHybrid.checked;
+
+  const legacySquad = hybrid ? `${primary} HYBRID` : primary;
+
   const data = {
     name: dom.fieldName.value.trim(),
     role: dom.fieldRole.value.trim(),
-    squad: dom.fieldSquad.value.trim(),
+
+    squadPrimary: primary,
+    squadHybrid: hybrid,
+    squad: legacySquad,
+
     power: cleanNumber(dom.fieldPower.value),
     powerType: dom.fieldPowerType.value,
-    stars: Number(dom.fieldStars.value) || 3,
+    stars: Number(dom.fieldStars.value),
     lastUpdated: serverTimestamp()
   };
 
@@ -269,6 +337,7 @@ dom.btnModalSave?.addEventListener("click", async () => {
     }
     closeModal();
   } catch (err) {
+    console.error(err);
     alert("Save failed.");
   }
 });
@@ -284,6 +353,7 @@ async function deleteMember(m) {
     await deleteDoc(doc(db, "members", m.id));
     await logAudit("DELETE", m.name, "", state.currentAdminName);
   } catch (err) {
+    console.error(err);
     alert("Delete failed.");
   }
 }
@@ -292,37 +362,46 @@ async function deleteMember(m) {
 /* ==========================================================
    CSV IMPORT / EXPORT
 ========================================================== */
-dom.btnExport?.addEventListener("click", () => utilsExportCSV(state.members));
-dom.btnImport?.addEventListener("click", () => dom.csvInput.click());
+dom.btnExport.addEventListener("click", () =>
+  utilsExportCSV(state.members)
+);
 
-dom.csvInput?.addEventListener("change", e => {
+dom.btnImport.addEventListener("click", () =>
+  dom.csvInput.click()
+);
+
+dom.csvInput?.addEventListener("change", (e) => {
   const file = e.target.files?.[0];
   if (!file) return;
 
   const reader = new FileReader();
-  reader.onload = async evt => {
+  reader.onload = async (evt) => {
     const imported = utilsParseCSV(evt.target.result);
     if (!confirm(`Replace with ${imported.length} rows?`)) return;
 
-    // Wipe old
     for (const m of state.members) {
       await deleteDoc(doc(db, "members", m.id));
     }
 
-    // Insert new
     for (const m of imported) {
+      const parsed = parseOldSquad(m.squad);
+      const primary = parsed.primary || "TANK";
+      const hybrid = parsed.hybrid;
+
       await addDoc(collection(db, "members"), {
         name: m.name,
         role: m.role,
-        squad: m.squad,
+        squadPrimary: primary,
+        squadHybrid: hybrid,
+        squad: hybrid ? `${primary} HYBRID` : primary,
         power: cleanNumber(m.power),
         powerType: m.powerType || "Precise",
-        stars: Number(m.stars) || 3,
+        stars: Number(m.stars),
         lastUpdated: serverTimestamp()
       });
     }
 
-    alert("Import Complete.");
+    alert("Import complete.");
   };
   reader.readAsText(file);
 });
@@ -331,19 +410,19 @@ dom.csvInput?.addEventListener("change", e => {
 /* ==========================================================
    SEARCH / FILTER / SORT EVENTS
 ========================================================== */
-dom.searchInput?.addEventListener("input", () => {
+dom.searchInput.addEventListener("input", () => {
   state.search = dom.searchInput.value;
   render();
 });
 
-dom.filterButtons.forEach(btn =>
+dom.filterButtons.forEach((btn) =>
   btn.addEventListener("click", () => {
     state.filter = btn.dataset.filter || "RESET";
     render();
   })
 );
 
-dom.sortButtons.forEach(btn =>
+dom.sortButtons.forEach((btn) =>
   btn.addEventListener("click", () => {
     state.sort = btn.dataset.sort || "none";
     render();
@@ -356,8 +435,10 @@ dom.sortButtons.forEach(btn =>
 ========================================================== */
 function subscribeMembers() {
   const qRef = query(collection(db, "members"), orderBy("name"));
-  onSnapshot(qRef, snap => {
-    state.members = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  onSnapshot(qRef, (snap) => {
+    state.members = snap.docs.map((d) =>
+      normalizeMemberLocal({ id: d.id, ...d.data() })
+    );
     render();
   });
 }
@@ -366,43 +447,28 @@ function subscribeMembers() {
 /* ==========================================================
    INIT (ADMIN PROTECTED)
 ========================================================== */
-guardAdminPage(); // NEW SYSTEM
-
-// INIT AFTER ADMIN IS VERIFIED
 function initAdminPanel(user) {
   state.currentAdminName = user.email || "Admin";
 
   subscribeMembers();
   subscribeAudit(dom.auditList);
 
-  dom.btnLogout?.addEventListener("click", async () => {
+  dom.btnLogout.addEventListener("click", async () => {
     await logout();
     window.location.href = "admin-login.html";
   });
 
-  dom.btnAdd?.addEventListener("click", openAddModal);
+  dom.btnAdd.addEventListener("click", openAddModal);
 }
 
-guardAdminPage(initAdminPanel);
+
+/* ==========================================================
+   AUTH STATE
+========================================================== */
 import { auth } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-guardAdminPage(); // Protect admin page
-
 onAuthStateChanged(auth, (user) => {
-  if (!user) return; // Not logged in, guard will redirect
-
-  console.log("👑 Admin logged in:", user.email);
-
-  state.currentAdminName = user.email;
-
-  subscribeMembers();    // ⬅️ THIS LOADS YOUR CARDS
-  subscribeAudit(dom.auditList);
-
-  dom.btnLogout?.addEventListener("click", async () => {
-    await logout();
-    window.location.href = "admin-login.html";
-  });
-
-  dom.btnAdd?.addEventListener("click", openAddModal);
+  if (!user) return;
+  initAdminPanel(user);
 });
