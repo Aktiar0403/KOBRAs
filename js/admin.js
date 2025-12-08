@@ -384,3 +384,25 @@ function initAdminPanel(user) {
 }
 
 guardAdminPage(initAdminPanel);
+import { auth } from "./firebase-config.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+guardAdminPage(); // Protect admin page
+
+onAuthStateChanged(auth, (user) => {
+  if (!user) return; // Not logged in, guard will redirect
+
+  console.log("👑 Admin logged in:", user.email);
+
+  state.currentAdminName = user.email;
+
+  subscribeMembers();    // ⬅️ THIS LOADS YOUR CARDS
+  subscribeAudit(dom.auditList);
+
+  dom.btnLogout?.addEventListener("click", async () => {
+    await logout();
+    window.location.href = "admin-login.html";
+  });
+
+  dom.btnAdd?.addEventListener("click", openAddModal);
+});
