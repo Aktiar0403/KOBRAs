@@ -26,7 +26,7 @@ body.bg {
 }
 
 /* Snake skin texture */
-body.bg::before {
+/*body.bg::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -114,7 +114,7 @@ body.bg::before {
   display: inline-block;
 }
 
-.kobra-heading-wrapper::before {
+/*.kobra-heading-wrapper::before {
   content: "";
   position: absolute;
   top: -45px;
