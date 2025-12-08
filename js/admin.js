@@ -210,7 +210,7 @@ function updateStats(viewMembers) {
   });
 
   dom.statTotal.textContent = total;
-  dom.statAvg.textContent = total ? (sum / total).toFixed(2) : "0";
+  dom.statAvg.textContent = total ? (sum / total).toFixed(2) : "0.00";
   dom.statFive.textContent = fiveStar;
   dom.statMissing.textContent = missing;
 }
