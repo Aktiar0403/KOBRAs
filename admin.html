@@ -13,7 +13,7 @@
 
     <!-- ================= HEADER (CENTERED) ================= -->
     <header class="topbar premium-header">
-  <h1>KOBRA Members</h1>
+  <h1>KOBRA MEMBERS</h1>
   <div class="header-actions">
     <button class="btn small">User Profile</button>
     <button id="btnLogout" class="btn small danger">Logout</button>
@@ -43,7 +43,7 @@
     </div>
 
     <div class="stat-item danger">
-      <label>Missing Info</label>
+      <label>Missing (0 + Approx)</label>
       <span id="statMissing">0</span>
     </div>
   </div>
@@ -51,9 +51,9 @@
 
   <!-- ===================== MISSING FILTER ROW ===================== -->
   <div class="missing-bar">
-    <button class="pill-btn red filter-btn" data-filter="Uncertain">🔴 0 Power</button>
+    <button class="pill-btn red filter-btn" data-filter="MISSING_ZERO">🔴 0 Power</button>
     <button class="pill-btn grey filter-btn" data-filter="APPROX">⚪ Approx Power</button>
-    <button class="pill-btn purple filter-btn" data-filter="Total Missing Info>🟣 Missing</button>
+    <button class="pill-btn purple filter-btn" data-filter="MISSING">🟣 Missing</button>
   </div>
 
 
@@ -81,20 +81,7 @@
     <button class="btn pill filter-btn" data-filter="R5">R5</button>
   </div>
 
-  <!-- ===================== SORT CONTROLS ===================== -->
-<div class="controls-row sort-bar" style="margin-bottom:18px; justify-content:center;">
-  <span class="muted xsmall" style="margin-right:10px;">Sort:</span>
-
-  <div class="sort-group" role="tablist" aria-label="Sort members">
-    <button class="btn pill sort-btn" data-sort="power-desc">Power ↓</button>
-    <button class="btn pill sort-btn" data-sort="power-asc">Power ↑</button>
-    <button class="btn pill sort-btn" data-sort="stars-desc">Activity ★↓</button>
-    <button class="btn pill sort-btn" data-sort="stars-asc">Activity ★↑</button>
-    <button class="btn pill sort-btn" data-sort="missing">Missing First</button>
-    <button class="btn pill sort-btn" data-sort="none">Clear</button>
-  </div>
-</div>
-
+  
 
 </section>
 
