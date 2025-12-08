@@ -368,10 +368,8 @@ function subscribeMembers() {
 ========================================================== */
 guardAdminPage(); // NEW SYSTEM
 
-// After user is confirmed admin:
-onAuthStateChanged(auth, (user) => {
-  if (!user) return;
-
+// INIT AFTER ADMIN IS VERIFIED
+function initAdminPanel(user) {
   state.currentAdminName = user.email || "Admin";
 
   subscribeMembers();
@@ -383,4 +381,6 @@ onAuthStateChanged(auth, (user) => {
   });
 
   dom.btnAdd?.addEventListener("click", openAddModal);
-});
+}
+
+guardAdminPage(initAdminPanel);
