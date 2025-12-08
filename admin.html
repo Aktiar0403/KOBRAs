@@ -31,88 +31,66 @@
 
     <main>
 
-      <!-- ==============================================================
-           STATS ROW  (Option C → Total | Avg | ★★★★★ | Missing)
-      ============================================================== -->
-      <section class="controls">
+     <section class="controls">
 
-        <div class="controls-row stats-dashboard">
+  <!-- ===================== STATS ROW ===================== -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <label>Total</label>
+      <span id="statTotal">0</span>
+    </div>
 
-          <div class="stat-card">
-            <div class="stat-label">Total</div>
-            <div class="stat-value" id="statTotal">0</div>
-          </div>
+    <div class="stat-item">
+      <label>Avg Power</label>
+      <span id="statAvg">0.00</span>
+    </div>
 
-          <div class="stat-card">
-            <div class="stat-label">Avg Power</div>
-            <div class="stat-value" id="statAvg">0.00</div>
-          </div>
+    <div class="stat-item">
+      <label>★★★★★</label>
+      <span id="statFive">0</span>
+    </div>
 
-          <div class="stat-card">
-            <div class="stat-label">★★★★★</div>
-            <div class="stat-value" id="statFive">0</div>
-          </div>
+    <div class="stat-item danger">
+      <label>Missing (0 + Approx)</label>
+      <span id="statMissing">0</span>
+    </div>
+  </div>
 
-          <div class="stat-card danger">
-            <div class="stat-label">Missing </div>
-            <div class="stat-value" id="statMissing">0</div>
-          </div>
 
-        </div>
+  <!-- ===================== MISSING FILTER ROW ===================== -->
+  <div class="missing-bar">
+    <button class="pill-btn red filter-btn" data-filter="MISSING_ZERO">🔴 0 Power</button>
+    <button class="pill-btn grey filter-btn" data-filter="APPROX">⚪ Approx Power</button>
+    <button class="pill-btn purple filter-btn" data-filter="MISSING">🟣 Missing</button>
+  </div>
 
-        <!-- ==============================================================
-             MISSING FILTER ROW
-        ============================================================== -->
-        <div class="controls-row" style="justify-content:center; gap:14px;">
 
-          <button class="btn pill filter-btn"
-            data-filter="MISSING_ZERO"
-            style="background:#8b0000;color:#fff;">
-            🔴 Uncertain
-          </button>
+  <!-- ===================== SEARCH + ACTIONS ROW ===================== -->
+  <div class="action-bar">
+    <input id="searchInput" class="search-input wide" placeholder="Search name, role or squad..." />
 
-          <button class="btn pill filter-btn"
-            data-filter="APPROX"
-            style="background:#555;color:#fff;">
-            ⚪ Approx Power
-          </button>
+    <div class="actions">
+      <button id="btnAddMember" class="btn primary">➕ Add Member</button>
+      <button id="btnImportCSV" class="btn small">📥 Import</button>
+      <button id="btnExportCSV" class="btn small">📤 Export</button>
+    </div>
+  </div>
 
-          <button class="btn pill filter-btn"
-            data-filter="MISSING"
-            style="background:#9b009b;color:#fff;">
-            🟣 Missing 
-          </button>
 
-        </div>
+  <!-- ===================== FILTER ROW ===================== -->
+  <div class="filter-row">
+    <span class="muted xsmall">Filter:</span>
+    <button class="btn pill filter-btn" data-filter="RESET">All</button>
+    <button class="btn pill filter-btn" data-filter="TANK">TANK</button>
+    <button class="btn pill filter-btn" data-filter="AIR">AIR</button>
+    <button class="btn pill filter-btn" data-filter="MISSILE">MISSILE</button>
+    <button class="btn pill filter-btn" data-filter="R3">R3</button>
+    <button class="btn pill filter-btn" data-filter="R4">R4</button>
+    <button class="btn pill filter-btn" data-filter="R5">R5</button>
+  </div>
 
-        <!-- ==============================================================
-             SEARCH + FILTERS + ADD + IMPORT/EXPORT
-        ============================================================== -->
-        <div class="controls-row">
-          <input id="searchInput" class="search-input"
-            placeholder="Search name, role or squad..." />
-        </div>
+</section>
 
-        <div class="controls-row">
-          <div class="filter-group">
-            <span class="muted xsmall">Filter:</span>
-            <button class="btn pill filter-btn" data-filter="RESET">All</button>
-            <button class="btn pill filter-btn" data-filter="TANK">TANK</button>
-            <button class="btn pill filter-btn" data-filter="AIR">AIR</button>
-            <button class="btn pill filter-btn" data-filter="MISSILE">MISSILE</button>
-            <button class="btn pill filter-btn" data-filter="R3">R3</button>
-            <button class="btn pill filter-btn" data-filter="R4">R4</button>
-            <button class="btn pill filter-btn" data-filter="R5">R5</button>
-          </div>
-
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <button id="btnAddMember" class="btn primary">➕ Add Member</button>
-            <button id="btnImportCSV" class="btn">📥 Import CSV</button>
-            <button id="btnExportCSV" class="btn">📤 Export CSV</button>
-          </div>
-        </div>
-
-      </section>
 
       <!-- ================= MEMBERS LIST + AUDIT ================= -->
       <section class="layout">
