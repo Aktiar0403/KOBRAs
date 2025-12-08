@@ -1,7 +1,7 @@
 console.log("✅ admin.js loaded successfully");
 
 import { db } from './firebase-config.js';
-import { guardPage, logout } from './auth.js';
+import { guardAdminPage, logout } from './auth.js';
 import { renderCards } from './cards.js';
 import {
   exportMembersToCSV as utilsExportCSV,
@@ -22,6 +22,7 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+
 /* ==========================================================
    APP STATE
 ========================================================== */
@@ -33,14 +34,14 @@ const state = {
   currentAdminName: ''
 };
 
+
 /* ==========================================================
-   SAFE DOM GETTER
+   DOM GETTER
 ========================================================== */
 function $id(id) {
-  const el = document.getElementById(id);
-  if (!el) console.warn(`⚠ Missing element: #${id}`);
-  return el;
+  return document.getElementById(id);
 }
+
 
 /* ==========================================================
    DOM REFERENCES
@@ -48,30 +49,24 @@ function $id(id) {
 const dom = {
   btnLogout: $id('btnLogout'),
 
-  // Stats
   statTotal: $id('statTotal'),
   statAvg: $id('statAvg'),
   statFive: $id('statFive'),
   statMissing: $id('statMissing'),
 
-  // Filters + Sort
   filterButtons: Array.from(document.querySelectorAll('.filter-btn') || []),
   sortButtons: Array.from(document.querySelectorAll('.sort-btn') || []),
 
-  // Search
   searchInput: $id('searchInput'),
 
-  // CRUD
   btnAdd: $id('btnAddMember'),
   btnExport: $id('btnExportCSV'),
   btnImport: $id('btnImportCSV'),
   csvInput: $id('csvFileInput'),
 
-  // Layout
   grid: $id('cardsGrid'),
   auditList: $id('auditList'),
 
-  // Modal
   modal: $id('memberModal'),
   modalTitle: $id('modalTitle'),
   fieldName: $id('fieldName'),
@@ -82,72 +77,39 @@ const dom = {
   fieldStars: $id('fieldStars'),
   btnModalSave: $id('btnModalSave'),
   btnModalCancel: $id('btnModalCancel'),
-
-  modalBackdrop: null,
-  modalBox: null
 };
 
 let editingDocId = null;
 
-/* ==========================================================
-   TIMESTAMP UTILS
-========================================================== */
-function timeAgoFromTimestamp(ts) {
-  if (!ts) return "never";
-  let ms;
-
-  if (typeof ts === "number") ms = ts;
-  else if (ts?.toMillis) ms = ts.toMillis();
-  else if (ts instanceof Date) ms = ts.getTime();
-  else return "never";
-
-  const diffSec = Math.floor((Date.now() - ms) / 1000);
-
-  if (diffSec < 60) return "just now";
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)} mins ago`;
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)} hrs ago`;
-  return `${Math.floor(diffSec / 86400)} days ago`;
-}
-
-function refreshAllTimestamps() {
-  document.querySelectorAll("[data-lastts]").forEach(el => {
-    const raw = el.getAttribute("data-lastts");
-    if (!raw) return el.textContent = "Updated never";
-    el.textContent = "Updated " + timeAgoFromTimestamp(Number(raw));
-  });
-}
-setInterval(refreshAllTimestamps, 60000);
 
 /* ==========================================================
-   FILTER + SORT ENGINE  (FULLY FIXED)
+   ZERO / MISSING LOGIC
 ========================================================== */
-function isZeroPower(value) {
-  if (value === 0) return true;
-  if (value === "0") return true;
-  if (typeof value === "string" && value.trim() === "0") return true;
-  return Number(value) === 0;
+function isZeroPower(v) {
+  if (v === 0 || v === "0") return true;
+  return Number(v) === 0;
 }
 
+
+/* ==========================================================
+   FILTER + SORT
+========================================================== */
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
 
-  /* ---------------- FILTERING ---------------- */
-  if (state.filter !== "RESET") {
-    const f = state.filter.toUpperCase();
+  const f = state.filter.toUpperCase();
 
-    // 🔴 0 Power Filter (FULL FIX)
+  // FILTERING
+  if (f !== "RESET") {
+
     if (f === "MISSING_ZERO") {
       arr = arr.filter(m => isZeroPower(m.power));
     }
 
-    // ⚪ Approx Only
     else if (f === "APPROX") {
-      arr = arr.filter(m =>
-        (m.powerType || "").toUpperCase() === "APPROX"
-      );
+      arr = arr.filter(m => (m.powerType || "").toUpperCase() === "APPROX");
     }
 
-    // 🟣 Missing = 0 Power + Approx
     else if (f === "MISSING") {
       arr = arr.filter(m =>
         isZeroPower(m.power) ||
@@ -155,7 +117,6 @@ function filteredAndSortedMembers() {
       );
     }
 
-    // Normal Filters: Role / Squad
     else {
       arr = arr.filter(m =>
         ((m.role || "") + (m.squad || "")).toUpperCase().includes(f)
@@ -163,7 +124,7 @@ function filteredAndSortedMembers() {
     }
   }
 
-  /* ---------------- SEARCH ---------------- */
+  // SEARCH
   const q = state.search.toLowerCase();
   if (q) {
     arr = arr.filter(m =>
@@ -171,7 +132,7 @@ function filteredAndSortedMembers() {
     );
   }
 
-  /* ---------------- SORTING ---------------- */
+  // SORTING
   if (state.sort === "power-desc") {
     arr.sort((a, b) => (Number(b.power) || 0) - (Number(a.power) || 0));
   }
@@ -196,21 +157,19 @@ function filteredAndSortedMembers() {
   return arr;
 }
 
+
 /* ==========================================================
-   STATS UPDATE
+   STATS
 ========================================================== */
-function updateStats(viewMembers) {
-  let total = viewMembers.length;
+function updateStats(view) {
+  let total = view.length;
   let sum = 0;
-  let fiveStars = 0;
+  let five = 0;
   let missing = 0;
 
-  viewMembers.forEach(m => {
-    const p = Number(m.power) || 0;
-    sum += p;
-
-    if (Number(m.stars) === 5) fiveStars++;
-
+  view.forEach(m => {
+    sum += Number(m.power) || 0;
+    if (Number(m.stars) === 5) five++;
     if (isZeroPower(m.power) || (m.powerType || "").toUpperCase() === "APPROX") {
       missing++;
     }
@@ -218,38 +177,30 @@ function updateStats(viewMembers) {
 
   dom.statTotal.textContent = total;
   dom.statAvg.textContent = total ? (sum / total).toFixed(2) : "0.00";
-  dom.statFive.textContent = fiveStars;
+  dom.statFive.textContent = five;
   dom.statMissing.textContent = missing;
 }
 
+
 /* ==========================================================
-   RENDER ENGINE
+   RENDER
 ========================================================== */
 function render() {
   const view = filteredAndSortedMembers();
-
   renderCards(dom.grid, view, {
     showAdminActions: true,
-    onEdit: openEditModalForMember,
+    onEdit: openEditModal,
     onDelete: deleteMember
   });
-
   updateStats(view);
-  refreshAllTimestamps();
 }
+
 
 /* ==========================================================
    MODAL SYSTEM
 ========================================================== */
-function ensureModalRefs() {
-  dom.modalBackdrop = dom.modal.querySelector(".modal-backdrop");
-  dom.modalBox = dom.modal.querySelector(".modal-box");
-}
-
 function openModal() {
-  ensureModalRefs();
   dom.modal.classList.remove("hidden");
-  setTimeout(() => dom.fieldName?.focus(), 30);
 }
 
 function closeModal() {
@@ -259,8 +210,9 @@ function closeModal() {
 
 dom.btnModalCancel?.addEventListener("click", closeModal);
 
+
 /* ==========================================================
-   ADD / EDIT MEMBER
+   ADD / EDIT
 ========================================================== */
 function openAddModal() {
   editingDocId = null;
@@ -276,7 +228,7 @@ function openAddModal() {
   openModal();
 }
 
-function openEditModalForMember(m) {
+function openEditModal(m) {
   editingDocId = m.id;
 
   dom.modalTitle.textContent = "Edit Member";
@@ -290,52 +242,57 @@ function openEditModalForMember(m) {
   openModal();
 }
 
-async function saveMemberFromModal() {
-  const name = dom.fieldName.value.trim();
-  if (!name) return alert("Name is required.");
+dom.btnModalSave?.addEventListener("click", async () => {
+
+  if (!dom.fieldName.value.trim()) {
+    alert("Name is required.");
+    return;
+  }
 
   const data = {
-    name,
+    name: dom.fieldName.value.trim(),
     role: dom.fieldRole.value.trim(),
     squad: dom.fieldSquad.value.trim(),
     power: cleanNumber(dom.fieldPower.value),
     powerType: dom.fieldPowerType.value,
-    stars: Math.max(1, Math.min(5, Number(dom.fieldStars.value))),
+    stars: Number(dom.fieldStars.value) || 3,
     lastUpdated: serverTimestamp()
   };
 
   try {
     if (!editingDocId) {
       await addDoc(collection(db, "members"), data);
-      await logAudit("ADD", name, "", state.currentAdminName);
+      await logAudit("ADD", data.name, "", state.currentAdminName);
     } else {
       await updateDoc(doc(db, "members", editingDocId), data);
-      await logAudit("EDIT", name, "", state.currentAdminName);
+      await logAudit("EDIT", data.name, "", state.currentAdminName);
     }
     closeModal();
   } catch (err) {
     alert("Save failed.");
   }
-}
+});
+
 
 /* ==========================================================
-   DELETE MEMBER
+   DELETE
 ========================================================== */
-async function deleteMember(member) {
-  if (!confirm(`Delete ${member.name}?`)) return;
+async function deleteMember(m) {
+  if (!confirm(`Delete ${m.name}?`)) return;
+
   try {
-    await deleteDoc(doc(db, "members", member.id));
-    await logAudit("DELETE", member.name, "", state.currentAdminName);
+    await deleteDoc(doc(db, "members", m.id));
+    await logAudit("DELETE", m.name, "", state.currentAdminName);
   } catch (err) {
     alert("Delete failed.");
   }
 }
 
+
 /* ==========================================================
-   IMPORT / EXPORT CSV
+   CSV IMPORT / EXPORT
 ========================================================== */
 dom.btnExport?.addEventListener("click", () => utilsExportCSV(state.members));
-
 dom.btnImport?.addEventListener("click", () => dom.csvInput.click());
 
 dom.csvInput?.addEventListener("change", e => {
@@ -345,13 +302,14 @@ dom.csvInput?.addEventListener("change", e => {
   const reader = new FileReader();
   reader.onload = async evt => {
     const imported = utilsParseCSV(evt.target.result);
-
     if (!confirm(`Replace with ${imported.length} rows?`)) return;
 
+    // Wipe old
     for (const m of state.members) {
       await deleteDoc(doc(db, "members", m.id));
     }
 
+    // Insert new
     for (const m of imported) {
       await addDoc(collection(db, "members"), {
         name: m.name,
@@ -364,13 +322,14 @@ dom.csvInput?.addEventListener("change", e => {
       });
     }
 
-    alert("Import complete.");
+    alert("Import Complete.");
   };
   reader.readAsText(file);
 });
 
+
 /* ==========================================================
-   SEARCH, FILTER, SORT EVENTS
+   SEARCH / FILTER / SORT EVENTS
 ========================================================== */
 dom.searchInput?.addEventListener("input", () => {
   state.search = dom.searchInput.value;
@@ -391,8 +350,9 @@ dom.sortButtons.forEach(btn =>
   })
 );
 
+
 /* ==========================================================
-   FIREBASE LIVE SYNC
+   FIRESTORE LIVE SYNC
 ========================================================== */
 function subscribeMembers() {
   const qRef = query(collection(db, "members"), orderBy("name"));
@@ -402,10 +362,16 @@ function subscribeMembers() {
   });
 }
 
+
 /* ==========================================================
-   INIT
+   INIT (ADMIN PROTECTED)
 ========================================================== */
-guardPage("admin", (user) => {
+guardAdminPage(); // NEW SYSTEM
+
+// After user is confirmed admin:
+onAuthStateChanged(auth, (user) => {
+  if (!user) return;
+
   state.currentAdminName = user.email || "Admin";
 
   subscribeMembers();
@@ -413,7 +379,7 @@ guardPage("admin", (user) => {
 
   dom.btnLogout?.addEventListener("click", async () => {
     await logout();
-    location.href = "/index.html";
+    window.location.href = "admin-login.html";
   });
 
   dom.btnAdd?.addEventListener("click", openAddModal);
