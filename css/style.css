@@ -1056,4 +1056,37 @@ body::after{
   .heading-container::after {
     width: 60px;
   }
+}/* CLEAN DARK + SUBTLE COBRA GLOW BACKGROUND */
+body {
+  background: radial-gradient(
+    circle at 50% 20%,
+    rgba(0, 255, 120, 0.10),
+    rgba(0, 255, 120, 0.03) 30%,
+    rgba(0, 0, 0, 1) 70%
+  );
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  color: #d9ffd9;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* OPTIONAL SOFT PULSE */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 30%,
+    rgba(0, 255, 120, 0.04),
+    transparent 70%
+  );
+  animation: softPulse 7s ease-in-out infinite alternate;
+}
+
+@keyframes softPulse {
+  0% { opacity: 0.35; transform: scale(1); }
+  100% { opacity: 0.55; transform: scale(1.05); }
 }
