@@ -6,7 +6,7 @@
   --danger: #ef4444;
   --text: #f9fafb;
   --muted: #9ca3af;
-  --muted-color: #9ca3af; /* Added missing variable */
+  --muted-color: #9ca3af;
   --border: #1f2933;
   --radius: 16px;
 }
@@ -23,18 +23,6 @@ body.bg {
   color: var(--text);
   position: relative;
   overflow-x: hidden;
-}
-
-/* Snake skin texture */
-/*body.bg::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snake-skin-dark.png");
-  background-size: repeat;
-  opacity: 0.055;
-  mix-blend-mode: overlay;
-  pointer-events: none;
 }
 
 /* Centered login */
@@ -100,39 +88,19 @@ body.bg {
     0 0 12px rgba(0, 212, 255, 0.75),
     0 0 28px rgba(0, 212, 255, 0.55),
     0 0 55px rgba(0, 212, 255, 0.35);
+  /* Simplified animation */
   animation: cobraGlow 4s ease-in-out infinite;
 }
 
 @keyframes cobraGlow {
-  0%   { filter: brightness(0.9); }
-  50%  { filter: brightness(1.6); }
-  100% { filter: brightness(0.9); }
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 1; }
 }
 
 .kobra-heading-wrapper {
   position: relative;
   display: inline-block;
 }
-
-/*.kobra-heading-wrapper::before {
-  content: "";
-  position: absolute;
-  top: -45px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 220px;
-  height: 220px;
-  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/icons/main/cobra-emblem.png") center/contain no-repeat;
-  opacity: 0.12;
-  filter: drop-shadow(0 0 12px rgba(0,200,255,0.4));
-  animation: cobraInsigniaFloat 6s ease-in-out infinite;
-}
-
-@keyframes cobraInsigniaFloat {
-  0% { transform: translateX(-50%) translateY(0); }
-  50% { transform: translateX(-50%) translateY(6px); }
-  100% { transform: translateX(-50%) translateY(0); }
-}*/
 
 .topbar {
   display: flex;
@@ -155,9 +123,8 @@ body.bg {
 }
 
 @keyframes strikePulse {
-  0% { opacity:0.2; }
+  0%, 100% { opacity:0.2; }
   50% { opacity:1; }
-  100% { opacity:0.2; }
 }
 
 .topbar h1 {
@@ -180,13 +147,13 @@ body.bg {
 .stat-item {
   flex: 1;
   padding: 18px;
-  background: rgba(20, 20, 30, 0.6);
+  background: rgba(20, 20, 30, 0.8);
   border-radius: 14px;
   border: 1px solid rgba(80, 80, 120, 0.4);
-  backdrop-filter: blur(10px);
+  /* Replaced backdrop-filter with solid color for better performance */
   box-shadow: 0 0 12px rgba(0,255,180,0.05);
   text-align: center;
-  transition: 0.25s ease-out;
+  transition: transform 0.25s ease-out, box-shadow 0.25s ease-out;
 }
 
 .stat-item:hover {
@@ -207,7 +174,7 @@ body.bg {
 }
 
 .stat-item.danger {
-  background: rgba(60, 0, 0, 0.6);
+  background: rgba(60, 0, 0, 0.8);
   border-color: rgba(255, 40, 40, 0.5);
   box-shadow: 0 0 15px rgba(255,0,0,0.15);
 }
@@ -231,7 +198,7 @@ body.bg {
   border: none;
   cursor: pointer;
   font-weight: 500;
-  transition: 0.25s ease;
+  transition: all 0.25s ease;
   box-shadow: 0 3px 10px rgba(0,0,0,0.4);
 }
 
@@ -280,7 +247,7 @@ body.bg {
   background: #111;
   border: 1px solid #333;
   color: #fff;
-  transition: 0.25s ease;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .search-input.wide:focus {
@@ -365,15 +332,6 @@ body.bg {
   position: relative;
 }
 
-.cards-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle, rgba(0,255,245,0.15), transparent 70%);
-  opacity: 0.4;
-  pointer-events: none;
-}
-
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -417,44 +375,17 @@ body.bg {
   overflow: hidden;
 }
 
-/* 
-.member-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: url("https://raw.githubusercontent.com/ChatGPT-UX-Library/textures/main/snake-scale-dark.png");
-  background-size: 180%;
-  background-position: center;
-  opacity: 0.35;
-  mix-blend-mode: overlay;
-  pointer-events: none;
-}*/
-
-/* Neon energy effect */
+/* Lightweight glow effect */
 .member-card::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(
-      circle at 30% 20%,
-      rgba(0,255,255,0.25),
-      transparent 70%
-    ),
-    radial-gradient(
-      circle at 70% 80%,
-      rgba(0,120,255,0.3),
-      transparent 70%
-    );
-  opacity: 0.25;
-  mix-blend-mode: screen;
+  background: linear-gradient(
+    135deg,
+    rgba(0,255,255,0.08) 0%,
+    rgba(0,120,255,0.05) 100%
+  );
   pointer-events: none;
-  animation: neonPulse 6s ease-in-out infinite;
-}
-
-@keyframes neonPulse {
-  0%   { opacity: 0.22; transform: scale(1);   }
-  50%  { opacity: 0.32; transform: scale(1.05);}
-  100% { opacity: 0.22; transform: scale(1);   }
 }
 
 .card-item {
@@ -528,7 +459,7 @@ body.bg {
   margin: 6px 0;
   width: 130px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.25);
-  transition: 0.2s ease;
+  transition: all 0.2s ease;
   cursor: grab;
 }
 
@@ -621,7 +552,7 @@ body.bg {
   padding: 6px 12px;
   font-size: .78rem;
   cursor: pointer;
-  transition: 0.25s;
+  transition: all 0.25s;
 }
 
 .btn.primary {
@@ -636,7 +567,7 @@ body.bg {
 }
 
 .btn.primary:hover {
-  transform: scale(1.06);
+  transform: scale(1.04);
   box-shadow: 0 0 24px rgba(0,200,255,0.55);
 }
 
@@ -806,287 +737,4 @@ body.bg {
     font-size: 1.8rem;
     letter-spacing: 2px;
   }
-  
-  .kobra-heading-wrapper::before {
-    width: 160px;
-    height: 160px;
-    top: -30px;
-  }
-}
-/* ===========================================
-   HEADER WITH BREATHABLE CENTERED HEADING
-   (with top bar for actions)
-   =========================================== */
-
-/* For first structure */
-.header-topbar {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  z-index: 100;
-}
-
-.premium-header {
-  position: relative;
-  text-align: center;
-  padding: 40px 0 30px;
-  margin-bottom: 30px;
-  min-height: 180px;
-}
-
-/* For second structure (flex layout) */
-.header-flex-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-  padding: 20px 0 30px;
-}
-
-.header-left,
-.header-right {
-  flex: 0 0 auto;
-  width: 200px; /* Adjust based on your button width */
-}
-
-.header-center {
-  flex: 1;
-  position: relative;
-  z-index: 2;
-}
-
-/* Ensure buttons are styled properly */
-.header-actions {
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-}
-
-/* Make sure heading container works with flex layout */
-.header-center .heading-container {
-  margin: 0 auto;
-  max-width: 800px;
-}
-
-.header-center .kobra-heading-wrapper {
-  position: relative;
-  display: block;
-}
-
-/* Adjust emblem position for flex layout */
-.header-center .kobra-heading-wrapper::before {
-  top: -50px;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-/* Ensure heading doesn't overlap with buttons on small screens */
-@media (max-width: 768px) {
-  .header-flex-container {
-    flex-direction: column;
-    gap: 20px;
-    padding: 15px 0 25px;
-  }
-  
-  .header-left,
-  .header-right {
-    width: 100%;
-  }
-  
-  .header-left {
-    order: 3;
-  }
-  
-  .header-center {
-    order: 1;
-    width: 100%;
-  }
-  
-  .header-right {
-    order: 2;
-    width: 100%;
-  }
-  
-  .header-actions {
-    justify-content: center;
-    margin-top: 10px;
-  }
-}
-
-/* For the first structure on mobile */
-@media (max-width: 768px) {
-  .header-topbar {
-    position: relative;
-    top: 0;
-    right: 0;
-    margin-bottom: 15px;
-  }
-  
-  .header-actions {
-    justify-content: center;
-  }
-  
-  .premium-header {
-    padding-top: 20px;
-  }
-}
-:root{
-  --cobra-bg: #07110b;    /* base dark color */
-  --cobra-scale: #0af08a; /* subtle highlight color */
-  --cobra-scale-opacity: 0.04;
-}
-
-/* Performance-friendly tiled SVG background (data URI) */
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  background-color: var(--cobra-bg);
-
-  /* data-uri SVG: tiny scale pattern */
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'><defs><pattern id='p' width='20' height='20' patternUnits='userSpaceOnUse'><circle cx='5' cy='10' r='6' fill='%23000000' fill-opacity='0.04'/><circle cx='15' cy='10' r='6' fill='%23000000' fill-opacity='0.04'/></pattern></defs><rect width='100%' height='100%' fill='url(%23p)'/></svg>");
-
-  background-repeat: repeat;
-  background-size: 20px 20px;   /* controls scale density */
-  background-position: center;
-}
-
-/* Optional subtle venom tint overlay (cheap) */
-body::after{
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(0,240,138,0.02), rgba(0,0,0,0.06));
-  mix-blend-mode: overlay;
-}
-/* ===========================================
-   MODERN LIGHTWEIGHT WITH SVG BACKGROUNDS
-   =========================================== */
-
-.premium-header {
-  text-align: center;
-  padding: 35px 0;
-  position: relative;
-  margin-bottom: 25px;
-}
-
-/* Ultra-light SVG pattern background (only 1KB) */
-.premium-header::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%2300eaff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
-  opacity: 0.3;
-  z-index: -1;
-}
-
-.heading-container {
-  position: relative;
-  display: inline-block;
-  margin: 0 auto;
-  padding: 0 40px;
-}
-
-/* Clean decorative lines with minimal gradients */
-.heading-container::before,
-.heading-container::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  width: 80px;
-  height: 1px;
-  background: linear-gradient(90deg, 
-    transparent 0%, 
-    rgba(0, 230, 255, 0.4) 50%, 
-    transparent 100%);
-  transform: translateY(-50%);
-}
-
-.heading-container::before {
-  left: -40px;
-}
-
-.heading-container::after {
-  right: -40px;
-}
-
-/* Efficient heading style */
-.kobra-heading {
-  font-size: 2.8rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 4px;
-  color: #00eaff;
-  
-  /* Minimal shadow for performance */
-  text-shadow: 
-    0 0 10px rgba(0, 230, 255, 0.8);
-  
-  /* Simple pulse animation */
-  animation: headingPulse 3s ease-in-out infinite;
-}
-
-@keyframes headingPulse {
-  0%, 100% { 
-    opacity: 0.95;
-    text-shadow: 0 0 10px rgba(0, 230, 255, 0.8);
-  }
-  50% { 
-    opacity: 1;
-    text-shadow: 0 0 20px rgba(0, 230, 255, 1);
-  }
-}
-
-/* Lightweight mobile */
-@media (max-width: 768px) {
-  .kobra-heading {
-    font-size: 2rem;
-    letter-spacing: 3px;
-  }
-  
-  .heading-container {
-    padding: 0 30px;
-  }
-  
-  .heading-container::before,
-  .heading-container::after {
-    width: 60px;
-  }
-}/* CLEAN DARK + SUBTLE COBRA GLOW BACKGROUND */
-body {
-  background: radial-gradient(
-    circle at 50% 20%,
-    rgba(0, 255, 120, 0.10),
-    rgba(0, 255, 120, 0.03) 30%,
-    rgba(0, 0, 0, 1) 70%
-  );
-  margin: 0;
-  padding: 0;
-  font-family: "Inter", sans-serif;
-  color: #d9ffd9;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* OPTIONAL SOFT PULSE */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at 50% 30%,
-    rgba(0, 255, 120, 0.04),
-    transparent 70%
-  );
-  animation: softPulse 7s ease-in-out infinite alternate;
-}
-
-@keyframes softPulse {
-  0% { opacity: 0.35; transform: scale(1); }
-  100% { opacity: 0.55; transform: scale(1.05); }
 }
