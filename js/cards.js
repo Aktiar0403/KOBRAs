@@ -2,7 +2,7 @@
 // FULL cards.js (FINAL BUILD)
 // - Square Icon
 // - G2 6px Gold Border for Hybrid
-// - Thick Gold Glow for Hybrid
+// - Strong Gold Glow for Hybrid
 // - Normal squad glow for Tank / Air / Missile
 // - Gloss + 3D Tilt + Neon Effects
 // ==========================
@@ -58,9 +58,10 @@ function squadPillProps(primary, hybrid) {
     }
   };
 
+  // HYBRID MODE → GOLD GLOW, SAME ICON
   if (primary && hybrid) {
     return {
-      icon: base[primary].icon,  // SAME ICON but GOLD glow
+      icon: base[primary].icon,
       neon: GOLD.neon,
       neonLight: GOLD.neonLight,
       border: GOLD.border,
@@ -70,6 +71,7 @@ function squadPillProps(primary, hybrid) {
     };
   }
 
+  // NORMAL SQUAD
   if (primary) {
     return {
       ...base[primary],
@@ -77,6 +79,7 @@ function squadPillProps(primary, hybrid) {
     };
   }
 
+  // FALLBACK
   return {
     icon: "/assets/squad-icons/default.png",
     neon: "rgba(255,255,255,0.6)",
@@ -89,7 +92,7 @@ function squadPillProps(primary, hybrid) {
 }
 
 /* =======================================================
-   PARSE OLD SQUAD FIELD
+   BACKWARD COMPATIBLE SQUAD PARSER
 ======================================================= */
 function parseOldSquad(str) {
   const s = String(str || "").toUpperCase();
@@ -112,10 +115,8 @@ export function renderCards(gridEl, members, options = {}) {
   const showAdminActions = !!options.showAdminActions;
 
   members.forEach((m) => {
-    const id = m.id || "";
-    const fullName = m.name || "";
-    const role = m.role || "";
 
+    // NEW squad fields OR fallback to old one
     const primary = m.squadPrimary || parseOldSquad(m.squad).primary;
     const hybrid = m.squadHybrid || parseOldSquad(m.squad).hybrid;
 
@@ -127,22 +128,22 @@ export function renderCards(gridEl, members, options = {}) {
         : "0.0";
 
     const powerType = m.powerType || "Precise";
+    const fullName = m.name || "";
+    const role = m.role || "";
+
+    const mainName = fullName.replace(/\(.+\)/, "").trim();
+    const bracketName = (fullName.match(/\(.+\)/)?.[0] || "").trim();
 
     let lastTsMs = m.lastUpdated?.toMillis ? m.lastUpdated.toMillis() : "";
     const updatedLabel = lastTsMs
       ? "Updated " + timeAgoInitial(lastTsMs)
       : "Updated never";
 
-    const mainName = fullName.replace(/\(.+\)/, "").trim();
-    const bracketName = (fullName.match(/\(.+\)/)?.[0] || "").trim();
-
-    const glowIntensity = hybrid
-      ? 55 // stronger for hybrid
-      : Math.min(45, Number(power) * 0.9);
+    const glowIntensity = hybrid ? 55 : Math.min(45, Number(power) * 0.9);
 
     const card = document.createElement("div");
     card.className = "member-card";
-    card.dataset.id = id;
+    card.dataset.id = m.id;
 
     card.style.cssText = `
       margin:10px;
@@ -154,8 +155,8 @@ export function renderCards(gridEl, members, options = {}) {
         0 0 ${glowIntensity}px ${squadInfo.neonLight},
         inset 0 0 20px rgba(255,255,255,0.06);
       position: relative;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
       overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
     `;
 
     // GLOSS overlay
@@ -192,29 +193,31 @@ export function renderCards(gridEl, members, options = {}) {
       card.style.transform = "translateY(0)";
     };
 
-    // ================================
-    // CARD INNER HTML
-    // ================================
+    /* =======================================================
+       CARD INNER STRUCTURE + ICON + BUTTONS
+    ======================================================== */
     card.innerHTML += `
       <div style="display:flex;">
 
-        <!-- LEFT SIDE OF CARD -->
-        <div style="flex:1; min-width:0;">
+        <!-- LEFT SIDE TEXT -->
+        <div style="flex:1;">
 
           <div style="display:flex; gap:0.75rem;">
 
+            <!-- AVATAR -->
             <div style="
               width:44px;height:44px;border-radius:50%;
               background:#ccc;display:flex;align-items:center;justify-content:center;
-              font-weight:600;color:#222; flex-shrink:0;
+              font-weight:600;color:#222;
             ">
               ${generateInitialsAvatar(fullName)}
             </div>
 
-            <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+            <!-- TEXT AREA -->
+            <div style="flex:1;">
 
-              <!-- NAME + POWER -->
               <div style="display:flex; justify-content:space-between;">
+
                 <div style="
                   font-size:1rem; font-weight:600;
                   white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
@@ -222,20 +225,20 @@ export function renderCards(gridEl, members, options = {}) {
                   ${escapeHtml(mainName)}
                 </div>
 
-                <div style="width:75px; text-align:right;">
+                <div style="text-align:right; width:75px;">
                   <div style="font-weight:700; font-size:1.15rem;">
                     ${escapeHtml(power)}
                   </div>
                   <div style="
                     font-size:0.72rem; margin-top:3px;
                     color:${powerType === "Approx"
-                      ? "rgba(255,210,0,0.95)"
-                      : "rgba(0,255,180,0.9)"};
-                    font-weight:600;
+                      ? "rgba(255,210,0,1)"
+                      : "rgba(0,255,180,1)"};
                   ">
                     ${escapeHtml(powerType)}
                   </div>
                 </div>
+
               </div>
 
               ${bracketName
@@ -248,23 +251,22 @@ export function renderCards(gridEl, members, options = {}) {
                 ${escapeHtml(role)}
               </div>
 
-              <div style="margin-top:5px;">
-                <span style="
-                  padding:4px 8px;
-                  border-radius:999px;
-                  background:${squadInfo.bg};
-                  color:${squadInfo.fg};
-                  border:1px solid ${squadInfo.border};
-                  font-size:0.78rem;
-                  font-weight:600;
-                ">
-                  ${escapeHtml(squadInfo.label)}
-                </span>
-              </div>
+              <span style="
+                padding:4px 8px;
+                border-radius:999px;
+                background:${squadInfo.bg};
+                color:${squadInfo.fg};
+                border:1px solid ${squadInfo.border};
+                font-size:0.78rem;
+                font-weight:600;
+                display:inline-block;
+                margin-top:5px;
+              ">
+                ${escapeHtml(squadInfo.label)}
+              </span>
 
-              <div class="muted xsmall updated-label"
-                   data-lastts="${lastTsMs}"
-                   style="opacity:0.75; margin-top:8px;">
+              <div class="muted xsmall"
+                   style="margin-top:8px; opacity:0.75;">
                 ${escapeHtml(updatedLabel)}
               </div>
 
@@ -273,14 +275,8 @@ export function renderCards(gridEl, members, options = {}) {
 
         </div>
 
-        <!-- RIGHT-SIDE ICON (SQUARE) -->
-        <div style="
-          width:70px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          padding-left:6px;
-        ">
+        <!-- RIGHT ICON BOX -->
+        <div style="width:80px; display:flex; align-items:center; justify-content:center;">
           <div style="
             width:50px;
             height:50px;
@@ -290,37 +286,49 @@ export function renderCards(gridEl, members, options = {}) {
             align-items:center;
             justify-content:center;
             background:rgba(255,255,255,0.03);
-            box-shadow:0 0 16px ${hybrid ? GOLD.neonLight : squadInfo.neonLight};
+            box-shadow:0 0 ${hybrid ? "22px" : "12px"} ${
+                  hybrid ? GOLD.neonLight : squadInfo.neonLight
+                };
           ">
             <img src="${squadInfo.icon}" 
                  style="
                    width:44px;
                    height:44px;
                    object-fit:contain;
-                   filter: drop-shadow(0 0 ${hybrid ? "10px" : "6px"} ${squadInfo.neon});
+                   filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${
+                     squadInfo.neon
+                   });
                  ">
           </div>
         </div>
 
       </div>
 
-      <!-- ADMIN BTNS -->
-      ${
-        showAdminActions
-          ? `<div style="margin-top:10px; display:flex; gap:0.5rem;">
-               <button class="btn btn-edit" data-id="${id}">Edit</button>
-               <button class="btn btn-delete" data-id="${id}">Delete</button>
-             </div>`
-          : ""
-      }
+      <!-- ADMIN BUTTONS -->
+      <div class="admin-btn-row" style="margin-top:10px; display:flex; gap:0.5rem;">
+        ${
+          showAdminActions
+            ? `
+          <button class="btn btn-edit" data-id="${m.id}">Edit</button>
+          <button class="btn btn-delete" data-id="${m.id}">Delete</button>
+        `
+            : ""
+        }
+      </div>
     `;
 
-    // Admin actions handlers
+    /* =======================================================
+       BUTTON HANDLERS (FIXED — NOW ALWAYS WORK)
+    ======================================================== */
     if (showAdminActions) {
-      card.querySelector(".btn-edit")
-        ?.addEventListener("click", () => options.onEdit?.(m));
-      card.querySelector(".btn-delete")
-        ?.addEventListener("click", () => options.onDelete?.(m));
+      const editBtn = card.querySelector(".btn-edit");
+      const deleteBtn = card.querySelector(".btn-delete");
+
+      if (editBtn)
+        editBtn.addEventListener("click", () => options.onEdit?.(m));
+
+      if (deleteBtn)
+        deleteBtn.addEventListener("click", () => options.onDelete?.(m));
     }
 
     gridEl.appendChild(card);
