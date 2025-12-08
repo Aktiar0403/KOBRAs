@@ -813,3 +813,120 @@ body.bg::before {
     top: -30px;
   }
 }
+/* ===========================================
+   HEADER WITH BREATHABLE CENTERED HEADING
+   (with top bar for actions)
+   =========================================== */
+
+/* For first structure */
+.header-topbar {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.premium-header {
+  position: relative;
+  text-align: center;
+  padding: 40px 0 30px;
+  margin-bottom: 30px;
+  min-height: 180px;
+}
+
+/* For second structure (flex layout) */
+.header-flex-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  padding: 20px 0 30px;
+}
+
+.header-left,
+.header-right {
+  flex: 0 0 auto;
+  width: 200px; /* Adjust based on your button width */
+}
+
+.header-center {
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+
+/* Ensure buttons are styled properly */
+.header-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Make sure heading container works with flex layout */
+.header-center .heading-container {
+  margin: 0 auto;
+  max-width: 800px;
+}
+
+.header-center .kobra-heading-wrapper {
+  position: relative;
+  display: block;
+}
+
+/* Adjust emblem position for flex layout */
+.header-center .kobra-heading-wrapper::before {
+  top: -50px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* Ensure heading doesn't overlap with buttons on small screens */
+@media (max-width: 768px) {
+  .header-flex-container {
+    flex-direction: column;
+    gap: 20px;
+    padding: 15px 0 25px;
+  }
+  
+  .header-left,
+  .header-right {
+    width: 100%;
+  }
+  
+  .header-left {
+    order: 3;
+  }
+  
+  .header-center {
+    order: 1;
+    width: 100%;
+  }
+  
+  .header-right {
+    order: 2;
+    width: 100%;
+  }
+  
+  .header-actions {
+    justify-content: center;
+    margin-top: 10px;
+  }
+}
+
+/* For the first structure on mobile */
+@media (max-width: 768px) {
+  .header-topbar {
+    position: relative;
+    top: 0;
+    right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .header-actions {
+    justify-content: center;
+  }
+  
+  .premium-header {
+    padding-top: 20px;
+  }
+}
