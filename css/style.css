@@ -1071,3 +1071,15 @@ body.bg {
   justify-content: center;
   gap: 16px;
 }
+/* Active state for pill buttons */
+.sort-group .sort-btn {
+  background: #141414;
+  border: 1px solid #2f2f2f;
+  color: #ddd;
+}
+.sort-group .sort-btn.active {
+  background: linear-gradient(135deg,#00ffc8,#00b3ff);
+  color: #001;
+  box-shadow: 0 0 18px rgba(0,200,255,0.18);
+  transform: translateY(-2px);
+}
