@@ -278,7 +278,14 @@ export function renderCards(gridEl, members, options = {}) {
         </div>
 
         <!-- RIGHT ICON BOX -->
-        <div style="width:80px; display:flex; align-items:center; justify-content:center;">
+        <div style="
+  width:90px;
+  min-width:90px;       /* 🔥 Prevent shrinking */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+">
+
           <div style="
             width:50px;
             height:50px;
