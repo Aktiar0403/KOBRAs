@@ -175,7 +175,7 @@ export function renderCards(gridEl, members, options = {}) {
         rgba(255,255,255,0.18) 20%,
         rgba(255,255,255,0.28) 30%,
         transparent 60%
-         pointer-events:none;   
+        pointer-events:none;   
       );
       transition:opacity .3s ease;
     `;
