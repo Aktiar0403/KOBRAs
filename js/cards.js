@@ -1,13 +1,6 @@
-// ==========================
-// FULL cards.js (FINAL BUILD)
-// - Square Icon
-// - G2 6px Gold Border for Hybrid
-// - Strong Gold Glow for Hybrid
-// - Normal squad glow for Tank / Air / Missile
-// - Gloss + 3D Tilt + Neon Effects
-// ==========================
+// cards.js (clean - no stars display)
+// Keep your existing features: gloss, neon, gold hybrid etc.
 
-/* Add keyframes once */
 const styleTag = document.createElement("style");
 styleTag.innerHTML = `
 @keyframes glossMove {
@@ -17,20 +10,13 @@ styleTag.innerHTML = `
 `;
 document.head.appendChild(styleTag);
 
-/* =======================================================
-   GOLD CONSTANTS FOR HYBRID (G2 THICK BORDER)
-======================================================= */
 const GOLD = {
   neon: "rgba(255, 210, 60, 1)",
   neonLight: "rgba(255, 210, 60, 0.85)",
   border: "rgba(255, 210, 60, 1)"
 };
 
-/* =======================================================
-   SQUAD COLOR + ICON MAP
-======================================================= */
 function squadPillProps(primary, hybrid) {
-
   const base = {
     TANK: {
       icon: "/assets/squad-icons/tank.png",
@@ -58,7 +44,6 @@ function squadPillProps(primary, hybrid) {
     }
   };
 
-  // HYBRID MODE → GOLD GLOW, SAME ICON
   if (primary && hybrid) {
     return {
       icon: base[primary].icon,
@@ -71,7 +56,6 @@ function squadPillProps(primary, hybrid) {
     };
   }
 
-  // NORMAL SQUAD
   if (primary) {
     return {
       ...base[primary],
@@ -79,7 +63,6 @@ function squadPillProps(primary, hybrid) {
     };
   }
 
-  // FALLBACK
   return {
     icon: "/assets/squad-icons/default.png",
     neon: "rgba(255,255,255,0.6)",
@@ -91,9 +74,6 @@ function squadPillProps(primary, hybrid) {
   };
 }
 
-/* =======================================================
-   BACKWARD COMPATIBLE SQUAD PARSER
-======================================================= */
 function parseOldSquad(str) {
   const s = String(str || "").toUpperCase();
   let primary = null;
@@ -107,26 +87,19 @@ function parseOldSquad(str) {
   return { primary, hybrid };
 }
 
-/* =======================================================
-   MAIN CARD RENDER FUNCTION
-======================================================= */
 export function renderCards(gridEl, members, options = {}) {
   gridEl.innerHTML = "";
   const showAdminActions = !!options.showAdminActions;
 
   members.forEach((m) => {
-
-    // NEW squad fields OR fallback to old one
     const primary = m.squadPrimary || parseOldSquad(m.squad).primary;
     const hybrid = m.squadHybrid || parseOldSquad(m.squad).hybrid;
-
     const squadInfo = squadPillProps(primary, hybrid);
 
     const power =
       m.power !== undefined && m.power !== null
         ? Number(m.power).toFixed(1)
         : "0.0";
-
     const powerType = m.powerType || "Precise";
     const fullName = m.name || "";
     const role = m.role || "";
@@ -159,7 +132,6 @@ export function renderCards(gridEl, members, options = {}) {
       transition: transform 0.25s ease, box-shadow 0.25s ease;
     `;
 
-    // GLOSS overlay
     const gloss = document.createElement("div");
     gloss.style.cssText = `
       position:absolute;
@@ -175,10 +147,9 @@ export function renderCards(gridEl, members, options = {}) {
         rgba(255,255,255,0.18) 20%,
         rgba(255,255,255,0.28) 30%,
         transparent 60%
-        
       );
       transition:opacity .3s ease;
-      pointer-events:none;   
+      pointer-events: none;
     `;
     gloss.className = "gloss-overlay";
     card.appendChild(gloss);
@@ -195,18 +166,11 @@ export function renderCards(gridEl, members, options = {}) {
       card.style.transform = "translateY(0)";
     };
 
-    /* =======================================================
-       CARD INNER STRUCTURE + ICON + BUTTONS
-    ======================================================== */
     card.innerHTML += `
       <div style="display:flex;">
 
-        <!-- LEFT SIDE TEXT -->
-        <div style="flex:1;">
-
+        <div style="flex:1; min-width:0;">
           <div style="display:flex; gap:0.75rem;">
-
-            <!-- AVATAR -->
             <div style="
               width:44px;height:44px;border-radius:50%;
               background:#ccc;display:flex;align-items:center;justify-content:center;
@@ -215,15 +179,9 @@ export function renderCards(gridEl, members, options = {}) {
               ${generateInitialsAvatar(fullName)}
             </div>
 
-            <!-- TEXT AREA -->
             <div style="flex:1;">
-
               <div style="display:flex; justify-content:space-between;">
-
-                <div style="
-                  font-size:1rem; font-weight:600;
-                  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-                ">
+                <div style="font-size:1rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                   ${escapeHtml(mainName)}
                 </div>
 
@@ -231,61 +189,32 @@ export function renderCards(gridEl, members, options = {}) {
                   <div style="font-weight:700; font-size:1.15rem;">
                     ${escapeHtml(power)}
                   </div>
-                  <div style="
-                    font-size:0.72rem; margin-top:3px;
-                    color:${powerType === "Approx"
-                      ? "rgba(255,210,0,1)"
-                      : "rgba(0,255,180,1)"};
-                  ">
+                  <div style="font-size:0.72rem; margin-top:3px; color:${powerType === "Approx" ? "rgba(255,210,0,1)" : "rgba(0,255,180,1)"};">
                     ${escapeHtml(powerType)}
                   </div>
                 </div>
-
               </div>
 
-              ${bracketName
-                ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.55);">
-                     ${escapeHtml(bracketName)}
-                   </div>`
-                : ""}
+              ${bracketName ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.55); margin-top:4px;">${escapeHtml(bracketName)}</div>` : ""}
 
-              <div style="font-size:0.85rem; opacity:0.75;">
+              <div style="font-size:0.85rem; opacity:0.75; margin-top:4px;">
                 ${escapeHtml(role)}
               </div>
 
-              <span style="
-                padding:4px 8px;
-                border-radius:999px;
-                background:${squadInfo.bg};
-                color:${squadInfo.fg};
-                border:1px solid ${squadInfo.border};
-                font-size:0.78rem;
-                font-weight:600;
-                display:inline-block;
-                margin-top:5px;
-              ">
-                ${escapeHtml(squadInfo.label)}
-              </span>
-
-              <div class="muted xsmall"
-                   style="margin-top:8px; opacity:0.75;">
-                ${escapeHtml(updatedLabel)}
+              <div style="margin-top:6px;">
+                <span style="padding:4px 8px;border-radius:999px;background:${squadInfo.bg};color:${squadInfo.fg};border:1px solid ${squadInfo.border};font-size:0.78rem;font-weight:600;">
+                  ${escapeHtml(squadInfo.label)}
+                </span>
               </div>
 
+              <div class="muted xsmall" style="margin-top:8px; opacity:0.75;">
+                ${escapeHtml(updatedLabel)}
+              </div>
             </div>
           </div>
-
         </div>
 
-        <!-- RIGHT ICON BOX -->
-        <div style="
-  width:90px;
-  min-width:90px;       /* 🔥 Prevent shrinking */
-  display:flex;
-  align-items:center;
-  justify-content:center;
-">
-
+        <div style="width:90px; min-width:90px; display:flex; align-items:center; justify-content:center; padding-left:6px;">
           <div style="
             width:50px;
             height:50px;
@@ -295,58 +224,30 @@ export function renderCards(gridEl, members, options = {}) {
             align-items:center;
             justify-content:center;
             background:rgba(255,255,255,0.03);
-            box-shadow:0 0 ${hybrid ? "22px" : "12px"} ${
-                  hybrid ? GOLD.neonLight : squadInfo.neonLight
-                };
+            box-shadow:0 0 ${hybrid ? "22px" : "12px"} ${hybrid ? GOLD.neonLight : squadInfo.neonLight};
           ">
-            <img src="${squadInfo.icon}" 
-                 style="
-                   width:44px;
-                   height:44px;
-                   object-fit:contain;
-                   filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${
-                     squadInfo.neon
-                   });
-                 ">
+            <img src="${squadInfo.icon}" style="width:44px;height:44px;object-fit:contain;filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${squadInfo.neon});">
           </div>
         </div>
 
       </div>
 
-      <!-- ADMIN BUTTONS -->
       <div class="admin-btn-row" style="margin-top:10px; display:flex; gap:0.5rem;">
-        ${
-          showAdminActions
-            ? `
-          <button class="btn btn-edit" data-id="${m.id}">Edit</button>
-          <button class="btn btn-delete" data-id="${m.id}">Delete</button>
-        `
-            : ""
-        }
+        ${ showAdminActions ? `<button class="btn btn-edit" data-id="${m.id}">Edit</button><button class="btn btn-delete" data-id="${m.id}">Delete</button>` : "" }
       </div>
     `;
 
-    /* =======================================================
-       BUTTON HANDLERS (FIXED — NOW ALWAYS WORK)
-    ======================================================== */
     if (showAdminActions) {
       const editBtn = card.querySelector(".btn-edit");
       const deleteBtn = card.querySelector(".btn-delete");
-
-      if (editBtn)
-        editBtn.addEventListener("click", () => options.onEdit?.(m));
-
-      if (deleteBtn)
-        deleteBtn.addEventListener("click", () => options.onDelete?.(m));
+      if (editBtn) editBtn.addEventListener("click", () => options.onEdit?.(m));
+      if (deleteBtn) deleteBtn.addEventListener("click", () => options.onDelete?.(m));
     }
 
     gridEl.appendChild(card);
   });
 }
 
-/* =======================================================
-   HELPERS
-======================================================= */
 function timeAgoInitial(ms) {
   const diff = (Date.now() - ms) / 1000;
   if (diff < 60) return "just now";

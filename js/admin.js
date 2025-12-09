@@ -22,7 +22,6 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
 /* ==========================================================
    GLOBAL STATE
 ========================================================== */
@@ -34,23 +33,21 @@ const state = {
   currentAdminName: ""
 };
 
-
 /* ==========================================================
    DOM SHORTCUT
 ========================================================== */
 const $ = (id) => document.getElementById(id);
 
-
 /* ==========================================================
    DOM ELEMENTS
+   NOTE: removed star-related DOM refs
 ========================================================== */
 const dom = {
   btnLogout: $("btnLogout"),
 
   statTotal: $("statTotal"),
   statAvg: $("statAvg"),
-  statFive: $("statFive"),
-  statMissing: $("statMissing"),
+  statMissing: $("statMissing"), // kept
 
   filterButtons: Array.from(document.querySelectorAll(".filter-btn")),
   sortButtons: Array.from(document.querySelectorAll(".sort-btn")),
@@ -78,14 +75,12 @@ const dom = {
 
   fieldPower: $("fieldPower"),
   fieldPowerType: $("fieldPowerType"),
-  fieldStars: $("fieldStars"),
 
   btnModalSave: $("btnModalSave"),
   btnModalCancel: $("btnModalCancel"),
 };
 
 let editingDocId = null;
-
 
 /* ==========================================================
    OLD SQUAD PARSER FOR BACKWARD COMPATIBILITY
@@ -103,9 +98,9 @@ function parseOldSquad(s) {
   return { primary, hybrid };
 }
 
-
 /* ==========================================================
    SEARCH + FILTER + SORT + ZERO LOGIC
+   (removed star sorts)
 ========================================================== */
 const isZeroPower = (v) => Number(v) === 0;
 
@@ -126,7 +121,6 @@ function filteredAndSortedMembers() {
   // FILTERING
   const f = state.filter.toUpperCase();
   if (f !== "RESET") {
-
     if (f === "MISSING_ZERO") {
       arr = arr.filter((m) => isZeroPower(m.power));
     } else if (f === "APPROX") {
@@ -162,15 +156,11 @@ function filteredAndSortedMembers() {
     );
   }
 
-  // SORTING
+  // SORTING (removed stars sorts)
   if (state.sort === "power-desc") {
     arr.sort((a, b) => Number(b.power) - Number(a.power));
   } else if (state.sort === "power-asc") {
     arr.sort((a, b) => Number(a.power) - Number(b.power));
-  } else if (state.sort === "stars-desc") {
-    arr.sort((a, b) => Number(b.stars) - Number(a.stars));
-  } else if (state.sort === "stars-asc") {
-    arr.sort((a, b) => Number(a.stars) - Number(b.stars));
   } else if (state.sort === "missing") {
     arr.sort((a, b) => {
       const am =
@@ -185,19 +175,16 @@ function filteredAndSortedMembers() {
   return arr;
 }
 
-
 /* ==========================================================
-   STATS
+   STATS (removed statFive computations and DOM update)
 ========================================================== */
 function updateStats(view) {
   let total = view.length,
     sum = 0,
-    five = 0,
     missing = 0;
 
   view.forEach((m) => {
     sum += Number(m.power) || 0;
-    if (Number(m.stars) === 5) five++;
     if (
       isZeroPower(m.power) ||
       (m.powerType || "").toUpperCase() === "APPROX"
@@ -208,10 +195,9 @@ function updateStats(view) {
 
   dom.statTotal.textContent = total;
   dom.statAvg.textContent = total ? (sum / total).toFixed(2) : "0.00";
-  dom.statFive.textContent = five;
+  // statFive removed
   dom.statMissing.textContent = missing;
 }
-
 
 /* ==========================================================
    RENDER CARDS
@@ -226,9 +212,9 @@ function render() {
   updateStats(view);
 }
 
-
 /* ==========================================================
    MODAL
+   (no stars field usage)
 ========================================================== */
 dom.btnModalCancel.addEventListener("click", () => {
   dom.modal.classList.add("hidden");
@@ -243,11 +229,10 @@ function openAddModal() {
   dom.fieldRole.value = "";
   dom.fieldSquadPrimary.value = "TANK";
   dom.fieldSquadHybrid.checked = false;
-  dom.hybridLabel.textContent = "No";
+  if (dom.hybridLabel) dom.hybridLabel.textContent = "No";
 
   dom.fieldPower.value = "";
   dom.fieldPowerType.value = "Precise";
-  dom.fieldStars.value = 3;
 
   dom.modal.classList.remove("hidden");
 }
@@ -256,26 +241,24 @@ function openEditModal(m) {
   editingDocId = m.id;
   dom.modalTitle.textContent = "Edit Member";
 
-  dom.fieldName.value = m.name;
-  dom.fieldRole.value = m.role;
+  dom.fieldName.value = m.name || "";
+  dom.fieldRole.value = m.role || "";
 
   const parsed = parseOldSquad(m.squad);
 
   dom.fieldSquadPrimary.value = m.squadPrimary || parsed.primary || "TANK";
-  dom.fieldSquadHybrid.checked =
-    m.squadHybrid || parsed.hybrid || false;
-  dom.hybridLabel.textContent = dom.fieldSquadHybrid.checked ? "Yes" : "No";
+  dom.fieldSquadHybrid.checked = m.squadHybrid || parsed.hybrid || false;
+  if (dom.hybridLabel) dom.hybridLabel.textContent = dom.fieldSquadHybrid.checked ? "Yes" : "No";
 
-  dom.fieldPower.value = m.power;
+  dom.fieldPower.value = m.power ?? "";
   dom.fieldPowerType.value = m.powerType || "Precise";
-  dom.fieldStars.value = m.stars;
 
   dom.modal.classList.remove("hidden");
 }
 
-
 /* ==========================================================
    SAVE MEMBER
+   - STOP writing `stars` to Firestore (option B)
 ========================================================== */
 dom.btnModalSave.addEventListener("click", async () => {
   if (!dom.fieldName.value.trim()) {
@@ -298,7 +281,7 @@ dom.btnModalSave.addEventListener("click", async () => {
 
     power: cleanNumber(dom.fieldPower.value),
     powerType: dom.fieldPowerType.value,
-    stars: Number(dom.fieldStars.value) || 3,
+    // stars intentionally NOT saved
     lastUpdated: serverTimestamp()
   };
 
@@ -318,7 +301,6 @@ dom.btnModalSave.addEventListener("click", async () => {
   dom.modal.classList.add("hidden");
 });
 
-
 /* ==========================================================
    DELETE
 ========================================================== */
@@ -334,9 +316,10 @@ async function deleteMember(m) {
   }
 }
 
-
 /* ==========================================================
    CSV IMPORT / EXPORT
+   - Import will no longer write `stars` to Firestore
+   - Export uses existing utilsExportCSV (may include stars if present in old docs)
 ========================================================== */
 dom.btnExport.addEventListener("click", () =>
   utilsExportCSV(state.members)
@@ -360,11 +343,11 @@ dom.csvInput.addEventListener("change", (e) => {
       await deleteDoc(doc(db, "members", m.id));
     }
 
-    // Insert
+    // Insert imported rows WITHOUT stars
     for (const m of imported) {
       const parsed = parseOldSquad(m.squad);
       const primary = parsed.primary || m.squadPrimary || "TANK";
-      const hybrid = parsed.hybrid || m.squadHybrid || false;
+      const hybrid = parsed.hybrid || !!m.squadHybrid || false;
 
       await addDoc(collection(db, "members"), {
         name: m.name,
@@ -374,7 +357,7 @@ dom.csvInput.addEventListener("change", (e) => {
         squad: hybrid ? `${primary} HYBRID` : primary,
         power: cleanNumber(m.power),
         powerType: m.powerType || "Precise",
-        stars: Number(m.stars) || 3,
+        // stars intentionally not written
         lastUpdated: serverTimestamp()
       });
     }
@@ -384,7 +367,6 @@ dom.csvInput.addEventListener("change", (e) => {
 
   reader.readAsText(file);
 });
-
 
 /* ==========================================================
    SEARCH / FILTER / SORT EVENTS
@@ -408,7 +390,6 @@ dom.sortButtons.forEach((btn) =>
   })
 );
 
-
 /* ==========================================================
    FIRESTORE LIVE SYNC
 ========================================================== */
@@ -422,7 +403,6 @@ function subscribeMembers() {
     render();
   });
 }
-
 
 /* ==========================================================
    ADMIN AUTH & INIT
