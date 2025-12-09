@@ -1,5 +1,4 @@
 // cards.js (clean - no stars display)
-// Keep your existing features: gloss, neon, gold hybrid etc.
 
 const styleTag = document.createElement("style");
 styleTag.innerHTML = `
@@ -56,12 +55,7 @@ function squadPillProps(primary, hybrid) {
     };
   }
 
-  if (primary) {
-    return {
-      ...base[primary],
-      label: primary
-    };
-  }
+  if (primary) return { ...base[primary], label: primary };
 
   return {
     icon: "/assets/squad-icons/default.png",
@@ -83,7 +77,6 @@ function parseOldSquad(str) {
   else if (s.includes("MISSILE")) primary = "MISSILE";
 
   const hybrid = s.includes("HYBRID");
-
   return { primary, hybrid };
 }
 
@@ -100,6 +93,7 @@ export function renderCards(gridEl, members, options = {}) {
       m.power !== undefined && m.power !== null
         ? Number(m.power).toFixed(1)
         : "0.0";
+
     const powerType = m.powerType || "Precise";
     const fullName = m.name || "";
     const role = m.role || "";
@@ -149,9 +143,8 @@ export function renderCards(gridEl, members, options = {}) {
         transparent 60%
       );
       transition:opacity .3s ease;
-      pointer-events: none;
+      pointer-events:none;
     `;
-    gloss.className = "gloss-overlay";
     card.appendChild(gloss);
 
     card.onmouseover = () => {
@@ -169,7 +162,15 @@ export function renderCards(gridEl, members, options = {}) {
     card.innerHTML += `
       <div style="display:flex;">
 
-        <div style="flex:1; min-width:0;">
+        <!-- 
+          FIX #1 — Limit left content width so it cannot push icon away 
+        -->
+        <div style="
+          flex:1;
+          min-width:0;
+          max-width:calc(100% - 90px);
+          overflow:hidden;
+        ">
           <div style="display:flex; gap:0.75rem;">
             <div style="
               width:44px;height:44px;border-radius:50%;
@@ -214,7 +215,19 @@ export function renderCards(gridEl, members, options = {}) {
           </div>
         </div>
 
-        <div style="width:90px; min-width:90px; display:flex; align-items:center; justify-content:center; padding-left:6px;">
+        <!-- 
+          FIX #2 — Prevent icon container from shrinking or expanding 
+        -->
+        <div style="
+          width:90px;
+          min-width:90px;
+          max-width:90px;
+          flex-shrink:0;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding-left:6px;
+        ">
           <div style="
             width:50px;
             height:50px;
@@ -233,7 +246,10 @@ export function renderCards(gridEl, members, options = {}) {
       </div>
 
       <div class="admin-btn-row" style="margin-top:10px; display:flex; gap:0.5rem;">
-        ${ showAdminActions ? `<button class="btn btn-edit" data-id="${m.id}">Edit</button><button class="btn btn-delete" data-id="${m.id}">Delete</button>` : "" }
+        ${ showAdminActions ? `
+          <button class="btn btn-edit" data-id="${m.id}">Edit</button>
+          <button class="btn btn-delete" data-id="${m.id}">Delete</button>
+        ` : "" }
       </div>
     `;
 
