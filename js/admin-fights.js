@@ -1,11 +1,11 @@
-// admin-fights.js (v2) — Enhanced Add-Player modal with squad filter & power ranking
-// Drop in /js/admin-fights.js (replace previous version)
+// admin-fights.js (v3) — Prevent cross-team duplicates + multi-select modal (click toggles)
+// Replace previous admin-fights.js with this complete file.
 
-console.log("✅ admin-fights.js (enhanced modal) loaded");
+console.log("✅ admin-fights.js (v3) loaded");
 
 import { db } from './firebase-config.js';
 import { cleanNumber } from './utils.js';
-import { logAudit } from './audit.js'; // optional; safe if undefined
+import { logAudit } from './audit.js'; // optional
 
 import {
   collection,
@@ -21,19 +21,18 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 /* ===========================
-   App state
+   Constants & State
    =========================== */
 const WEEKS_COLLECTION = 'desert_brawl_weeks';
-const membersCache = []; // live members cache (populated by subscribeMembers)
-const savedWeeksList = [];
-
+const membersCache = []; // populated by subscribeMembers
 const teams = {
   A: { main: [], subs: [], ui: {} },
   B: { main: [], subs: [], ui: {} }
 };
+let activeModal = null;
 
 /* ===========================
-   Helpers
+   Small helpers
    =========================== */
 const $ = id => document.getElementById(id);
 
@@ -66,29 +65,22 @@ function sanitizeId(s) {
 }
 
 /* ===========================
-   Squad derivation logic (Option 1: derived Hybrid categories)
+   Derived hybrid category (Option 1)
    =========================== */
-// Return one of: 'TANK','AIR','MISSILE','HYBRID','HYBRID-AIR','HYBRID-TANK'
 function derivedHybridCategory(member) {
   const squad = (member.squad || '').toUpperCase();
   const role = (member.role || '').toUpperCase();
-  if (squad !== 'HYBRID') return squad || 'UNKNOWN';
-
-  // squad === 'HYBRID' -> derive subcategory by checking role text
+  if (squad !== 'HYBRID') return squad || '';
   if (role.includes('AIR')) return 'HYBRID-AIR';
   if (role.includes('TANK')) return 'HYBRID-TANK';
-
-  // fallback: if name or other fields mention AIR/TANK
   const name = (member.name || '').toUpperCase();
   if (name.includes('AIR')) return 'HYBRID-AIR';
   if (name.includes('TANK')) return 'HYBRID-TANK';
-
-  // default hybrid
   return 'HYBRID';
 }
 
 /* ===========================
-   Firestore subscriptions
+   Firestore: subscribe members
    =========================== */
 function subscribeMembers() {
   try {
@@ -96,49 +88,35 @@ function subscribeMembers() {
     onSnapshot(q, snap => {
       membersCache.length = 0;
       snap.docs.forEach(d => membersCache.push({ id: d.id, ...d.data() }));
-      // if a modal is open, update its list
-      if (activeModal && activeModal.type === 'add-player') refreshModalList();
+      // refresh modal list if open
+      if (activeModal && activeModal.type === 'add-player') activeModal.refresh();
     }, err => {
       console.warn('members snapshot error', err);
     });
   } catch (e) {
-    console.warn('Firestore unavailable for members subscription', e);
+    console.warn('Firestore members subscription unavailable', e);
   }
 }
 
 /* ===========================
-   UI bindings (init)
+   UI bindings
    =========================== */
 function bindUI() {
-  // Team A ui
-  teams.A.ui.name = $('teamAName');
-  teams.A.ui.squad = $('teamASquad');
-  teams.A.ui.mainList = $('teamAMainList');
-  teams.A.ui.subList = $('teamASubList');
-  teams.A.ui.mainPower = $('teamAMainPower');
-  teams.A.ui.subPower = $('teamASubPower');
-  teams.A.ui.totalPower = $('teamATotalPower');
-  teams.A.ui.addMain = $('addTeamAMain');
-  teams.A.ui.addSub = $('addTeamASub');
-  teams.A.ui.mainCounts = $('teamAMainCounts');
-  teams.A.ui.mainCountLabel = $('teamAMainCount');
-  teams.A.ui.subCountLabel = $('teamASubCount');
+  // Team A UI
+  teams.A.ui.name = $('teamAName'); teams.A.ui.squad = $('teamASquad');
+  teams.A.ui.mainList = $('teamAMainList'); teams.A.ui.subList = $('teamASubList');
+  teams.A.ui.mainPower = $('teamAMainPower'); teams.A.ui.subPower = $('teamASubPower'); teams.A.ui.totalPower = $('teamATotalPower');
+  teams.A.ui.addMain = $('addTeamAMain'); teams.A.ui.addSub = $('addTeamASub'); teams.A.ui.mainCounts = $('teamAMainCounts');
+  teams.A.ui.mainCountLabel = $('teamAMainCount'); teams.A.ui.subCountLabel = $('teamASubCount');
 
-  // Team B ui
-  teams.B.ui.name = $('teamBName');
-  teams.B.ui.squad = $('teamBSquad');
-  teams.B.ui.mainList = $('teamBMainList');
-  teams.B.ui.subList = $('teamBSubList');
-  teams.B.ui.mainPower = $('teamBMainPower');
-  teams.B.ui.subPower = $('teamBSubPower');
-  teams.B.ui.totalPower = $('teamBTotalPower');
-  teams.B.ui.addMain = $('addTeamBMain');
-  teams.B.ui.addSub = $('addTeamBSub');
-  teams.B.ui.mainCounts = $('teamBMainCounts');
-  teams.B.ui.mainCountLabel = $('teamBMainCount');
-  teams.B.ui.subCountLabel = $('teamBSubCount');
+  // Team B UI
+  teams.B.ui.name = $('teamBName'); teams.B.ui.squad = $('teamBSquad');
+  teams.B.ui.mainList = $('teamBMainList'); teams.B.ui.subList = $('teamBSubList');
+  teams.B.ui.mainPower = $('teamBMainPower'); teams.B.ui.subPower = $('teamBSubPower'); teams.B.ui.totalPower = $('teamBTotalPower');
+  teams.B.ui.addMain = $('addTeamBMain'); teams.B.ui.addSub = $('addTeamBSub'); teams.B.ui.mainCounts = $('teamBMainCounts');
+  teams.B.ui.mainCountLabel = $('teamBMainCount'); teams.B.ui.subCountLabel = $('teamBSubCount');
 
-  // week controls
+  // Week controls
   $('autoWeekBtn')?.addEventListener('click', () => { $('weekLabel').value = getISOWeekLabel(); });
   $('saveWeekBtn')?.addEventListener('click', saveWeek);
   $('loadWeekBtn')?.addEventListener('click', loadSelectedWeek);
@@ -146,7 +124,7 @@ function bindUI() {
   $('clearAllBtn')?.addEventListener('click', clearAllTeams);
   $('exportWeekBtn')?.addEventListener('click', exportCurrentWeekJSON);
 
-  // add player buttons
+  // Add player buttons
   teams.A.ui.addMain?.addEventListener('click', () => openAddPlayerModal('A','main'));
   teams.A.ui.addSub?.addEventListener('click', () => openAddPlayerModal('A','sub'));
   teams.B.ui.addMain?.addEventListener('click', () => openAddPlayerModal('B','main'));
@@ -154,22 +132,34 @@ function bindUI() {
 }
 
 /* ===========================
-   Rendering teams & counts
+   Rendering helpers
    =========================== */
+function countSquads(playerArray) {
+  const out = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
+  playerArray.forEach(p => {
+    const s = (p.squad || '').toUpperCase();
+    if (!s) return;
+    if (s.startsWith('HYBRID')) out.HYBRID++; // derived hybrid categories count as HYBRID
+    else if (out[s] !== undefined) out[s]++;
+  });
+  return out;
+}
+
 function renderTeam(side) {
   const t = teams[side];
+  if (!t) return;
 
-  // render main
+  // main list
   t.ui.mainList.innerHTML = '';
-  t.main.forEach((p, idx) => t.ui.mainList.appendChild(playerRow(side, 'main', p, idx)));
+  t.main.forEach((p, idx) => t.ui.mainList.appendChild(playerRow(side,'main',p,idx)));
 
-  // render subs
+  // subs list
   t.ui.subList.innerHTML = '';
-  t.subs.forEach((p, idx) => t.ui.subList.appendChild(playerRow(side, 'sub', p, idx)));
+  t.subs.forEach((p, idx) => t.ui.subList.appendChild(playerRow(side,'sub',p,idx)));
 
-  // sums
-  const mainSum = t.main.reduce((s, p) => s + toNumber(p.power), 0);
-  const subSum = t.subs.reduce((s, p) => s + toNumber(p.power), 0);
+  // totals
+  const mainSum = t.main.reduce((s,p) => s + toNumber(p.power), 0);
+  const subSum = t.subs.reduce((s,p) => s + toNumber(p.power), 0);
   t.ui.mainPower.textContent = mainSum;
   t.ui.subPower.textContent = subSum;
   t.ui.totalPower.textContent = mainSum + subSum;
@@ -180,62 +170,32 @@ function renderTeam(side) {
 
   const counts = countSquads(t.main);
   t.ui.mainCounts.innerHTML = Object.entries(counts).map(([k,v]) => `<div class="count-pill">${k}: ${v}</div>`).join('');
+  // enable/disable add buttons
   t.ui.addMain.disabled = t.main.length >= 20;
   t.ui.addSub.disabled = t.subs.length >= 10;
 }
 
-function countSquads(playerArray) {
-  const keys = ['TANK','AIR','MISSILE','HYBRID'];
-  const out = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
-  playerArray.forEach(p => {
-    const s = (p.squad||'').toUpperCase();
-    if (out[s] !== undefined) out[s]++; else {
-      // if derived hybrid categories exist (HYBRID-AIR/TANK), count as HYBRID
-      if (s.startsWith('HYBRID')) out.HYBRID++;
-    }
-  });
-  return out;
-}
-
-function playerRow(side, bucket, player, idx) {
+function playerRow(side, bucket, p, idx) {
   const row = document.createElement('div');
   row.className = 'player-row';
 
   const left = document.createElement('div');
   left.className = 'left';
-  left.textContent = player.name || '(unnamed)';
+  left.textContent = p.name || '(unnamed)';
 
   const meta = document.createElement('div');
   meta.className = 'meta';
-
   const pwr = document.createElement('span');
   pwr.className = 'pwr';
-  // Approx power visual: muted + ≈ prefix (option 2=B)
-  if ((player.powerType || '').toUpperCase() === 'APPROX') {
-    pwr.style.color = '#999';
-    pwr.textContent = '≈' + (player.power ?? 0);
-  } else {
-    pwr.style.color = '#00ffc8';
-    pwr.textContent = (player.power ?? 0);
-  }
+  if ((p.powerType||'').toUpperCase() === 'APPROX') { pwr.style.color='#999'; pwr.textContent = '≈' + (p.power ?? 0); }
+  else { pwr.style.color='#00ffc8'; pwr.textContent = (p.power ?? 0); }
+  const squadEl = document.createElement('span'); squadEl.className='squad'; squadEl.textContent = p.squad || '';
+  meta.appendChild(pwr); meta.appendChild(squadEl);
 
-  const squadSpan = document.createElement('span');
-  squadSpan.className = 'squad';
-  squadSpan.textContent = player.squad || '';
-
-  meta.appendChild(pwr);
-  meta.appendChild(squadSpan);
-
-  const actions = document.createElement('div');
-  actions.className = 'actions';
-  const remBtn = document.createElement('button');
-  remBtn.className = 'btn ghost';
-  remBtn.textContent = 'Remove';
-  remBtn.addEventListener('click', () => {
-    removePlayer(side, bucket, idx);
-  });
-
-  actions.appendChild(remBtn);
+  const actions = document.createElement('div'); actions.className='actions';
+  const rem = document.createElement('button'); rem.className='btn ghost'; rem.textContent='Remove';
+  rem.addEventListener('click', () => removePlayer(side, bucket, idx));
+  actions.appendChild(rem);
 
   row.appendChild(left);
   row.appendChild(meta);
@@ -244,25 +204,48 @@ function playerRow(side, bucket, player, idx) {
 }
 
 /* ===========================
-   Add / remove players
+   Duplicate checks
+   =========================== */
+// Check if member id exists in either team (optionally excluding same side)
+function isMemberInTeam(memberId, side) {
+  if (!memberId) return false;
+  const t = teams[side];
+  return t.main.some(p => p.id === memberId) || t.subs.some(p => p.id === memberId);
+}
+
+function isMemberInOtherTeam(memberId, side) {
+  const other = (side === 'A') ? 'B' : 'A';
+  return isMemberInTeam(memberId, other);
+}
+
+/* ===========================
+   Add / remove players (with cross-team prevention)
    =========================== */
 function addPlayerToTeam(side, bucket, player) {
   const t = teams[side];
   if (!t) return;
 
-  // prevent duplicate inside same team
-  if (player.id) {
-    const existing = t.main.concat(t.subs).find(p => p.id === player.id);
-    if (existing) { alert('Member already in this team.'); return; }
+  // if player has id and exists in the opposite team -> block
+  if (player.id && isMemberInOtherTeam(player.id, side)) {
+    const other = (side === 'A') ? 'B' : 'A';
+    alert(`This member already exists in Team ${other}. Cannot add to both teams.`);
+    return;
   }
 
+  // prevent duplicate within same team
+  if (player.id && isMemberInTeam(player.id, side)) {
+    alert('This member already exists in this team.');
+    return;
+  }
+
+  // add to chosen bucket with limits
+  const normalized = normalizePlayer(player);
   if (bucket === 'main') {
-    if (t.main.length >= 20) { alert('Main limit (20) reached'); return; }
-    // if selected member from DB, prefer DB squad (override manual)
-    t.main.push(normalizePlayer(player));
+    if (t.main.length >= 20) { alert('Main limit 20 reached'); return; }
+    t.main.push(normalized);
   } else {
-    if (t.subs.length >= 10) { alert('Sub limit (10) reached'); return; }
-    t.subs.push(normalizePlayer(player));
+    if (t.subs.length >= 10) { alert('Sub limit 10 reached'); return; }
+    t.subs.push(normalized);
   }
   renderTeam(side);
 }
@@ -276,120 +259,72 @@ function removePlayer(side, bucket, idx) {
 }
 
 function normalizePlayer(p) {
-  // Ensure shape: { id, name, power, squad, powerType }
-  const squadFromDB = p.id ? ( (p.squad || '').toUpperCase() ) : ( (p.squad || '').toUpperCase() );
-  // If p originates from membersCache and squad is HYBRID, derive hybrid category for display
-  let displaySquad = squadFromDB || (p.squad || '').toUpperCase();
-  if (displaySquad === 'HYBRID' && p.id) {
-    // try derive hybrid subcategory from role
+  // prefer DB derived squad when id present
+  let squad = (p.squad || '').toUpperCase();
+  if (p.id) {
     const mem = membersCache.find(m => m.id === p.id);
-    if (mem) displaySquad = derivedHybridCategory(mem);
+    if (mem) {
+      squad = derivedHybridCategory(mem);
+    }
   }
   return {
     id: p.id || null,
     name: p.name || '',
     power: toNumber(p.power),
-    squad: displaySquad || '',
+    squad: squad || '',
     powerType: p.powerType || 'Precise'
   };
 }
 
 /* ===========================
-   Modal: enhanced Add-Player modal
-   - Squad filter buttons (derived hybrid)
-   - Power sort (desc / asc)
-   - Search box
-   - Ranked, clickable list
-   - Manual entry fallback
+   Modal: Multi-select (click toggles)
    =========================== */
-
-let activeModal = null; // hold modal state to refresh list when membersCache updates
-
 function openAddPlayerModal(side, bucket) {
-  closeModal(); // ensure single modal
+  closeModal(); // ensure single
 
-  // modal overlay
+  // overlay
   const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.background = 'rgba(0,0,0,0.6)';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = 99999;
+  overlay.style.position='fixed'; overlay.style.inset='0'; overlay.style.background='rgba(0,0,0,0.6)';
+  overlay.style.display='flex'; overlay.style.alignItems='center'; overlay.style.justifyContent='center'; overlay.style.zIndex=99999;
 
-  // modal box
+  // box
   const box = document.createElement('div');
-  box.style.width = '720px';
-  box.style.maxWidth = '96%';
-  box.style.maxHeight = '86%';
-  box.style.overflow = 'auto';
-  box.style.background = 'rgba(6,6,10,0.98)';
-  box.style.border = '1px solid rgba(80,80,120,0.3)';
-  box.style.padding = '14px';
-  box.style.borderRadius = '12px';
+  box.style.width='760px'; box.style.maxWidth='98%'; box.style.maxHeight='86%'; box.style.overflow='auto';
+  box.style.background='rgba(6,6,10,0.98)'; box.style.border='1px solid rgba(80,80,120,0.3)'; box.style.padding='14px'; box.style.borderRadius='12px';
   overlay.appendChild(box);
 
   // header
-  const h = document.createElement('div');
-  h.style.display = 'flex';
-  h.style.justifyContent = 'space-between';
-  h.style.alignItems = 'center';
-  const title = document.createElement('h3');
-  title.textContent = `${side==='A'?'Team A':'Team B'} — Add ${bucket==='main'?'Main':'Sub'} Player`;
-  title.style.color = '#00ffc8';
-  title.style.margin = '0';
-  h.appendChild(title);
+  const header = document.createElement('div'); header.style.display='flex'; header.style.justifyContent='space-between'; header.style.alignItems='center';
+  const title = document.createElement('h3'); title.textContent = `${side==='A'?'Team A':'Team B'} — Add ${bucket==='main'?'Main':'Sub'} Players`; title.style.color='#00ffc8'; title.style.margin=0;
+  header.appendChild(title);
+  const closeBtn = document.createElement('button'); closeBtn.className='btn ghost'; closeBtn.textContent='Close'; closeBtn.addEventListener('click', closeModal);
+  header.appendChild(closeBtn);
+  box.appendChild(header);
 
-  const closeX = document.createElement('button');
-  closeX.className = 'btn ghost';
-  closeX.textContent = 'Close';
-  closeX.addEventListener('click', closeModal);
-  h.appendChild(closeX);
-  box.appendChild(h);
-
-  // Controls row: Search + squad filters + sort
-  const controls = document.createElement('div');
-  controls.style.display = 'flex';
-  controls.style.gap = '8px';
-  controls.style.margin = '12px 0';
-  controls.style.flexWrap = 'wrap';
-
-  const search = document.createElement('input');
-  search.className = 'input';
-  search.placeholder = 'Search name...';
-  search.style.flex = '1';
+  // controls: search + squad filters + sort
+  const controls = document.createElement('div'); controls.style.display='flex'; controls.style.gap='8px'; controls.style.margin='12px 0'; controls.style.flexWrap='wrap';
+  const search = document.createElement('input'); search.className='input'; search.placeholder='Search name...'; search.style.flex='1';
   controls.appendChild(search);
 
   // squad filter buttons
   const squads = ['ALL','TANK','AIR','MISSILE','HYBRID-AIR','HYBRID-TANK','HYBRID'];
-  const squadFilterGroup = document.createElement('div');
-  squadFilterGroup.style.display = 'flex';
-  squadFilterGroup.style.gap = '6px';
+  const squadGroup = document.createElement('div'); squadGroup.style.display='flex'; squadGroup.style.gap='6px';
   squads.forEach(sq => {
-    const b = document.createElement('button');
-    b.className = 'btn ghost';
-    b.textContent = sq;
-    b.dataset.squad = sq;
+    const b = document.createElement('button'); b.className='btn ghost'; b.textContent=sq; b.dataset.squad=sq;
     b.addEventListener('click', () => {
-      // toggle active
-      Array.from(squadFilterGroup.children).forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      modalState.squadFilter = sq;
-      refreshModalList();
+      Array.from(squadGroup.children).forEach(x=>x.classList.remove('active'));
+      b.classList.add('active'); modalState.squadFilter = sq; refreshList();
     });
-    squadFilterGroup.appendChild(b);
+    squadGroup.appendChild(b);
   });
-  controls.appendChild(squadFilterGroup);
+  controls.appendChild(squadGroup);
 
-  // sort buttons
-  const sortGroup = document.createElement('div');
-  sortGroup.style.display = 'flex';
-  sortGroup.style.gap = '6px';
+  // sort
+  const sortGroup = document.createElement('div'); sortGroup.style.display='flex'; sortGroup.style.gap='6px';
   const sd = document.createElement('button'); sd.className='btn ghost'; sd.textContent='Power ↓'; sd.dataset.sort='desc';
   const sa = document.createElement('button'); sa.className='btn ghost'; sa.textContent='Power ↑'; sa.dataset.sort='asc';
-  sd.addEventListener('click', () => { modalState.sort = 'desc'; sd.classList.add('active'); sa.classList.remove('active'); refreshModalList(); });
-  sa.addEventListener('click', () => { modalState.sort = 'asc'; sa.classList.add('active'); sd.classList.remove('active'); refreshModalList(); });
+  sd.addEventListener('click', () => { modalState.sort='desc'; sd.classList.add('active'); sa.classList.remove('active'); refreshList(); });
+  sa.addEventListener('click', () => { modalState.sort='asc'; sa.classList.add('active'); sd.classList.remove('active'); refreshList(); });
   sortGroup.appendChild(sd); sortGroup.appendChild(sa);
   controls.appendChild(sortGroup);
 
@@ -397,205 +332,167 @@ function openAddPlayerModal(side, bucket) {
 
   // list container
   const listWrap = document.createElement('div');
-  listWrap.style.border = '1px solid rgba(255,255,255,0.03)';
-  listWrap.style.borderRadius = '8px';
-  listWrap.style.padding = '10px';
-  listWrap.style.maxHeight = '320px';
-  listWrap.style.overflow = 'auto';
+  listWrap.style.border='1px solid rgba(255,255,255,0.03)'; listWrap.style.borderRadius='8px'; listWrap.style.padding='10px';
+  listWrap.style.maxHeight='360px'; listWrap.style.overflow='auto';
   box.appendChild(listWrap);
 
-  // manual entry area
-  const manual = document.createElement('div');
-  manual.style.marginTop = '12px';
-  manual.innerHTML = `
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <input class="input" id="manualName" placeholder="Manual name (if not selecting member)" style="flex:1"/>
-      <input class="input" id="manualPower" placeholder="Power" style="width:120px" type="number"/>
-      <select class="input" id="manualSquad" style="width:160px">
-        <option value="">Squad (optional)</option>
-        <option value="TANK">TANK</option><option value="AIR">AIR</option><option value="MISSILE">MISSILE</option><option value="HYBRID">HYBRID</option>
-      </select>
-      <select class="input" id="manualPowerType" style="width:120px">
-        <option value="Precise">Precise</option><option value="Approx">Approx</option>
-      </select>
-    </div>
-  `;
+  // manual entry
+  const manual = document.createElement('div'); manual.style.marginTop='12px';
+  manual.innerHTML = `<div style="display:flex;gap:8px;flex-wrap:wrap">
+    <input class="input" id="manualName" placeholder="Manual name (if not selecting)" style="flex:1"/>
+    <input class="input" id="manualPower" placeholder="Power" style="width:120px" type="number"/>
+    <select class="input" id="manualSquad" style="width:160px">
+      <option value="">Squad (optional)</option><option value="TANK">TANK</option><option value="AIR">AIR</option><option value="MISSILE">MISSILE</option><option value="HYBRID">HYBRID</option>
+    </select>
+    <select class="input" id="manualPowerType" style="width:120px">
+      <option value="Precise">Precise</option><option value="Approx">Approx</option>
+    </select>
+  </div>`;
   box.appendChild(manual);
 
-  // add actions (Add Selected / Add Manual / Cancel)
-  const actions = document.createElement('div');
-  actions.style.display = 'flex';
-  actions.style.justifyContent = 'flex-end';
-  actions.style.gap = '8px';
-  actions.style.marginTop = '12px';
-
-  const addSelected = document.createElement('button');
-  addSelected.className = 'btn primary'; addSelected.textContent = 'Add Selected';
-  addSelected.addEventListener('click', () => {
-    if (!modalState.selectedMemberId) { alert('Select a member from the list or use manual entry.'); return; }
-    const mem = membersCache.find(m => m.id === modalState.selectedMemberId);
-    if (!mem) { alert('Member not found'); return; }
-    const player = {
-      id: mem.id,
-      name: mem.name,
-      power: mem.power ?? 0,
-      squad: derivedHybridCategory(mem), // display derived category
-      powerType: mem.powerType || 'Precise'
-    };
-    addPlayerToTeam(side, bucket, player);
-    closeModal();
-  });
-
-  const addManual = document.createElement('button');
-  addManual.className = 'btn primary'; addManual.textContent = 'Add Manual';
+  // actions
+  const actions = document.createElement('div'); actions.style.display='flex'; actions.style.justifyContent='flex-end'; actions.style.gap='8px'; actions.style.marginTop='12px';
+  const cancel = document.createElement('button'); cancel.className='btn ghost'; cancel.textContent='Cancel'; cancel.addEventListener('click', closeModal);
+  const addManual = document.createElement('button'); addManual.className='btn primary'; addManual.textContent='Add Manual';
   addManual.addEventListener('click', () => {
     const name = box.querySelector('#manualName').value.trim();
     const power = box.querySelector('#manualPower').value;
     const squad = box.querySelector('#manualSquad').value;
     const ptype = box.querySelector('#manualPowerType').value || 'Precise';
-    if (!name) return alert('Enter manual name or select a member.');
-    const player = { id: null, name, power: toNumber(power), squad: squad || '', powerType: ptype };
+    if (!name) return alert('Enter manual name or select members.');
+    const player = { id: null, name, power: toNumber(power), squad, powerType: ptype };
     addPlayerToTeam(side, bucket, player);
     closeModal();
   });
 
-  const cancel = document.createElement('button');
-  cancel.className = 'btn ghost'; cancel.textContent = 'Cancel'; cancel.addEventListener('click', closeModal);
+  const addSelected = document.createElement('button'); addSelected.className='btn primary'; addSelected.textContent='Add Selected';
+  addSelected.addEventListener('click', () => {
+    const ids = modalState.selectedIds.slice();
+    if (!ids.length) return alert('No members selected. Click rows to select multiple.');
+    // try to add all selected one by one with cross-team checks
+    let blocked = [];
+    for (const mid of ids) {
+      const mem = membersCache.find(x => x.id === mid);
+      if (!mem) continue;
+      // cross-team check
+      if (isMemberInOtherTeam(mem.id, side)) {
+        blocked.push(mem.name + ` (in other team)`);
+        continue;
+      }
+      // duplicate within same team check
+      if (isMemberInTeam(mem.id, side)) {
+        blocked.push(mem.name + ` (already in same team)`);
+        continue;
+      }
+      const player = { id: mem.id, name: mem.name, power: mem.power ?? 0, squad: derivedHybridCategory(mem), powerType: mem.powerType || 'Precise' };
+      // enforce limits: if adding would exceed, stop adding further and inform
+      const t = teams[side];
+      const remainMain = 20 - t.main.length;
+      const remainSub = 10 - t.subs.length;
+      if ((bucket==='main' && remainMain <= 0) || (bucket==='sub' && remainSub <= 0)) {
+        blocked.push(mem.name + ' (limit reached)');
+        continue;
+      }
+      addPlayerToTeam(side, bucket, player);
+    }
+    if (blocked.length) alert('Some members could not be added:\n' + blocked.join('\n'));
+    closeModal();
+  });
 
-  actions.appendChild(cancel);
-  actions.appendChild(addManual);
-  actions.appendChild(addSelected);
+  actions.appendChild(cancel); actions.appendChild(addManual); actions.appendChild(addSelected);
   box.appendChild(actions);
 
-  // modal state for filtering & selection
+  // modal state
   const modalState = {
     squadFilter: 'ALL',
     sort: 'desc',
     search: '',
-    selectedMemberId: null
+    selectedIds: []
   };
 
-  // search wiring
-  search.addEventListener('input', (e) => { modalState.search = e.target.value.trim().toLowerCase(); refreshModalList(); });
+  // initial active states
+  Array.from(squadGroup.children).forEach(b => { if (b.dataset.squad === 'ALL') b.classList.add('active'); });
+  sd.classList.add('active');
 
-  // expose helpers for external updates
+  // search wiring
+  search.addEventListener('input', (e) => { modalState.search = e.target.value.trim().toLowerCase(); refreshList(); });
+
+  // expose for updates
   activeModal = {
     overlay,
     box,
     type: 'add-player',
     state: modalState,
-    refresh: refreshModalList
+    refresh: refreshList
   };
 
-  // append overlay
   document.body.appendChild(overlay);
-
-  // initial activate ALL button
-  Array.from(squadFilterGroup.children).forEach(b => { if (b.dataset.squad === 'ALL') b.classList.add('active'); });
-
-  // refresh list
-  refreshModalList();
-
-  // ensure focused
   search.focus();
+  refreshList();
 
-  /* --------------- refreshModalList (closure) --------------- */
-  function refreshModalList() {
-    listWrap.innerHTML = ''; // clear
-    // prepare list from membersCache
+  /* ---------- refreshList closure ---------- */
+  function refreshList() {
+    listWrap.innerHTML = '';
+    // build list from membersCache
     let list = membersCache.map(m => ({ id: m.id, name: m.name, power: toNumber(m.power), squadRaw: (m.squad||'').toUpperCase(), role: (m.role||''), powerType: m.powerType || 'Precise' }));
-
-    // derive displaySquad for each
-    list = list.map(m => {
-      const display = (m.squadRaw === 'HYBRID') ? derivedHybridCategory(m) : (m.squadRaw || '');
-      return { ...m, displaySquad: display };
-    });
-
-    // apply squad filter
+    // derive display squad
+    list = list.map(m => ({ ...m, displaySquad: (m.squadRaw === 'HYBRID') ? derivedHybridCategory(m) : (m.squadRaw || '') }));
+    // squad filter
     if (modalState.squadFilter && modalState.squadFilter !== 'ALL') {
-      const sq = modalState.squadFilter;
+      const sf = modalState.squadFilter;
       list = list.filter(m => {
-        if (sq === 'HYBRID-AIR' || sq === 'HYBRID-TANK') return (m.displaySquad === sq);
-        if (sq === 'HYBRID') return (m.displaySquad === 'HYBRID' || m.displaySquad === 'HYBRID-AIR' || m.displaySquad === 'HYBRID-TANK');
-        return (m.displaySquad === sq) || (m.squadRaw === sq);
+        if (sf === 'HYBRID-AIR' || sf === 'HYBRID-TANK') return m.displaySquad === sf;
+        if (sf === 'HYBRID') return m.displaySquad.startsWith('HYBRID');
+        return m.displaySquad === sf || m.squadRaw === sf;
       });
     }
-
-    // apply search
+    // search
     if (modalState.search) {
       list = list.filter(m => (m.name + ' ' + (m.displaySquad||'') + ' ' + (m.role||'')).toLowerCase().includes(modalState.search));
     }
-
-    // apply sort by power
+    // sort
     if (modalState.sort === 'desc') list.sort((a,b) => b.power - a.power);
     else list.sort((a,b) => a.power - b.power);
 
-    // build list items
+    // build DOM items
     list.forEach(m => {
       const item = document.createElement('div');
-      item.style.display = 'flex';
-      item.style.justifyContent = 'space-between';
-      item.style.alignItems = 'center';
-      item.style.padding = '8px';
-      item.style.borderRadius = '8px';
-      item.style.marginBottom = '6px';
-      item.style.cursor = 'pointer';
-      item.style.background = 'transparent';
-      item.addEventListener('click', () => {
-        modalState.selectedMemberId = m.id;
-        // highlight selection
-        Array.from(listWrap.children).forEach(c => c.style.outline = 'none');
-        item.style.outline = '2px solid rgba(0,200,255,0.12)';
+      item.style.display='flex'; item.style.justifyContent='space-between'; item.style.alignItems='center';
+      item.style.padding='8px'; item.style.borderRadius='8px'; item.style.marginBottom='6px'; item.style.cursor='pointer';
+      item.style.background = modalState.selectedIds.includes(m.id) ? 'rgba(0,200,255,0.06)' : 'transparent';
+      // If member exists in other team, grey it out and add note
+      const inOther = isMemberInOtherTeam(m.id, side);
+      if (inOther) item.style.opacity = '0.55';
+
+      item.addEventListener('click', (e) => {
+        // toggle selection (Multi A behavior)
+        if (modalState.selectedIds.includes(m.id)) {
+          modalState.selectedIds = modalState.selectedIds.filter(x => x !== m.id);
+          item.style.background = 'transparent';
+        } else {
+          modalState.selectedIds.push(m.id);
+          item.style.background = 'rgba(0,200,255,0.06)';
+        }
       });
 
-      const left = document.createElement('div');
-      left.style.display = 'flex';
-      left.style.flexDirection = 'column';
+      const left = document.createElement('div'); left.style.display='flex'; left.style.flexDirection='column';
+      const nameEl = document.createElement('div'); nameEl.textContent = m.name; nameEl.style.color='#eaeaea'; nameEl.style.fontWeight='600';
+      const subEl = document.createElement('div'); subEl.textContent = `${m.displaySquad || ''}${m.role ? ' • ' + m.role : ''}`; subEl.style.color='#aaa'; subEl.style.fontSize='12px';
+      left.appendChild(nameEl); left.appendChild(subEl);
 
-      const nameEl = document.createElement('div');
-      nameEl.textContent = m.name;
-      nameEl.style.color = '#eaeaea';
-      nameEl.style.fontWeight = '600';
+      const right = document.createElement('div'); right.style.display='flex'; right.style.flexDirection='column'; right.style.alignItems='flex-end';
+      const pwrEl = document.createElement('div'); pwrEl.style.fontWeight='700';
+      if (m.powerType && m.powerType.toUpperCase() === 'APPROX') { pwrEl.textContent = '≈' + m.power; pwrEl.style.color='#999'; }
+      else { pwrEl.textContent = m.power; pwrEl.style.color='#00ffc8'; }
+      const badge = document.createElement('div'); badge.textContent = m.displaySquad || ''; badge.style.color='#ddd'; badge.style.fontSize='12px';
+      right.appendChild(pwrEl); right.appendChild(badge);
 
-      const subEl = document.createElement('div');
-      subEl.textContent = `${m.displaySquad || ''} ${m.role ? ' • ' + m.role : ''}`;
-      subEl.style.color = '#aaa';
-      subEl.style.fontSize = '12px';
-
-      left.appendChild(nameEl);
-      left.appendChild(subEl);
-
-      const right = document.createElement('div');
-      right.style.display = 'flex';
-      right.style.flexDirection = 'column';
-      right.style.alignItems = 'flex-end';
-
-      const pwrEl = document.createElement('div');
-      if (m.powerType && m.powerType.toUpperCase() === 'APPROX') {
-        pwrEl.textContent = '≈' + m.power;
-        pwrEl.style.color = '#999';
-      } else {
-        pwrEl.textContent = m.power;
-        pwrEl.style.color = '#00ffc8';
-      }
-      pwrEl.style.fontWeight = '700';
-
-      const badge = document.createElement('div');
-      badge.textContent = m.displaySquad || '';
-      badge.style.color = '#ddd';
-      badge.style.fontSize = '12px';
-
-      right.appendChild(pwrEl);
-      right.appendChild(badge);
-
-      item.appendChild(left);
-      item.appendChild(right);
+      item.appendChild(left); item.appendChild(right);
       listWrap.appendChild(item);
     });
 
-    // if empty show hint
     if (!list.length) {
-      const hint = document.createElement('div'); hint.style.color = '#888'; hint.style.padding='12px'; hint.textContent = 'No members found.';
+      const hint = document.createElement('div'); hint.style.color='#888'; hint.style.padding='12px'; hint.textContent = 'No members found.';
       listWrap.appendChild(hint);
     }
   }
@@ -612,10 +509,9 @@ function closeModal() {
 }
 
 /* ===========================
-   Weeks save/load/delete & other helpers
-   (kept from previous implementation)
+   Weeks: save / load / delete / export
+   (similar to previous implementations)
    =========================== */
-
 function buildWeekPayload() {
   return {
     label: $('weekLabel').value || getISOWeekLabel(),
@@ -645,18 +541,14 @@ async function saveWeek() {
 async function refreshSavedWeeks() {
   try {
     const snap = await getDocs(collection(db, WEEKS_COLLECTION));
-    const sel = $('savedWeeks');
-    if (!sel) return;
+    const sel = $('savedWeeks'); if (!sel) return;
     sel.innerHTML = '<option value="">-- Load saved week --</option>';
     snap.docs.forEach(d => {
       const opt = document.createElement('option');
-      opt.value = d.id;
-      opt.textContent = d.data().label || d.id;
+      opt.value = d.id; opt.textContent = d.data().label || d.id;
       sel.appendChild(opt);
     });
-  } catch (e) {
-    console.warn('refreshSavedWeeks error', e);
-  }
+  } catch (e) { console.warn('refreshSavedWeeks error', e); }
 }
 
 async function loadSelectedWeek() {
@@ -665,13 +557,9 @@ async function loadSelectedWeek() {
   try {
     const snap = await getDoc(doc(db, WEEKS_COLLECTION, id));
     if (!snap.exists()) return alert('Week not found');
-    const data = snap.data();
-    applyLoadedWeek(data);
+    const data = snap.data(); applyLoadedWeek(data);
     $('weekLabel').value = data.label || id;
-  } catch (e) {
-    console.error('load error', e);
-    alert('Load failed');
-  }
+  } catch (e) { console.error('load error', e); alert('Load failed'); }
 }
 
 function applyLoadedWeek(data) {
@@ -679,7 +567,6 @@ function applyLoadedWeek(data) {
   teams.A.subs = (data.teamA?.subs || []).map(normalizeForLoad);
   teams.B.main = (data.teamB?.main || []).map(normalizeForLoad);
   teams.B.subs = (data.teamB?.subs || []).map(normalizeForLoad);
-  // set UI fields if present
   if (teams.A.ui.name) teams.A.ui.name.value = data.teamA?.name || '';
   if (teams.A.ui.squad) teams.A.ui.squad.value = data.teamA?.squad || '';
   if (teams.B.ui.name) teams.B.ui.name.value = data.teamB?.name || '';
@@ -705,21 +592,14 @@ async function deleteSelectedWeek() {
     await deleteDoc(doc(db, WEEKS_COLLECTION, id));
     alert('Deleted');
     await refreshSavedWeeks();
-  } catch (e) {
-    console.error('delete week error', e);
-    alert('Delete failed');
-  }
+  } catch (e) { console.error('delete week error', e); alert('Delete failed'); }
 }
 
-/* ===========================
-   Export JSON / Clear functions
-   =========================== */
 function exportCurrentWeekJSON() {
   const payload = buildWeekPayload();
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `${payload.label || 'week'}.json`; document.body.appendChild(a); a.click(); a.remove();
+  const a = document.createElement('a'); a.href=url; a.download = `${payload.label || 'week'}.json`; document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
 
@@ -731,21 +611,12 @@ function clearAllTeams() {
 }
 
 /* ===========================
-   Utilities
+   Utility / init
    =========================== */
 function normalizePlayerObj(p) {
-  return {
-    id: p.id || null,
-    name: p.name || '',
-    power: toNumber(p.power),
-    squad: (p.squad || '').toUpperCase(),
-    powerType: p.powerType || 'Precise'
-  };
+  return { id: p.id || null, name: p.name || '', power: toNumber(p.power), squad: (p.squad || '').toUpperCase(), powerType: p.powerType || 'Precise' };
 }
 
-/* ===========================
-   Initialize
-   =========================== */
 function init() {
   bindUI();
   subscribeMembers();
@@ -754,12 +625,4 @@ function init() {
   $('weekLabel').value = getISOWeekLabel();
 }
 
-// Expose functions used by modal
-function refreshModalList() {
-  if (activeModal && activeModal.refresh) activeModal.refresh();
-}
-
-/* ===========================
-   Start
-   =========================== */
 document.addEventListener('DOMContentLoaded', init);
