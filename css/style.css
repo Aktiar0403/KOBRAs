@@ -738,3 +738,106 @@ body.bg {
     letter-spacing: 2px;
   }
 }
+/* PAGE TITLE */
+.brawl-header h1 {
+  text-align: center;
+  color: #00ffc8;
+  font-size: 34px;
+  text-shadow: 0 0 12px rgba(0,255,200,0.35);
+  margin: 20px 0 30px 0;
+}
+
+/* TEAM CARDS WRAPPER */
+.teams-container {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 40px;
+  gap: 30px;
+}
+
+/* TEAM CARD */
+.team-card {
+  flex: 1;
+  background: rgba(20, 20, 30, 0.6);
+  padding: 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(80,80,120,0.3);
+  box-shadow: 0 0 15px rgba(0,255,180,0.08);
+  backdrop-filter: blur(8px);
+}
+
+/* TITLES */
+.team-title {
+  text-align: center;
+  font-size: 26px;
+  color: #00ffc8;
+  margin-bottom: 10px;
+}
+.team-title.teamB {
+  color: #00b7ff;
+}
+
+.label {
+  font-size: 13px;
+  color: #ccc;
+  margin-top: 10px;
+}
+
+.input {
+  width: 100%;
+  padding: 10px;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.power-box {
+  margin-top: 10px;
+  padding: 12px;
+  background: #151515;
+  border: 1px solid #333;
+  border-radius: 10px;
+}
+
+.total-power {
+  margin-top: 6px;
+  font-size: 18px;
+  color: #00ffc8;
+  font-weight: bold;
+}
+
+.sub-heading {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #fff;
+  border-bottom: 1px solid #333;
+  padding-bottom: 6px;
+}
+
+.player-list {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* BUTTONS */
+.btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #0099ff, #00ddff);
+  color: #fff;
+  width: 100%;
+  margin-bottom: 14px;
+}
+
+.btn.secondary {
+  background: linear-gradient(135deg, #444, #666);
+  color: #fff;
+  width: 100%;
+}

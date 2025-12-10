@@ -2,120 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>KOBRA – War Builder</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DESERT BRAWL — TEAM BUILDER</title>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 
 <body class="bg">
-<div class="app-shell">
 
-  <!-- TOPBAR -->
-  <header class="topbar">
-      <div>
-          <h1>War Builder</h1>
-          <p class="muted small">Create teams, assign members & finalize lineup.</p>
-          <p class="muted xsmall">Logged in as: <span id="adminNameLabel">—</span></p>
-      </div>
-      <div class="topbar-actions">
-          <button id="btnDashboard" class="btn">⬅ Back</button>
-          <button id="btnLogout" class="btn">Logout</button>
-      </div>
-  </header>
+  <div class="brawl-header">
+    <h1>DESERT BRAWL — TEAM BUILDER</h1>
+  </div>
 
+  <div class="teams-container">
 
-  <!-- MAIN -->
-  <main>
+    <!-- ================= TEAM A ================= -->
+    <div class="team-card">
+      <h2 class="team-title">Team A</h2>
 
-    <!-- Controls section (matches Members page styling) -->
-    <section class="controls">
+      <div class="team-section">
+        <label class="label">Team A Name</label>
+        <input id="teamAName" class="input" placeholder="Enter Team A Name">
 
-      <h2 class="muted small">Fight Setup</h2>
+        <label class="label">Squad Type</label>
+        <select id="teamASquad" class="input">
+          <option value="">Select Type</option>
+          <option value="TANK">TANK</option>
+          <option value="AIR">AIR</option>
+          <option value="MISSILE">MISSILE</option>
+          <option value="HYBRID">HYBRID</option>
+        </select>
 
-      <div class="controls-row">
-        <label class="field-label">Fight Name</label>
-        <input id="fightName" class="search-input" placeholder="e.g. Alliance War vs XYZ" />
-      </div>
-
-      <div class="controls-row">
-        <div>
-          <label class="field-label">Number of Teams</label>
-          <input id="numTeams" class="search-input" type="number" value="2" min="1" />
-        </div>
-
-        <div>
-          <label class="field-label">Players Per Team</label>
-          <input id="playersPerTeam" class="search-input" type="number" value="20" />
-        </div>
-
-        <div>
-          <label class="field-label">Substitutes</label>
-          <input id="subsPerTeam" class="search-input" type="number" value="10" />
+        <div class="power-box">
+          <div>Main Power: <span id="teamAMainPower">0</span></div>
+          <div>Subs Power: <span id="teamASubPower">0</span></div>
+          <div class="total-power">Total Power: <span id="teamATotalPower">0</span></div>
         </div>
       </div>
 
-      <div class="controls-row">
-        <label class="field-label">Team Names</label>
-      </div>
+      <!-- MAIN PLAYERS -->
+      <h3 class="sub-heading">20 Main Players</h3>
+      <div id="teamAMainList" class="player-list"></div>
+      <button class="btn primary" id="addTeamAMain">➕ Add Main Player</button>
 
-      <div class="controls-row" id="teamNamesContainer"></div>
+      <!-- SUB PLAYERS -->
+      <h3 class="sub-heading">10 Sub Players</h3>
+      <div id="teamASubList" class="player-list"></div>
+      <button class="btn secondary" id="addTeamASub">➕ Add Sub Player</button>
+    </div>
 
-      <div class="controls-row">
-        <button id="createFightBtn" class="btn primary">Create New Fight</button>
-        <button id="loadDraftsBtn" class="btn">Load Draft Fight</button>
-      </div>
+    <!-- ================= TEAM B ================= -->
+    <div class="team-card">
+      <h2 class="team-title teamB">Team B</h2>
 
-      <div class="controls-row">
-        <div class="stat-pill">Status: <span id="fightStatus">—</span></div>
-      </div>
+      <div class="team-section">
+        <label class="label">Team B Name</label>
+        <input id="teamBName" class="input" placeholder="Enter Team B Name">
 
-      <hr style="margin:20px 0; opacity:0.3"/>
+        <label class="label">Squad Type</label>
+        <select id="teamBSquad" class="input">
+          <option value="">Select Type</option>
+          <option value="TANK">TANK</option>
+          <option value="AIR">AIR</option>
+          <option value="MISSILE">MISSILE</option>
+          <option value="HYBRID">HYBRID</option>
+        </select>
 
-      <h2 class="muted small">Roster Selection</h2>
-
-      <div class="controls-row">
-        <input id="rosterSearch" class="search-input" placeholder="Search members..." />
-      </div>
-
-    </section>
-
-
-    <!-- Layout = left panel + right panel (same as dashboard) -->
-    <section class="layout">
-
-        <!-- LEFT SIDE — ALL MEMBERS -->
-        <div class="cards-panel">
-            <h3 class="muted small">Available Members</h3>
-            <div id="rosterPool" class="cards-grid"></div>
+        <div class="power-box">
+          <div>Main Power: <span id="teamBMainPower">0</span></div>
+          <div>Subs Power: <span id="teamBSubPower">0</span></div>
+          <div class="total-power">Total Power: <span id="teamBTotalPower">0</span></div>
         </div>
+      </div>
 
-        <!-- RIGHT SIDE — TEAM BUILDER -->
-        <aside class="audit-panel">
-            <h2>Teams</h2>
-            <p class="muted xsmall">Drag players to assign them.</p>
+      <!-- MAIN PLAYERS -->
+      <h3 class="sub-heading">20 Main Players</h3>
+      <div id="teamBMainList" class="player-list"></div>
+      <button class="btn primary" id="addTeamBMain">➕ Add Main Player</button>
 
-            <div id="teamsContainer" class="audit-list"></div>
+      <!-- SUB PLAYERS -->
+      <h3 class="sub-heading">10 Sub Players</h3>
+      <div id="teamBSubList" class="player-list"></div>
+      <button class="btn secondary" id="addTeamBSub">➕ Add Sub Player</button>
+    </div>
 
-            <div class="controls-row" style="margin-top:15px">
-              <button id="saveTeamsBtn" class="btn primary">Save Teams</button>
-              <button id="finalizeBtn" class="btn">Finalize Fight</button>
-            </div>
-        </aside>
-
-    </section>
-
-  </main>
-</div>
-
-<script>
-  // Small navigation helper
-  document.getElementById("btnDashboard").onclick = () => {
-    window.location.href = "/dashboard.html";
-  };
-</script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-<script type="module" src="/js/admin-fights.js"></script>
-
+  </div>
 </body>
 </html>
