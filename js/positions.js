@@ -32,6 +32,7 @@ const MAP_SPOTS = [
 ];
 
 /* ========== State ========== */
+let activeTeam = 'A'; // default//
 let currentWeekId = null;
 let weekData = null;
 let positions = { teamA: {}, teamB: {} }; // each map: posKey -> [ { id, name, note } ]
@@ -122,64 +123,57 @@ async function loadWeekById(id) {
 }
 
 /* ========== Render functions ========== */
-function renderAll() {
-  renderTeamLists();
-  renderMap('A');
-  renderMap('B');
-}
+function renderActiveTeamMap() {
+  const teamKey = activeTeam === 'A' ? 'teamA' : 'teamB';
 
-function renderTeamLists() {
-  empty(teamAList); empty(teamBList);
-  teamAMembers.forEach(p => {
-    const chip = document.createElement('div'); chip.className='player-chip';
-    chip.innerHTML = `<div><div class="player-name">${p.name}</div><div class="player-meta">${p.squad} • ${p.power}</div></div>
-                      <div class="player-meta">${assignedPositionsForPlayer(p.id, 'teamA').length || 0}</div>`;
-    teamAList.appendChild(chip);
+  const mapInner = $('mapInnerSingle');
+  const teamList = $('teamListSingle');
+
+  // Update panel labels
+  $('panelTitle').textContent = `Team ${activeTeam} — Map`;
+  $('teamListLabel').textContent = `Team ${activeTeam} Players`;
+
+  // Clear current players list
+  empty(teamList);
+
+  // Build player chips
+  const players = activeTeam === 'A' ? teamAMembers : teamBMembers;
+  players.forEach(p => {
+    const chip = document.createElement('div');
+    chip.className = 'player-chip';
+    chip.innerHTML = `<div>
+        <div class="player-name">${p.name}</div>
+        <div class="player-meta">${p.squad} • ${p.power}</div>
+      </div>
+      <div class="player-meta">${assignedPositionsForPlayer(p.id, teamKey).length}</div>`;
+    teamList.appendChild(chip);
   });
-  teamBMembers.forEach(p => {
-    const chip = document.createElement('div'); chip.className='player-chip';
-    chip.innerHTML = `<div><div class="player-name">${p.name}</div><div class="player-meta">${p.squad} • ${p.power}</div></div>
-                      <div class="player-meta">${assignedPositionsForPlayer(p.id, 'teamB').length || 0}</div>`;
-    teamBList.appendChild(chip);
-  });
-}
 
-function assignedPositionsForPlayer(pid, teamKey) {
-  const map = positions[teamKey] || {};
-  const out = [];
-  Object.entries(map).forEach(([pos, arr]) => {
-    if (Array.isArray(arr)) {
-      for (const a of arr) if (a.id === pid) out.push(pos);
-    }
-  });
-  return out;
-}
+  // Clear old hotspots
+  Array.from(mapInner.querySelectorAll('.hotspot')).forEach(x => x.remove());
 
-function renderMap(teamLetter) {
-  const mapInner = teamLetter === 'A' ? mapInnerA : mapInnerB;
-  const teamKey = teamLetter === 'A' ? 'teamA' : 'teamB';
-  // clear hotspots
-  Array.from(mapInner.querySelectorAll('.hotspot')).forEach(n => n.remove());
-
-  // append hotspots
+  // Draw hotspots
   MAP_SPOTS.forEach(spot => {
     const el = document.createElement('div');
     el.className = 'hotspot';
     el.style.left = spot.x + '%';
-    el.style.top  = spot.y + '%';
+    el.style.top = spot.y + '%';
     el.dataset.key = spot.key;
 
-    const dot = document.createElement('div'); dot.className = 'dot';
+    const dot = document.createElement('div');
+    dot.className = 'dot';
     el.appendChild(dot);
 
-    // count badge
-    const arr = (positions[teamKey]?.[spot.key]) || [];
+    const arr = positions[teamKey]?.[spot.key] || [];
     if (arr.length) {
-      const c = document.createElement('div'); c.className='count'; c.textContent = arr.length;
+      const c = document.createElement('div');
+      c.className = 'count';
+      c.textContent = arr.length;
       el.appendChild(c);
-      // label listing up to 3 names
-      const label = document.createElement('div'); label.className = 'hotspot-label';
-      label.textContent = arr.slice(0,3).map(a => a.name).join(', ') + (arr.length > 3 ? ` +${arr.length-3}` : '');
+
+      const label = document.createElement('div');
+      label.className = 'hotspot-label';
+      label.textContent = arr.slice(0, 3).map(a => a.name).join(', ') + (arr.length > 3 ? ` +${arr.length-3}` : '');
       el.appendChild(label);
     }
 
@@ -187,6 +181,7 @@ function renderMap(teamLetter) {
     mapInner.appendChild(el);
   });
 }
+
 
 /* ========== Hotspot click -> picker modal (multi-select + note) ========== */
 function onHotspotClick(teamKey, posKey) {
@@ -353,6 +348,19 @@ function wireEvents() {
     loadWeekById(id);
   });
   savePositionsBtn.addEventListener('click', savePositionsToWeek);
+$('switchA').addEventListener('click', () => {
+  activeTeam = 'A';
+  $('switchA').classList.add('primary');
+  $('switchB').classList.remove('primary');
+  renderActiveTeamMap();
+});
+
+$('switchB').addEventListener('click', () => {
+  activeTeam = 'B';
+  $('switchB').classList.add('primary');
+  $('switchA').classList.remove('primary');
+  renderActiveTeamMap();
+});
 
   // quick clear via context menu (not destructive)
   document.addEventListener('keydown', (e) => {

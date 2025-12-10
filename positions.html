@@ -69,41 +69,29 @@
     </div>
   </div>
 
-  <div class="layout">
-    <!-- Team A panel -->
-    <section class="panel">
-      <h3 style="color:#00ffc8;">Team A — Map</h3>
-      <div class="muted">Click a hotspot → pick one or more players → add optional note → Assign.</div>
+  <!-- TEAM SWITCHER -->
+<div style="display:flex; gap:10px; margin-bottom:16px;">
+  <button id="switchA" class="btn primary" style="flex:1;">Team A</button>
+  <button id="switchB" class="btn" style="flex:1;">Team B</button>
+</div>
 
-      <div class="map-wrap" style="margin-top:10px;">
-        <div class="map-inner" id="mapInnerA">
-          <img id="mapImageA" src="/assets/desert-storm-named-standard1.png" alt="Desert Map" />
-        </div>
-      </div>
+<!-- SINGLE PANEL — reused for A or B -->
+<section class="panel" id="singlePanel">
+  <h3 id="panelTitle" style="color:#00ffc8;">Team A — Map</h3>
+  <div class="muted">Click a hotspot → pick one or more players → add optional note → Assign.</div>
 
-      <div style="margin-top:12px;">
-        <div class="muted">Team A Players</div>
-        <div id="teamAList" class="team-list"></div>
-      </div>
-    </section>
-
-    <!-- Team B panel -->
-    <section class="panel">
-      <h3 style="color:#ffb86b;">Team B — Map</h3>
-      <div class="muted">Separate map for Team B — assignments independent from Team A.</div>
-
-      <div class="map-wrap" style="margin-top:10px;">
-        <div class="map-inner" id="mapInnerB">
-          <img id="mapImageB" src="/assets/desert-storm-named-standard1.png" alt="Desert Map" />
-        </div>
-      </div>
-
-      <div style="margin-top:12px;">
-        <div class="muted">Team B Players</div>
-        <div id="teamBList" class="team-list"></div>
-      </div>
-    </section>
+  <div class="map-wrap" style="margin-top:10px;">
+    <div class="map-inner" id="mapInnerSingle">
+      <img id="mapImageSingle" src="/assets/desert-storm-named-standard.png" />
+    </div>
   </div>
+
+  <div style="margin-top:12px;">
+    <div class="muted" id="teamListLabel">Team A Players</div>
+    <div id="teamListSingle" class="team-list"></div>
+  </div>
+</section>
+
 
   <!-- picker overlay is created dynamically -->
 
