@@ -865,8 +865,8 @@ body.bg {
 }
 .map-spot {
   position: absolute;
-  width: 14px;              /* reduced size */
-  height: 14px;
+  width: 4px;              /* reduced size */
+  height: 4px;
   background: rgba(0, 255, 180, 0.75);
   border: 1px solid rgba(0, 255, 180, 0.9);
   border-radius: 50%;
