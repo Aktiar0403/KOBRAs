@@ -1,10 +1,10 @@
 // admin-fights.js (v3) — Prevent cross-team duplicates + multi-select modal (click toggles)
-// Replace previous admin-fights.js with this complete file.
+
 
 console.log("✅ admin-fights.js (v3) loaded");
 
 import { db } from './firebase-config.js';
-import { cleanNumber } from './utils.js';
+
 import { logAudit } from './audit.js'; // optional
 
 import {
@@ -669,4 +669,4 @@ function init() {
   $('weekLabel').value = getISOWeekLabel();
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', init); //check this
