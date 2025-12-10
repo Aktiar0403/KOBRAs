@@ -20,8 +20,30 @@
     .switcher{display:flex;gap:8px;margin-bottom:10px}
     .switcher .btn{flex:1}
     .panel{background:linear-gradient(180deg,var(--panel),#061019);border-radius:12px;padding:12px;border:1px solid var(--cardBorder)}
-    .map-wrap{border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.02);margin-top:12px}
-    .map-inner{position:relative;width:100%;height:620px;background:#03040a;display:flex;align-items:center;justify-content:center}
+    /* Map wrapper stays same */
+.map-wrap {
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.02);
+  margin-top: 12px;
+}
+
+/* FIXED — Maintain exact original image ratio */
+.map-inner {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2016 / 2112; /* <<< IMPORTANT */
+  background-image: url('/assets/desert-storm-named-standard1.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* Remove <img> — not needed anymore */
+.map-inner img {
+  display: none !important;
+}
+
     .map-inner img{width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
     .hotspot{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.04);cursor:pointer;transition:150ms}
     .hotspot:hover{transform:translate(-50%,-50%) scale(1.06);box-shadow:0 14px 40px rgba(0,200,255,0.06)}
@@ -73,7 +95,7 @@
 
       <div class="map-wrap">
         <div class="map-inner" id="mapInnerSingle">
-          <img id="mapImageSingle" src="/assets/desert-storm-named-standard1.png" alt="Desert Map" />
+          
         </div>
       </div>
 
