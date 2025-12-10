@@ -480,14 +480,58 @@ function openAddPlayerModal(side, bucket) {
       const subEl = document.createElement('div'); subEl.textContent = `${m.displaySquad || ''}${m.role ? ' • ' + m.role : ''}`; subEl.style.color='#aaa'; subEl.style.fontSize='12px';
       left.appendChild(nameEl); left.appendChild(subEl);
 
-      const right = document.createElement('div'); right.style.display='flex'; right.style.flexDirection='column'; right.style.alignItems='flex-end';
-      const pwrEl = document.createElement('div'); pwrEl.style.fontWeight='700';
-      if (m.powerType && m.powerType.toUpperCase() === 'APPROX') { pwrEl.textContent = '≈' + m.power; pwrEl.style.color='#999'; }
-      else { pwrEl.textContent = m.power; pwrEl.style.color='#00ffc8'; }
-      const badge = document.createElement('div'); badge.textContent = m.displaySquad || ''; badge.style.color='#ddd'; badge.style.fontSize='12px';
-      right.appendChild(pwrEl); right.appendChild(badge);
+      // Right side container
+const right = document.createElement('div');
+right.style.display = 'flex';
+right.style.flexDirection = 'column';
+right.style.alignItems = 'flex-end';
+right.style.gap = '3px';
 
-      item.appendChild(left); item.appendChild(right);
+// POWER (≈ approximation logic)
+const pwrEl = document.createElement('div');
+pwrEl.style.fontWeight = '700';
+if (m.powerType && m.powerType.toUpperCase() === 'APPROX') {
+  pwrEl.textContent = '≈' + m.power;
+  pwrEl.style.color = '#999';
+} else {
+  pwrEl.textContent = m.power;
+  pwrEl.style.color = '#00ffc8';
+}
+right.appendChild(pwrEl);
+
+// SQUAD LABEL
+const badgeSquad = document.createElement('div');
+badgeSquad.textContent = m.displaySquad || '';
+badgeSquad.style.color = '#ddd';
+badgeSquad.style.fontSize = '12px';
+right.appendChild(badgeSquad);
+
+// BADGE: Already in same team?
+if (isMemberInTeam(m.id, side)) {
+  const inTeam = document.createElement('div');
+  inTeam.textContent = "IN TEAM";
+  inTeam.style.color = "#7bb2ff";
+  inTeam.style.fontSize = "11px";
+  inTeam.style.padding = "1px 6px";
+  inTeam.style.border = "1px solid rgba(120,160,255,0.4)";
+  inTeam.style.borderRadius = "6px";
+  right.appendChild(inTeam);
+}
+
+// BADGE: Already in OTHER team?
+if (isMemberInOtherTeam(m.id, side)) {
+  const otherTeam = document.createElement('div');
+  otherTeam.textContent = "OTHER TEAM";
+  otherTeam.style.color = "#ff7b7b";
+  otherTeam.style.fontSize = "11px";
+  otherTeam.style.padding = "1px 6px";
+  otherTeam.style.border = "1px solid rgba(255,120,120,0.4)";
+  otherTeam.style.borderRadius = "6px";
+  right.appendChild(otherTeam);
+}
+
+item.appendChild(right);
+
       listWrap.appendChild(item);
     });
 
