@@ -1,635 +1,552 @@
-/***********************************************
- * admin-fights.js — FINAL FIXED (Color-coded Circle Cards)
- *
- * - Firebase v10 compatible
- * - Uses /members collection
- * - Circle card UI + squad color-coding
- * - No recursion / stack overflow
- * - Works with SortableJS (must be included in page)
- ***********************************************/
+// admin-fights.js
+// DESERT BRAWL — TEAM BUILDER logic
+// Requires: ./firebase-config.js (exporting `db`) and ./utils.js (exporting cleanNumber)
+// Place <script type="module" src="/js/admin-fights.js"></script> in page.
 
-import { db, auth } from "./firebase-config.js";
+console.log("✅ admin-fights.js loaded");
 
+import { db } from './firebase-config.js';
+import { cleanNumber } from './utils.js';
 import {
   collection,
+  onSnapshot,
+  query,
+  orderBy,
   addDoc,
-  doc,
-  getDoc,
-  updateDoc,
-  getDocs,
-  serverTimestamp,
+  setDoc,
+  doc
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
 /* ---------------------------
-   Helpful constants & colors
-   --------------------------- */
-const SQUAD_COLORS = {
-  TANK: "#1e90ff",
-  MISSILE: "#ef4444",
-  AIR: "#7c3aed",
-  HYBRID: "#fb923c",
-  DEFAULT: "#6b7280",
+   State
+   - teams keep arrays of players
+   - player: { uid, id, name, power, powerType, source } source: 'member'|'manual'
+----------------------------*/
+const teams = {
+  A: {
+    nameEl: null,
+    squadEl: null,
+    mainListEl: null,
+    subListEl: null,
+    main: [], // up to 20
+    subs: [], // up to 10
+    ui: {
+      mainPower: null,
+      subPower: null,
+      totalPower: null,
+      addMainBtn: null,
+      addSubBtn: null
+    }
+  },
+  B: {
+    nameEl: null,
+    squadEl: null,
+    mainListEl: null,
+    subListEl: null,
+    main: [],
+    subs: [],
+    ui: {
+      mainPower: null,
+      subPower: null,
+      totalPower: null,
+      addMainBtn: null,
+      addSubBtn: null
+    }
+  }
 };
 
+let membersCache = []; // live members from Firestore: { id, name, power, powerType, ... }
+
 /* ---------------------------
-   DOM ready wrapper
-   --------------------------- */
-document.addEventListener("DOMContentLoaded", async () => {
-  // Auth guard
-  onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      alert("Please log in to access the War Builder.");
-      window.location.href = "/login.html";
-    } else {
-      // Optionally populate admin label if present
-      const adminLabel = document.getElementById("adminNameLabel");
-      if (adminLabel) adminLabel.textContent = user.displayName || user.email || user.uid;
-    }
+   DOM selectors (expected from HTML)
+----------------------------*/
+function $(id) { return document.getElementById(id); }
+
+function initDOMBindings() {
+  // Team A
+  teams.A.nameEl = $('teamAName');
+  teams.A.squadEl = $('teamASquad');
+  teams.A.mainListEl = $('teamAMainList');
+  teams.A.subListEl = $('teamASubList');
+  teams.A.ui.mainPower = $('teamAMainPower');
+  teams.A.ui.subPower = $('teamASubPower');
+  teams.A.ui.totalPower = $('teamATotalPower');
+  teams.A.ui.addMainBtn = $('addTeamAMain');
+  teams.A.ui.addSubBtn = $('addTeamASub');
+
+  // Team B
+  teams.B.nameEl = $('teamBName');
+  teams.B.squadEl = $('teamBSquad');
+  teams.B.mainListEl = $('teamBMainList');
+  teams.B.subListEl = $('teamBSubList');
+  teams.B.ui.mainPower = $('teamBMainPower');
+  teams.B.ui.subPower = $('teamBSubPower');
+  teams.B.ui.totalPower = $('teamBTotalPower');
+  teams.B.ui.addMainBtn = $('addTeamBMain');
+  teams.B.ui.addSubBtn = $('addTeamBSub');
+
+  // Wire add buttons
+  teams.A.ui.addMainBtn?.addEventListener('click', () => openAddPlayerModal('A', 'main'));
+  teams.A.ui.addSubBtn?.addEventListener('click', () => openAddPlayerModal('A', 'sub'));
+  teams.B.ui.addMainBtn?.addEventListener('click', () => openAddPlayerModal('B', 'main'));
+  teams.B.ui.addSubBtn?.addEventListener('click', () => openAddPlayerModal('B', 'sub'));
+}
+
+/* ---------------------------
+   Firestore members subscription
+----------------------------*/
+function subscribeMembers() {
+  try {
+    const qRef = query(collection(db, 'members'), orderBy('name'));
+    onSnapshot(qRef, snap => {
+      membersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // If a members dropdown is open in modal, refresh it
+      refreshMemberSelectOptions();
+    }, err => {
+      console.error('members subscription error', err);
+    });
+  } catch (e) {
+    console.warn('Firestore not available or db not configured. Members selection will be limited to manual entry.');
+  }
+}
+
+/* ---------------------------
+   Helpers
+----------------------------*/
+function uid(prefix='p') {
+  return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+}
+
+function toNumber(v) {
+  if (v === null || v === undefined) return 0;
+  const n = Number(v);
+  if (Number.isFinite(n)) return n;
+  // fallback: remove non-digit chars
+  const cleaned = String(v).replace(/[^\d.-]/g, '');
+  const m = Number(cleaned);
+  return Number.isFinite(m) ? m : 0;
+}
+
+/* ---------------------------
+   Rendering team lists & totals
+----------------------------*/
+function renderTeam(side) {
+  const t = teams[side];
+  if (!t) return;
+
+  // render main players
+  t.mainListEl.innerHTML = '';
+  t.main.forEach((p, idx) => {
+    const row = createPlayerRow(p, side, 'main', idx);
+    t.mainListEl.appendChild(row);
   });
 
-  /* ---------------------------
-     State
-     --------------------------- */
-  let currentFightId = null;
-  let currentFight = null;
+  // render subs
+  t.subListEl.innerHTML = '';
+  t.subs.forEach((p, idx) => {
+    const row = createPlayerRow(p, side, 'sub', idx);
+    t.subListEl.appendChild(row);
+  });
 
-  let rosterMembersCache = []; // all members from /members
-  let rosterPool = []; // selected member IDs for current fight
+  // update totals
+  const mainSum = t.main.reduce((s, p) => s + toNumber(p.power), 0);
+  const subSum = t.subs.reduce((s, p) => s + toNumber(p.power), 0);
+  const total = mainSum + subSum;
 
-  /* ---------------------------
-     DOM helpers
-     --------------------------- */
-  const $ = (s, c = document) => c.querySelector(s);
-  const $$ = (s, c = document) => Array.from((c || document).querySelectorAll(s));
+  t.ui.mainPower.textContent = mainSum;
+  t.ui.subPower.textContent = subSum;
+  t.ui.totalPower.textContent = total;
 
-  /* ---------------------------
-     Elements (must exist in admin-fights.html)
-     --------------------------- */
-  const fightNameInput = $("#fightName");
-  const numTeamsInput = $("#numTeams");
-  const playersPerTeamInput = $("#playersPerTeam");
-  const subsPerTeamInput = $("#subsPerTeam");
-  const teamNamesContainer = $("#teamNamesContainer");
+  // enforce limits
+  t.ui.addMainBtn.disabled = (t.main.length >= 20);
+  t.ui.addSubBtn.disabled = (t.subs.length >= 10);
 
-  const createFightBtn = $("#createFightBtn");
-  const loadDraftsBtn = $("#loadDraftsBtn");
+  // show small badge on buttons (optional)
+  t.ui.addMainBtn.title = `Main players: ${t.main.length}/20`;
+  t.ui.addSubBtn.title = `Sub players: ${t.subs.length}/10`;
+}
 
-  const rosterPoolEl = $("#rosterPool");
-  const rosterSearch = $("#rosterSearch");
+/* ---------------------------
+   Player row DOM
+----------------------------*/
+function createPlayerRow(player, side, bucket, index) {
+  const row = document.createElement('div');
+  row.className = 'player-row';
 
-  const saveTeamsBtn = $("#saveTeamsBtn");
-  const finalizeBtn = $("#finalizeBtn");
+  // left: name
+  const left = document.createElement('div');
+  left.className = 'player-left';
+  left.textContent = player.name || '(unknown)';
 
-  const teamsContainer = $("#teamsContainer");
-  const fightStatusEl = $("#fightStatus");
+  // center: power & badge
+  const center = document.createElement('div');
+  center.className = 'player-center';
+  const pwr = document.createElement('span');
+  pwr.className = 'player-power';
+  pwr.textContent = player.power ?? 0;
+  center.appendChild(pwr);
 
-  // Defensive: if some elements are missing, create placeholders to avoid errors
-  if (!rosterPoolEl) {
-    console.warn("admin-fights.js: #rosterPool not found in DOM");
-  }
-  if (!teamsContainer) {
-    console.warn("admin-fights.js: #teamsContainer not found in DOM");
-  }
-
-  /* ---------------------------
-     Utilities
-     --------------------------- */
-  function safeText(v) {
-    if (v === null || v === undefined) return "";
-    return String(v);
-  }
-
-  function squadColorFor(squad) {
-    if (!squad) return SQUAD_COLORS.DEFAULT;
-    const key = String(squad).toUpperCase();
-    return SQUAD_COLORS[key] || SQUAD_COLORS.DEFAULT;
+  if (player.powerType) {
+    const badge = document.createElement('span');
+    badge.className = 'power-type';
+    badge.textContent = player.powerType;
+    center.appendChild(badge);
   }
 
-  function starsText(n) {
-    const c = parseInt(n) || 0;
-    return "★".repeat(c) + "☆".repeat(Math.max(0, 5 - c));
+  // right: delete button
+  const right = document.createElement('div');
+  right.className = 'player-right';
+  const del = document.createElement('button');
+  del.className = 'btn small danger';
+  del.textContent = 'Delete';
+  del.addEventListener('click', () => {
+    removePlayer(side, bucket, index);
+  });
+  right.appendChild(del);
+
+  row.appendChild(left);
+  row.appendChild(center);
+  row.appendChild(right);
+
+  return row;
+}
+
+/* ---------------------------
+   Remove player
+----------------------------*/
+function removePlayer(side, bucket, index) {
+  const t = teams[side];
+  if (!t) return;
+  if (bucket === 'main') {
+    if (index < 0 || index >= t.main.length) return;
+    t.main.splice(index, 1);
+  } else {
+    if (index < 0 || index >= t.subs.length) return;
+    t.subs.splice(index, 1);
   }
+  renderTeam(side);
+}
 
-  /* ---------------------------
-     Render team name inputs dynamically
-     --------------------------- */
-  function renderTeamNameInputs() {
-    if (!teamNamesContainer) return;
-    const n = Math.max(1, parseInt(numTeamsInput?.value || "1"));
-    teamNamesContainer.innerHTML = "";
-    for (let i = 1; i <= n; i++) {
-      const div = document.createElement("div");
-      div.style.marginTop = "8px";
-      div.innerHTML = `<input data-team-index="${i}" class="teamNameInput" type="text" placeholder="Team ${i}" />`;
-      teamNamesContainer.appendChild(div);
-    }
-  }
+/* ---------------------------
+   Modal: Add Player
+   - allows select from members or manual entry
+----------------------------*/
+let currentModal = null;
 
-  /* ---------------------------
-     Create Fight
-     --------------------------- */
-  if (createFightBtn) {
-    createFightBtn.addEventListener("click", async () => {
-      // guard elements exist
-      if (!fightNameInput || !numTeamsInput || !playersPerTeamInput || !subsPerTeamInput) {
-        return alert("Required fight inputs missing in page.");
-      }
+function openAddPlayerModal(side, bucket) {
+  // build modal content
+  const title = `${side === 'A'? 'Team A':'Team B'} — Add ${bucket === 'main' ? 'Main' : 'Sub'} Player`;
+  const modal = createModal(title);
 
-      const fightName = safeText(fightNameInput.value).trim() || "New Fight";
-      const numTeams = Math.max(1, parseInt(numTeamsInput.value || "1"));
-      const playersPerTeam = Math.max(1, parseInt(playersPerTeamInput.value || "1"));
-      const subsPerTeam = Math.max(0, parseInt(subsPerTeamInput.value || "0"));
+  const container = document.createElement('div');
+  container.className = 'modal-content';
 
-      const teamInputs = $$(".teamNameInput") || [];
-      const teams = {};
-      for (let i = 1; i <= numTeams; i++) {
-        const nameInput = teamInputs[i - 1];
-        const name = nameInput ? safeText(nameInput.value).trim() || `Team ${i}` : `Team ${i}`;
-        teams[`team${i}`] = { name, main: [], subs: [] };
-      }
+  // Member select
+  const selWrap = document.createElement('div');
+  selWrap.style.marginBottom = '10px';
+  const selLabel = document.createElement('label');
+  selLabel.textContent = 'Select existing member (optional)';
+  selLabel.className = 'field-label';
+  selWrap.appendChild(selLabel);
 
-      const payload = {
-        fightName,
-        createdBy: auth.currentUser?.uid || "admin",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        numTeams,
-        playersPerTeam,
-        subsPerTeam,
-        warType: "custom",
-        rosterPool: [],
-        teams,
-        status: "draft",
-      };
+  const select = document.createElement('select');
+  select.className = 'input';
+  select.id = 'memberSelect';
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = '';
+  defaultOpt.textContent = '-- Choose member or leave blank --';
+  select.appendChild(defaultOpt);
 
-      try {
-        const ref = await addDoc(collection(db, "fights"), payload);
-        currentFightId = ref.id;
-        await loadFight(currentFightId);
-        alert("Fight created successfully.");
-      } catch (err) {
-        console.error("createFight error:", err);
-        alert("Error creating fight: " + (err?.message || err));
-      }
-    });
-  }
+  // populate options
+  membersCache.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = `${m.name} — ${m.power ?? ''} ${m.powerType ? '(' + m.powerType + ')' : ''}`;
+    select.appendChild(o);
+  });
 
-  /* ---------------------------
-     Load draft fights (simple)
-     --------------------------- */
-  if (loadDraftsBtn) {
-    loadDraftsBtn.addEventListener("click", async () => {
-      try {
-        const snap = await getDocs(collection(db, "fights"));
-        const drafts = [];
-        snap.forEach((d) => {
-          const data = d.data();
-          if (data?.status === "draft" || data?.status === "team_selection") drafts.push({ id: d.id, ...data });
-        });
-        if (!drafts.length) return alert("No draft fights found.");
-        await loadFight(drafts[0].id);
-      } catch (err) {
-        console.error("loadDrafts error:", err);
-        alert("Error loading drafts: " + (err?.message || err));
-      }
-    });
-  }
+  selWrap.appendChild(select);
+  container.appendChild(selWrap);
 
-  /* ---------------------------
-     Load a fight by id
-     --------------------------- */
-  async function loadFight(id) {
-    if (!id) return;
-    try {
-      const snap = await getDoc(doc(db, "fights", id));
-      if (!snap.exists()) {
-        alert("Fight not found");
+  // Manual entry fields
+  const nameLabel = document.createElement('label');
+  nameLabel.textContent = 'Name (if not selecting existing)';
+  nameLabel.className = 'field-label';
+  container.appendChild(nameLabel);
+
+  const nameInput = document.createElement('input');
+  nameInput.className = 'input';
+  nameInput.placeholder = 'Player name';
+  container.appendChild(nameInput);
+
+  const powerLabel = document.createElement('label');
+  powerLabel.textContent = 'Power';
+  powerLabel.className = 'field-label';
+  container.appendChild(powerLabel);
+
+  const powerInput = document.createElement('input');
+  powerInput.type = 'number';
+  powerInput.step = '0.1';
+  powerInput.className = 'input';
+  powerInput.placeholder = '0';
+  container.appendChild(powerInput);
+
+  const powerTypeLabel = document.createElement('label');
+  powerTypeLabel.textContent = 'Power Type';
+  powerTypeLabel.className = 'field-label';
+  container.appendChild(powerTypeLabel);
+
+  const powerTypeSelect = document.createElement('select');
+  powerTypeSelect.className = 'input';
+  const optPrec = document.createElement('option'); optPrec.value = 'Precise'; optPrec.textContent = 'Precise';
+  const optApprox = document.createElement('option'); optApprox.value = 'Approx'; optApprox.textContent = 'Approx';
+  powerTypeSelect.appendChild(optPrec);
+  powerTypeSelect.appendChild(optApprox);
+  container.appendChild(powerTypeSelect);
+
+  // Buttons
+  const actions = document.createElement('div');
+  actions.style.display = 'flex';
+  actions.style.gap = '8px';
+  actions.style.marginTop = '12px';
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.className = 'btn small';
+  cancelBtn.textContent = 'Cancel';
+  cancelBtn.addEventListener('click', () => {
+    closeModal();
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'btn primary';
+  addBtn.textContent = 'Add Player';
+  addBtn.addEventListener('click', () => {
+    // if member selected, take from membersCache
+    const selectedMemberId = select.value;
+    if (selectedMemberId) {
+      const mem = membersCache.find(x => x.id === selectedMemberId);
+      if (!mem) {
+        alert('Selected member not found.');
         return;
       }
-      currentFightId = id;
-      currentFight = snap.data();
-
-      // populate inputs safely
-      if (fightNameInput) fightNameInput.value = currentFight.fightName || "";
-      if (numTeamsInput) numTeamsInput.value = currentFight.numTeams || 1;
-      if (playersPerTeamInput) playersPerTeamInput.value = currentFight.playersPerTeam || 1;
-      if (subsPerTeamInput) subsPerTeamInput.value = currentFight.subsPerTeam || 0;
-
-      renderTeamNameInputs();
-      const teamNameInputs = $$(".teamNameInput");
-      for (let i = 0; i < teamNameInputs.length; i++) {
-        const key = `team${i + 1}`;
-        if (currentFight?.teams?.[key]?.name) teamNameInputs[i].value = currentFight.teams[key].name;
-      }
-
-      rosterPool = Array.isArray(currentFight.rosterPool) ? [...currentFight.rosterPool] : [];
-      if (fightStatusEl) fightStatusEl.textContent = currentFight.status || "—";
-
-      await loadAllMembers();
-      renderRosterPool(); // draw pool
-      renderTeams();
-    } catch (err) {
-      console.error("loadFight error:", err);
-      alert("Error loading fight: " + (err?.message || err));
-    }
-  }
-
-  /* ---------------------------
-     Load members from /members
-     --------------------------- */
-  async function loadAllMembers() {
-    rosterMembersCache = [];
-    try {
-      const snap = await getDocs(collection(db, "members"));
-      snap.forEach((d) => {
-        rosterMembersCache.push({ id: d.id, ...d.data() });
-      });
-      // sort cache by power desc for convenience
-      rosterMembersCache.sort((a, b) => (b.power || 0) - (a.power || 0));
-    } catch (err) {
-      console.error("loadAllMembers error:", err);
-      alert("Error loading members: " + (err?.message || err));
-    }
-  }
-
-  /* ---------------------------
-     Render roster pool (left)
-     --------------------------- */
-  function renderRosterPool(filter = "") {
-    if (!rosterPoolEl) return;
-    rosterPoolEl.innerHTML = "";
-
-    const q = (filter || "").trim().toLowerCase();
-
-    // Build fragment to minimize reflows
-    const frag = document.createDocumentFragment();
-
-    rosterMembersCache.forEach((m) => {
-      const name = safeText(m.name || m.username || m.id).toLowerCase();
-      if (q && !name.includes(q) && !String(m.squad || "").toLowerCase().includes(q)) return;
-
-      const inPool = rosterPool.includes(m.id);
-
-      // card container
-      const card = document.createElement("div");
-      card.className = "member-circle-card";
-      card.dataset.uid = m.id;
-
-      // avatar circle (color-coded by squad)
-      const avatar = document.createElement("div");
-      avatar.className = "circle-avatar";
-      avatar.textContent = (safeText(m.name)[0] || "?").toUpperCase();
-      avatar.style.background = squadColorFor(m.squad);
-
-      // info block
-      const info = document.createElement("div");
-      info.className = "circle-info";
-      info.innerHTML = `
-        <div class="member-name">${safeText(m.name)}</div>
-        <div class="member-sub">${safeText(m.squad)} • ${safeText(m.rank || "")}</div>
-        <div class="member-stars">${starsText(m.activity || m.stars || 0)}</div>
-        <div class="member-power">Power: ${m.power ?? 0}</div>
-      `;
-
-      // action button
-      const btn = document.createElement("button");
-      btn.className = "togglePoolBtn";
-      btn.textContent = inPool ? "Remove" : "Add";
-      btn.style.background = inPool ? "#ef4444" : "#2b6ef6";
-
-      // attach safe event (not re-rendering recursively)
-      btn.addEventListener("click", async () => {
-        // toggle in-memory rosterPool
-        if (rosterPool.includes(m.id)) {
-          rosterPool = rosterPool.filter((id) => id !== m.id);
-        } else {
-          rosterPool.push(m.id);
-        }
-
-        // persist rosterPool if a fight is loaded
-        if (currentFightId) {
-          try {
-            await updateDoc(doc(db, "fights", currentFightId), { rosterPool });
-          } catch (err) {
-            console.error("update rosterPool error:", err);
-            alert("Could not update roster pool: " + (err?.message || err));
-          }
-        }
-
-        // update UI: update teams and re-render roster after a microtick to avoid nested reflows
-        renderTeams();
-        setTimeout(() => renderRosterPool(rosterSearch?.value || ""), 0);
-      });
-
-      // assemble card
-      card.appendChild(avatar);
-      card.appendChild(info);
-      card.appendChild(btn);
-      frag.appendChild(card);
-    });
-
-    rosterPoolEl.appendChild(frag);
-  }
-
-  /* ---------------------------
-     Build slot card (team slot)
-     --------------------------- */
-  function buildSlot(playerUid, teamKey, slotType, index) {
-    const slot = document.createElement("div");
-    slot.className = "slot";
-    slot.dataset.team = teamKey;
-    slot.dataset.slotType = slotType;
-    slot.dataset.slotIndex = index;
-
-    if (!playerUid) {
-      slot.classList.add("empty");
-      slot.textContent = "Drag player here";
-      return slot;
-    }
-
-    const p = rosterMembersCache.find((x) => x.id === playerUid) || { id: playerUid, name: playerUid };
-
-    // create member-circle-card inside slot
-    const card = document.createElement("div");
-    card.className = "member-circle-card small";
-    card.dataset.uid = p.id;
-
-    const avatar = document.createElement("div");
-    avatar.className = "circle-avatar small";
-    avatar.textContent = (safeText(p.name)[0] || "?").toUpperCase();
-    avatar.style.background = squadColorFor(p.squad);
-
-    const info = document.createElement("div");
-    info.className = "circle-info small";
-    info.innerHTML = `
-      <div class="member-name">${safeText(p.name)}</div>
-      <div class="member-sub">${safeText(p.squad)} • ${safeText(p.rank || "")}</div>
-      <div class="member-stars">${starsText(p.activity || p.stars || 0)}</div>
-      <div class="member-power">Power: ${p.power ?? 0}</div>
-    `;
-
-    const removeBtn = document.createElement("button");
-    removeBtn.className = "circle-remove";
-    removeBtn.textContent = "X";
-    removeBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      // remove from DOM then persist
-      // remove UID from all teams and re-render
-      removeUidFromAllTeams(p.id);
-      persistToModel();
-      renderTeams();
-    });
-
-    card.appendChild(avatar);
-    card.appendChild(info);
-    card.appendChild(removeBtn);
-
-    slot.appendChild(card);
-    return slot;
-  }
-
-  /* ---------------------------
-     Render teams (right)
-     --------------------------- */
-  function renderTeams() {
-    if (!teamsContainer) return;
-    teamsContainer.innerHTML = "";
-
-    // require currentFight
-    if (!currentFight) {
-      teamsContainer.innerHTML = `<div class="muted small">No fight loaded. Create or load a fight.</div>`;
+      const player = {
+        uid: uid('m'),
+        id: mem.id,
+        name: mem.name || 'Unknown',
+        power: mem.power ?? 0,
+        powerType: mem.powerType || 'Precise',
+        source: 'member'
+      };
+      addPlayerToTeam(side, bucket, player);
+      closeModal();
       return;
     }
 
-    const numTeams = currentFight.numTeams || 1;
-    const playersPerTeam = currentFight.playersPerTeam || 1;
-    const subsPerTeam = currentFight.subsPerTeam || 0;
+    // else manual
+    const manualName = nameInput.value.trim();
+    const manualPower = powerInput.value !== '' ? cleanNumber(powerInput.value) : 0;
+    const manualType = powerTypeSelect.value || 'Precise';
 
-    const frag = document.createDocumentFragment();
-
-    for (let t = 1; t <= numTeams; t++) {
-      const key = `team${t}`;
-      const teamObj = currentFight.teams?.[key] || { name: `Team ${t}`, main: [], subs: [] };
-
-      const col = document.createElement("div");
-      col.className = "team-column panel";
-      col.style.width = "300px";
-
-      // header
-      const header = document.createElement("div");
-      header.className = "team-title";
-      header.innerHTML = `<div>${safeText(teamObj.name)}</div>
-        <div class="counters small">Main: <span id="count-${key}-main">${(teamObj.main||[]).length}/${playersPerTeam}</span></div>`;
-      col.appendChild(header);
-
-      // main slots container
-      const mainContainer = document.createElement("div");
-      mainContainer.className = "main-slots";
-      mainContainer.dataset.slotFor = `${key}-main`;
-      for (let i = 0; i < playersPerTeam; i++) {
-        const uid = (teamObj.main && teamObj.main[i]) || null;
-        mainContainer.appendChild(buildSlot(uid, key, "main", i));
-      }
-      col.appendChild(mainContainer);
-
-      // subs
-      if (subsPerTeam > 0) {
-        const subTitle = document.createElement("div");
-        subTitle.textContent = "Substitutes";
-        subTitle.style.marginTop = "12px";
-        col.appendChild(subTitle);
-
-        const subsContainer = document.createElement("div");
-        subsContainer.className = "subs-slots";
-        subsContainer.dataset.slotFor = `${key}-subs`;
-        for (let i = 0; i < subsPerTeam; i++) {
-          const uid = (teamObj.subs && teamObj.subs[i]) || null;
-          subsContainer.appendChild(buildSlot(uid, key, "subs", i));
-        }
-        col.appendChild(subsContainer);
-      }
-
-      frag.appendChild(col);
+    if (!manualName) {
+      alert('Enter player name or choose an existing member.');
+      return;
     }
 
-    teamsContainer.appendChild(frag);
+    const player = {
+      uid: uid('x'),
+      id: null,
+      name: manualName,
+      power: manualPower,
+      powerType: manualType,
+      source: 'manual'
+    };
+    addPlayerToTeam(side, bucket, player);
+    closeModal();
+  });
 
-    // attach Sortable handlers
-    setupSortable();
-    updateAllCounters();
-  }
+  actions.appendChild(cancelBtn);
+  actions.appendChild(addBtn);
 
-  /* ---------------------------
-     Sortable setup (no recursion)
-     --------------------------- */
-  function setupSortable() {
-    // destroy previous sortables if any by replacing nodes? Simpler: re-create Sortable on containers
-    const slotContainers = $$(".main-slots, .subs-slots");
-    slotContainers.forEach((container) => {
-      // allow moving between all lists in the same group
-      Sortable.create(container, {
-        group: "teamSlots",
-        animation: 150,
-        onAdd: (evt) => {
-          // when a new element added, ensure uniqueness
-          const card = evt.item;
-          const uid = card?.dataset?.uid;
-          if (!uid) return;
+  container.appendChild(actions);
 
-          // remove duplicates from other slots
-          removeUidFromAllTeams(uid);
+  modal.body.appendChild(container);
+  openModal(modal);
+  // store current modal
+  currentModal = modal;
+}
 
-          // place uid into model at this slot (persist after a microtick)
-          setTimeout(() => {
-            persistToModel();
-            renderTeams();
-          }, 0);
-        },
-        onUpdate: () => {
-          persistToModel();
-          updateAllCounters();
-        },
-      });
-    });
+/* ---------------------------
+   Modal creation / open / close helpers
+----------------------------*/
+function createModal(title) {
+  // overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
 
-    // roster pool: clone from source
-    if (rosterPoolEl) {
-      Sortable.create(rosterPoolEl, {
-        group: { name: "teamSlots", pull: "clone", put: false },
-        animation: 150,
-        sort: false,
-      });
+  // box
+  const box = document.createElement('div');
+  box.className = 'modal-box-lg';
+
+  // header
+  const h = document.createElement('div');
+  h.className = 'modal-header';
+  const h1 = document.createElement('h3');
+  h1.textContent = title;
+  h.appendChild(h1);
+
+  // body
+  const body = document.createElement('div');
+  body.className = 'modal-body';
+
+  box.appendChild(h);
+  box.appendChild(body);
+
+  // append
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // click outside to close
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  return { overlay, box, body };
+}
+
+function openModal(modalObj) {
+  modalObj.overlay.style.zIndex = 9999;
+  modalObj.overlay.style.position = 'fixed';
+  modalObj.overlay.style.inset = '0';
+  modalObj.overlay.style.display = 'flex';
+  modalObj.overlay.style.alignItems = 'center';
+  modalObj.overlay.style.justifyContent = 'center';
+  // small fade
+  modalObj.overlay.style.animation = 'modalFade .18s ease';
+  // style box
+  modalObj.box.style.width = '520px';
+  modalObj.box.style.maxWidth = '95%';
+  modalObj.box.style.background = 'rgba(10,10,14,0.95)';
+  modalObj.box.style.border = '1px solid rgba(80,80,120,0.3)';
+  modalObj.box.style.borderRadius = '12px';
+  modalObj.box.style.padding = '16px';
+  modalObj.box.style.boxShadow = '0 10px 40px rgba(0,0,0,0.7)';
+}
+
+function closeModal() {
+  if (!currentModal) return;
+  try {
+    document.body.removeChild(currentModal.overlay);
+  } catch (e) {}
+  currentModal = null;
+}
+
+/* ---------------------------
+   Add player to team (with limit enforcement)
+----------------------------*/
+function addPlayerToTeam(side, bucket, player) {
+  const t = teams[side];
+  if (!t) return;
+
+  if (bucket === 'main') {
+    if (t.main.length >= 20) {
+      alert('Main players limit reached (20).');
+      return;
     }
-  }
-
-  /* ---------------------------
-     Remove UID from all teams
-     --------------------------- */
-  function removeUidFromAllTeams(uid) {
-    if (!currentFight?.teams) return;
-    for (const k of Object.keys(currentFight.teams)) {
-      const t = currentFight.teams[k];
-      t.main = (t.main || []).filter((x) => x !== uid);
-      t.subs = (t.subs || []).filter((x) => x !== uid);
-    }
-    rosterPool = rosterPool.filter((x) => x !== uid);
-  }
-
-  /* ---------------------------
-     Persist DOM -> currentFight model
-     --------------------------- */
-  function persistToModel() {
-    if (!currentFight) return;
-    const newTeams = {};
-    const columns = $$(".team-column");
-    let idx = 1;
-    columns.forEach((col) => {
-      const key = `team${idx}`;
-      const mainUids = Array.from(col.querySelectorAll(".main-slots .member-circle-card[data-uid]")).map((c) => c.dataset.uid);
-      const subsUids = Array.from(col.querySelectorAll(".subs-slots .member-circle-card[data-uid]")).map((c) => c.dataset.uid);
-      const nameEl = col.querySelector(".team-title > div");
-      const name = nameEl ? nameEl.textContent.trim() : `Team ${idx}`;
-      newTeams[key] = { name, main: mainUids, subs: subsUids };
-      idx++;
-    });
-    currentFight.teams = newTeams;
-  }
-
-  /* ---------------------------
-     Update counters (team power optionally)
-     --------------------------- */
-  function updateAllCounters() {
-    if (!currentFight) return;
-    const numTeams = currentFight.numTeams || 1;
-    for (let i = 1; i <= numTeams; i++) {
-      const key = `team${i}`;
-      const el = $(`#count-${key}-main`);
-      if (el && currentFight.teams && currentFight.teams[key]) {
-        el.textContent = `${(currentFight.teams[key].main || []).length}/${currentFight.playersPerTeam || 0}`;
-      }
-    }
-  }
-
-  /* ---------------------------
-     Save teams to Firestore
-     --------------------------- */
-  if (saveTeamsBtn) {
-    saveTeamsBtn.addEventListener("click", async () => {
-      if (!currentFightId || !currentFight) return alert("No fight loaded.");
-      persistToModel();
-
-      // basic validation
-      const pp = parseInt(currentFight.playersPerTeam || 1);
-      const sp = parseInt(currentFight.subsPerTeam || 0);
-      for (const key of Object.keys(currentFight.teams || {})) {
-        const t = currentFight.teams[key];
-        if ((t.main || []).length > pp) return alert(`${t.name}: main exceeds allowed players (${pp})`);
-        if ((t.subs || []).length > sp) return alert(`${t.name}: subs exceeds allowed (${sp})`);
-      }
-
-      try {
-        await updateDoc(doc(db, "fights", currentFightId), {
-          teams: currentFight.teams,
-          rosterPool,
-          status: "team_selection",
-          updatedAt: serverTimestamp(),
-        });
-        alert("Teams saved.");
-      } catch (err) {
-        console.error("saveTeams error:", err);
-        alert("Error saving teams: " + (err?.message || err));
-      }
-    });
-  }
-
-  /* ---------------------------
-     Finalize (lock) fight
-     --------------------------- */
-  if (finalizeBtn) {
-    finalizeBtn.addEventListener("click", async () => {
-      if (!currentFightId) return alert("No fight loaded.");
-      if (!confirm("Finalize teams? This will lock the fight.")) return;
-      try {
-        await updateDoc(doc(db, "fights", currentFightId), {
-          status: "finalized",
-          updatedAt: serverTimestamp(),
-        });
-        if (fightStatusEl) fightStatusEl.textContent = "finalized";
-        alert("Fight finalized.");
-      } catch (err) {
-        console.error("finalize error:", err);
-        alert("Error finalizing: " + (err?.message || err));
-      }
-    });
-  }
-
-  /* ---------------------------
-     Search handler
-     --------------------------- */
-  if (rosterSearch) {
-    rosterSearch.addEventListener("input", (e) => {
-      renderRosterPool(e.target.value || "");
-    });
-  }
-
-  /* ---------------------------
-     Initialization
-     --------------------------- */
-  // Make sure inputs exist before rendering
-  renderTeamNameInputs();
-
-  // If there is a fightId in query param, load it
-  const params = new URLSearchParams(window.location.search);
-  const qFightId = params.get("fightId");
-  if (qFightId) {
-    await loadFight(qFightId);
+    t.main.push(player);
   } else {
-    // just load members so roster has content
-    await loadAllMembers();
-    renderRosterPool();
-    // show placeholder teams if no fight
-    renderTeams();
+    if (t.subs.length >= 10) {
+      alert('Sub players limit reached (10).');
+      return;
+    }
+    t.subs.push(player);
   }
-}); // end DOMContentLoaded
+  renderTeam(side);
+}
+
+/* ---------------------------
+   Member select refresh (if modal open)
+----------------------------*/
+function refreshMemberSelectOptions() {
+  const sel = document.getElementById('memberSelect');
+  if (!sel) return;
+  // clear existing except first default
+  while (sel.options.length > 1) sel.remove(1);
+  membersCache.forEach(m => {
+    const o = document.createElement('option');
+    o.value = m.id;
+    o.textContent = `${m.name} — ${m.power ?? ''} ${m.powerType ? '('+m.powerType+')' : ''}`;
+    sel.appendChild(o);
+  });
+}
+
+/* ---------------------------
+   Optional: Save teams to Firestore
+----------------------------*/
+async function saveTeamToFirestore(side) {
+  // Optional: uncomment to enable persistence
+  /*
+  const t = teams[side];
+  const payload = {
+    name: t.nameEl?.value || '',
+    squad: t.squadEl?.value || '',
+    main: t.main,
+    subs: t.subs,
+    totalMainPower: Number(t.ui.mainPower.textContent) || 0,
+    totalSubPower: Number(t.ui.subPower.textContent) || 0,
+    totalPower: Number(t.ui.totalPower.textContent) || 0,
+    updatedAt: serverTimestamp()
+  };
+  await setDoc(doc(db, 'desert_brawl_teams', `${side}`), payload);
+  */
+}
+
+/* ---------------------------
+   Init - wire everything
+----------------------------*/
+function init() {
+  initDOMBindings();
+  subscribeMembers();
+
+  // initial render
+  renderTeam('A');
+  renderTeam('B');
+
+  // keyboard shortcuts: Ctrl+1 / Ctrl+2 to focus team names
+  window.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === '1') teams.A.nameEl?.focus();
+    if (e.ctrlKey && e.key === '2') teams.B.nameEl?.focus();
+  });
+}
+
+/* ---------------------------
+   Run
+----------------------------*/
+document.addEventListener('DOMContentLoaded', init);
+
+/* ---------------------------
+   Minimal CSS for modal & player-row
+   (You can copy these into your style.css)
+----------------------------*/
+/*
+.modal-overlay { }
+.modal-box-lg { }
+.modal-header h3 { color:#00ffc8; margin:0 0 8px 0; }
+.modal-body { color:#ddd; font-size:14px; }
+
+.player-row {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:8px;
+  background:rgba(0,0,0,0.18);
+  margin-bottom:8px;
+  gap:8px;
+}
+.player-left { flex: 1; font-weight:600; color:#eaeaea; }
+.player-center { display:flex; gap:8px; align-items:center; }
+.player-power { font-size:14px; color:#00ffc8; font-weight:700; margin-right:6px; }
+.power-type { font-size:11px; color:#bbb; background: rgba(255,255,255,0.03); padding:3px 6px; border-radius:6px; }
+.player-right { }
+.btn.small { padding:6px 10px; border-radius:8px; }
+*/
