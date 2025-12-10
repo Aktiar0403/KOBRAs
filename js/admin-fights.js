@@ -507,41 +507,12 @@ function normalizePlayer(p) {
 /* -------------------------
    Init
 ------------------------- */
-function wire() {
+document.addEventListener('DOMContentLoaded', () => {
   initBindings();
   subscribeMembers();
   refreshSavedWeeksList();
   renderTeams();
 
-  // set default week label
+  // set default week label (Option C)
   $('weekLabel').value = getISOWeekLabel();
-}
-
-function initBindings() {
-  // cached bindings done earlier (find elements)
-  teams.A.nameEl = $('teamAName'); teams.A.squadEl = $('teamASquad');
-  teams.A.ui.mainList = $('teamAMainList'); teams.A.ui.subList = $('teamASubList');
-  teams.A.ui.mainPower = $('teamAMainPower'); teams.A.ui.subPower = $('teamASubPower'); teams.A.ui.totalPower = $('teamATotalPower');
-  teams.A.ui.addMain = $('addTeamAMain'); teams.A.ui.addSub = $('addTeamASub');
-  teams.A.ui.mainCounts = $('teamAMainCounts'); teams.A.ui.mainCountLabel = $('teamAMainCount'); teams.A.ui.subCountLabel = $('teamASubCount');
-
-  teams.B.nameEl = $('teamBName'); teams.B.squadEl = $('teamBSquad');
-  teams.B.ui.mainList = $('teamBMainList'); teams.B.ui.subList = $('teamBSubList');
-  teams.B.ui.mainPower = $('teamBMainPower'); teams.B.ui.subPower = $('teamBSubPower'); teams.B.ui.totalPower = $('teamBTotalPower');
-  teams.B.ui.addMain = $('addTeamBMain'); teams.B.ui.addSub = $('addTeamBSub');
-  teams.B.ui.mainCounts = $('teamBMainCounts'); teams.B.ui.mainCountLabel = $('teamBMainCount'); teams.B.ui.subCountLabel = $('teamBSubCount');
-
-  // bind simple events
-  $('addTeamAMain')?.addEventListener('click', () => openAddModal('A','main'));
-  $('addTeamASub')?.addEventListener('click', () => openAddModal('A','sub'));
-  $('addTeamBMain')?.addEventListener('click', () => openAddModal('B','main'));
-  $('addTeamBSub')?.addEventListener('click', () => openAddModal('B','sub'));
-  $('saveWeekBtn')?.addEventListener('click', saveWeek);
-  $('loadWeekBtn')?.addEventListener('click', loadSelectedWeek);
-  $('deleteWeekBtn')?.addEventListener('click', deleteSelectedWeek);
-  $('autoWeekBtn')?.addEventListener('click', () => { $('weekLabel').value = getISOWeekLabel(); });
-  $('clearAllBtn')?.addEventListener('click', clearAllTeams);
-  $('exportWeekBtn')?.addEventListener('click', exportCurrentWeekJSON);
-}
-
-document.addEventListener('DOMContentLoaded', wire);
+});
