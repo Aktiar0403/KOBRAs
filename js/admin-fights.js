@@ -1,552 +1,547 @@
 // admin-fights.js
-// DESERT BRAWL — TEAM BUILDER logic
-// Requires: ./firebase-config.js (exporting `db`) and ./utils.js (exporting cleanNumber)
-// Place <script type="module" src="/js/admin-fights.js"></script> in page.
-
+// Desert Brawl Team Builder — full JS (Week auto+manual, save/load/edit, counts)
 console.log("✅ admin-fights.js loaded");
 
 import { db } from './firebase-config.js';
 import { cleanNumber } from './utils.js';
+import { logAudit } from './audit.js'; // optional; safe if exists
+
 import {
   collection,
   onSnapshot,
   query,
   orderBy,
-  addDoc,
+  doc,
   setDoc,
-  doc
+  getDoc,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* ---------------------------
+/* -------------------------
    State
-   - teams keep arrays of players
-   - player: { uid, id, name, power, powerType, source } source: 'member'|'manual'
-----------------------------*/
+------------------------- */
 const teams = {
-  A: {
-    nameEl: null,
-    squadEl: null,
-    mainListEl: null,
-    subListEl: null,
-    main: [], // up to 20
-    subs: [], // up to 10
-    ui: {
-      mainPower: null,
-      subPower: null,
-      totalPower: null,
-      addMainBtn: null,
-      addSubBtn: null
-    }
-  },
-  B: {
-    nameEl: null,
-    squadEl: null,
-    mainListEl: null,
-    subListEl: null,
-    main: [],
-    subs: [],
-    ui: {
-      mainPower: null,
-      subPower: null,
-      totalPower: null,
-      addMainBtn: null,
-      addSubBtn: null
-    }
-  }
+  A: { main: [], subs: [], nameEl: null, squadEl: null, ui: {} },
+  B: { main: [], subs: [], nameEl: null, squadEl: null, ui: {} }
 };
 
-let membersCache = []; // live members from Firestore: { id, name, power, powerType, ... }
+let membersCache = []; // members from Firestore
+let savedWeeksList = []; // list of saved weeks (docs)
+const WEEKS_COLLECTION = 'desert_brawl_weeks';
 
-/* ---------------------------
-   DOM selectors (expected from HTML)
-----------------------------*/
+/* -------------------------
+   Helpers
+------------------------- */
 function $(id) { return document.getElementById(id); }
 
-function initDOMBindings() {
-  // Team A
-  teams.A.nameEl = $('teamAName');
-  teams.A.squadEl = $('teamASquad');
-  teams.A.mainListEl = $('teamAMainList');
-  teams.A.subListEl = $('teamASubList');
-  teams.A.ui.mainPower = $('teamAMainPower');
-  teams.A.ui.subPower = $('teamASubPower');
-  teams.A.ui.totalPower = $('teamATotalPower');
-  teams.A.ui.addMainBtn = $('addTeamAMain');
-  teams.A.ui.addSubBtn = $('addTeamASub');
-
-  // Team B
-  teams.B.nameEl = $('teamBName');
-  teams.B.squadEl = $('teamBSquad');
-  teams.B.mainListEl = $('teamBMainList');
-  teams.B.subListEl = $('teamBSubList');
-  teams.B.ui.mainPower = $('teamBMainPower');
-  teams.B.ui.subPower = $('teamBSubPower');
-  teams.B.ui.totalPower = $('teamBTotalPower');
-  teams.B.ui.addMainBtn = $('addTeamBMain');
-  teams.B.ui.addSubBtn = $('addTeamBSub');
-
-  // Wire add buttons
-  teams.A.ui.addMainBtn?.addEventListener('click', () => openAddPlayerModal('A', 'main'));
-  teams.A.ui.addSubBtn?.addEventListener('click', () => openAddPlayerModal('A', 'sub'));
-  teams.B.ui.addMainBtn?.addEventListener('click', () => openAddPlayerModal('B', 'main'));
-  teams.B.ui.addSubBtn?.addEventListener('click', () => openAddPlayerModal('B', 'sub'));
-}
-
-/* ---------------------------
-   Firestore members subscription
-----------------------------*/
-function subscribeMembers() {
-  try {
-    const qRef = query(collection(db, 'members'), orderBy('name'));
-    onSnapshot(qRef, snap => {
-      membersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // If a members dropdown is open in modal, refresh it
-      refreshMemberSelectOptions();
-    }, err => {
-      console.error('members subscription error', err);
-    });
-  } catch (e) {
-    console.warn('Firestore not available or db not configured. Members selection will be limited to manual entry.');
-  }
-}
-
-/* ---------------------------
-   Helpers
-----------------------------*/
 function uid(prefix='p') {
-  return prefix + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,8);
+  return prefix + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 }
 
 function toNumber(v) {
-  if (v === null || v === undefined) return 0;
+  if (v === null || v === undefined || v === '') return 0;
   const n = Number(v);
-  if (Number.isFinite(n)) return n;
-  // fallback: remove non-digit chars
-  const cleaned = String(v).replace(/[^\d.-]/g, '');
-  const m = Number(cleaned);
-  return Number.isFinite(m) ? m : 0;
+  if (!Number.isFinite(n)) {
+    const cleaned = String(v).replace(/[^\d.-]/g, '');
+    const m = Number(cleaned);
+    return Number.isFinite(m) ? m : 0;
+  }
+  return n;
 }
 
-/* ---------------------------
-   Rendering team lists & totals
-----------------------------*/
+/* -------------------------
+   Week label helpers
+   - auto label: week-YYYY-WW (ISO week)
+------------------------- */
+function getISOWeekLabel() {
+  const now = new Date();
+  const tmp = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = tmp.getUTCDay() || 7;
+  tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+  const weekNo = Math.ceil((((tmp - yearStart) / 86400000) + 1)/7);
+  return `week-${tmp.getUTCFullYear()}-${String(weekNo).padStart(2,'0')}`;
+}
+
+function sanitizeId(s) {
+  return s.replace(/\s+/g,'_').replace(/[^a-zA-Z0-9_\-]/g,'').toLowerCase() || null;
+}
+
+/* -------------------------
+   DOM bindings & init
+------------------------- */
+function initBindings() {
+  // team elements A
+  teams.A.nameEl = $('teamAName');
+  teams.A.squadEl = $('teamASquad');
+  teams.A.ui.mainPower = $('teamAMainPower');
+  teams.A.ui.subPower = $('teamASubPower');
+  teams.A.ui.totalPower = $('teamATotalPower');
+  teams.A.ui.mainList = $('teamAMainList');
+  teams.A.ui.subList = $('teamASubList');
+  teams.A.ui.addMain = $('addTeamAMain');
+  teams.A.ui.addSub = $('addTeamASub');
+  teams.A.ui.mainCounts = $('teamAMainCounts');
+  teams.A.ui.mainCountLabel = $('teamAMainCount');
+  teams.A.ui.subCountLabel = $('teamASubCount');
+
+  // team B
+  teams.B.nameEl = $('teamBName');
+  teams.B.squadEl = $('teamBSquad');
+  teams.B.ui.mainPower = $('teamBMainPower');
+  teams.B.ui.subPower = $('teamBSubPower');
+  teams.B.ui.totalPower = $('teamBTotalPower');
+  teams.B.ui.mainList = $('teamBMainList');
+  teams.B.ui.subList = $('teamBSubList');
+  teams.B.ui.addMain = $('addTeamBMain');
+  teams.B.ui.addSub = $('addTeamBSub');
+  teams.B.ui.mainCounts = $('teamBMainCounts');
+  teams.B.ui.mainCountLabel = $('teamBMainCount');
+  teams.B.ui.subCountLabel = $('teamBSubCount');
+
+  // week controls
+  $('autoWeekBtn')?.addEventListener('click', () => {
+    $('weekLabel').value = getISOWeekLabel();
+  });
+  $('saveWeekBtn')?.addEventListener('click', saveWeek);
+  $('loadWeekBtn')?.addEventListener('click', loadSelectedWeek);
+  $('deleteWeekBtn')?.addEventListener('click', deleteSelectedWeek);
+  $('clearAllBtn')?.addEventListener('click', clearAllTeams);
+  $('exportWeekBtn')?.addEventListener('click', exportCurrentWeekJSON);
+
+  // add player buttons
+  teams.A.ui.addMain?.addEventListener('click', () => openAddModal('A','main'));
+  teams.A.ui.addSub?.addEventListener('click', () => openAddModal('A','sub'));
+  teams.B.ui.addMain?.addEventListener('click', () => openAddModal('B','main'));
+  teams.B.ui.addSub?.addEventListener('click', () => openAddModal('B','sub'));
+}
+
+/* -------------------------
+   Firestore: members subscribe and weeks list
+------------------------- */
+function subscribeMembers() {
+  try {
+    const q = query(collection(db, 'members'), orderBy('name'));
+    onSnapshot(q, snap => {
+      membersCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    });
+  } catch (e) {
+    console.warn('Firestore members subscription not available', e);
+  }
+}
+
+async function refreshSavedWeeksList() {
+  try {
+    const snap = await getDocs(collection(db, WEEKS_COLLECTION));
+    savedWeeksList = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    populateWeeksSelect();
+  } catch (e) {
+    console.warn('Failed to load saved weeks list', e);
+  }
+}
+
+function populateWeeksSelect() {
+  const sel = $('savedWeeks');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">-- Load saved week --</option>';
+  savedWeeksList.forEach(w => {
+    const opt = document.createElement('option');
+    opt.value = w.id;
+    opt.textContent = w.label || w.id;
+    sel.appendChild(opt);
+  });
+}
+
+/* -------------------------
+   Render helpers
+------------------------- */
+function renderTeams() {
+  renderTeam('A');
+  renderTeam('B');
+}
+
+function countSquadTypes(playerArray) {
+  const counts = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
+  playerArray.forEach(p => {
+    const s = (p.squad || '').toUpperCase();
+    if (counts[s] !== undefined) counts[s]++;
+  });
+  return counts;
+}
+
 function renderTeam(side) {
   const t = teams[side];
   if (!t) return;
 
-  // render main players
-  t.mainListEl.innerHTML = '';
+  // main list
+  t.ui.mainList.innerHTML = '';
   t.main.forEach((p, idx) => {
-    const row = createPlayerRow(p, side, 'main', idx);
-    t.mainListEl.appendChild(row);
+    t.ui.mainList.appendChild(playerRowElement(side, 'main', p, idx));
   });
 
-  // render subs
-  t.subListEl.innerHTML = '';
+  // subs list
+  t.ui.subList.innerHTML = '';
   t.subs.forEach((p, idx) => {
-    const row = createPlayerRow(p, side, 'sub', idx);
-    t.subListEl.appendChild(row);
+    t.ui.subList.appendChild(playerRowElement(side, 'sub', p, idx));
   });
 
-  // update totals
-  const mainSum = t.main.reduce((s, p) => s + toNumber(p.power), 0);
-  const subSum = t.subs.reduce((s, p) => s + toNumber(p.power), 0);
-  const total = mainSum + subSum;
-
+  // sums
+  const mainSum = t.main.reduce((s,p) => s + toNumber(p.power), 0);
+  const subSum = t.subs.reduce((s,p) => s + toNumber(p.power), 0);
   t.ui.mainPower.textContent = mainSum;
   t.ui.subPower.textContent = subSum;
-  t.ui.totalPower.textContent = total;
+  t.ui.totalPower.textContent = mainSum + subSum;
 
-  // enforce limits
-  t.ui.addMainBtn.disabled = (t.main.length >= 20);
-  t.ui.addSubBtn.disabled = (t.subs.length >= 10);
+  // counts
+  t.ui.mainCountLabel.textContent = t.main.length;
+  t.ui.subCountLabel.textContent = t.subs.length;
 
-  // show small badge on buttons (optional)
-  t.ui.addMainBtn.title = `Main players: ${t.main.length}/20`;
-  t.ui.addSubBtn.title = `Sub players: ${t.subs.length}/10`;
+  const countsMain = countSquadTypes(t.main);
+  const countsHTML = Object.entries(countsMain).map(([k,v]) => `<div class="count-pill">${k}: ${v}</div>`).join('');
+  t.ui.mainCounts.innerHTML = countsHTML;
+
+  // enable/disable add buttons by limits
+  t.ui.addMain.disabled = (t.main.length >= 20);
+  t.ui.addSub.disabled = (t.subs.length >= 10);
 }
 
-/* ---------------------------
+/* -------------------------
    Player row DOM
-----------------------------*/
-function createPlayerRow(player, side, bucket, index) {
+------------------------- */
+function playerRowElement(side, bucket, p, idx) {
   const row = document.createElement('div');
   row.className = 'player-row';
 
-  // left: name
   const left = document.createElement('div');
-  left.className = 'player-left';
-  left.textContent = player.name || '(unknown)';
+  left.className = 'left';
+  left.textContent = p.name || '(unnamed)';
 
-  // center: power & badge
-  const center = document.createElement('div');
-  center.className = 'player-center';
-  const pwr = document.createElement('span');
-  pwr.className = 'player-power';
-  pwr.textContent = player.power ?? 0;
-  center.appendChild(pwr);
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  const pwr = document.createElement('span'); pwr.className = 'pwr'; pwr.textContent = p.power ?? 0;
+  const s = document.createElement('span'); s.className = 'squad'; s.textContent = p.squad || '';
+  meta.appendChild(pwr); meta.appendChild(s);
 
-  if (player.powerType) {
-    const badge = document.createElement('span');
-    badge.className = 'power-type';
-    badge.textContent = player.powerType;
-    center.appendChild(badge);
-  }
-
-  // right: delete button
-  const right = document.createElement('div');
-  right.className = 'player-right';
-  const del = document.createElement('button');
-  del.className = 'btn small danger';
-  del.textContent = 'Delete';
+  const actions = document.createElement('div');
+  actions.className = 'actions';
+  const del = document.createElement('button'); del.className='btn ghost'; del.textContent='Remove';
   del.addEventListener('click', () => {
-    removePlayer(side, bucket, index);
+    removePlayer(side, bucket, idx);
   });
-  right.appendChild(del);
+  actions.appendChild(del);
 
   row.appendChild(left);
-  row.appendChild(center);
-  row.appendChild(right);
-
+  row.appendChild(meta);
+  row.appendChild(actions);
   return row;
 }
 
-/* ---------------------------
-   Remove player
-----------------------------*/
-function removePlayer(side, bucket, index) {
+/* -------------------------
+   Add / Remove players
+------------------------- */
+function addPlayer(side, bucket, player) {
   const t = teams[side];
   if (!t) return;
   if (bucket === 'main') {
-    if (index < 0 || index >= t.main.length) return;
-    t.main.splice(index, 1);
-  } else {
-    if (index < 0 || index >= t.subs.length) return;
-    t.subs.splice(index, 1);
-  }
-  renderTeam(side);
-}
-
-/* ---------------------------
-   Modal: Add Player
-   - allows select from members or manual entry
-----------------------------*/
-let currentModal = null;
-
-function openAddPlayerModal(side, bucket) {
-  // build modal content
-  const title = `${side === 'A'? 'Team A':'Team B'} — Add ${bucket === 'main' ? 'Main' : 'Sub'} Player`;
-  const modal = createModal(title);
-
-  const container = document.createElement('div');
-  container.className = 'modal-content';
-
-  // Member select
-  const selWrap = document.createElement('div');
-  selWrap.style.marginBottom = '10px';
-  const selLabel = document.createElement('label');
-  selLabel.textContent = 'Select existing member (optional)';
-  selLabel.className = 'field-label';
-  selWrap.appendChild(selLabel);
-
-  const select = document.createElement('select');
-  select.className = 'input';
-  select.id = 'memberSelect';
-  const defaultOpt = document.createElement('option');
-  defaultOpt.value = '';
-  defaultOpt.textContent = '-- Choose member or leave blank --';
-  select.appendChild(defaultOpt);
-
-  // populate options
-  membersCache.forEach(m => {
-    const o = document.createElement('option');
-    o.value = m.id;
-    o.textContent = `${m.name} — ${m.power ?? ''} ${m.powerType ? '(' + m.powerType + ')' : ''}`;
-    select.appendChild(o);
-  });
-
-  selWrap.appendChild(select);
-  container.appendChild(selWrap);
-
-  // Manual entry fields
-  const nameLabel = document.createElement('label');
-  nameLabel.textContent = 'Name (if not selecting existing)';
-  nameLabel.className = 'field-label';
-  container.appendChild(nameLabel);
-
-  const nameInput = document.createElement('input');
-  nameInput.className = 'input';
-  nameInput.placeholder = 'Player name';
-  container.appendChild(nameInput);
-
-  const powerLabel = document.createElement('label');
-  powerLabel.textContent = 'Power';
-  powerLabel.className = 'field-label';
-  container.appendChild(powerLabel);
-
-  const powerInput = document.createElement('input');
-  powerInput.type = 'number';
-  powerInput.step = '0.1';
-  powerInput.className = 'input';
-  powerInput.placeholder = '0';
-  container.appendChild(powerInput);
-
-  const powerTypeLabel = document.createElement('label');
-  powerTypeLabel.textContent = 'Power Type';
-  powerTypeLabel.className = 'field-label';
-  container.appendChild(powerTypeLabel);
-
-  const powerTypeSelect = document.createElement('select');
-  powerTypeSelect.className = 'input';
-  const optPrec = document.createElement('option'); optPrec.value = 'Precise'; optPrec.textContent = 'Precise';
-  const optApprox = document.createElement('option'); optApprox.value = 'Approx'; optApprox.textContent = 'Approx';
-  powerTypeSelect.appendChild(optPrec);
-  powerTypeSelect.appendChild(optApprox);
-  container.appendChild(powerTypeSelect);
-
-  // Buttons
-  const actions = document.createElement('div');
-  actions.style.display = 'flex';
-  actions.style.gap = '8px';
-  actions.style.marginTop = '12px';
-
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'btn small';
-  cancelBtn.textContent = 'Cancel';
-  cancelBtn.addEventListener('click', () => {
-    closeModal();
-  });
-
-  const addBtn = document.createElement('button');
-  addBtn.className = 'btn primary';
-  addBtn.textContent = 'Add Player';
-  addBtn.addEventListener('click', () => {
-    // if member selected, take from membersCache
-    const selectedMemberId = select.value;
-    if (selectedMemberId) {
-      const mem = membersCache.find(x => x.id === selectedMemberId);
-      if (!mem) {
-        alert('Selected member not found.');
-        return;
-      }
-      const player = {
-        uid: uid('m'),
-        id: mem.id,
-        name: mem.name || 'Unknown',
-        power: mem.power ?? 0,
-        powerType: mem.powerType || 'Precise',
-        source: 'member'
-      };
-      addPlayerToTeam(side, bucket, player);
-      closeModal();
-      return;
-    }
-
-    // else manual
-    const manualName = nameInput.value.trim();
-    const manualPower = powerInput.value !== '' ? cleanNumber(powerInput.value) : 0;
-    const manualType = powerTypeSelect.value || 'Precise';
-
-    if (!manualName) {
-      alert('Enter player name or choose an existing member.');
-      return;
-    }
-
-    const player = {
-      uid: uid('x'),
-      id: null,
-      name: manualName,
-      power: manualPower,
-      powerType: manualType,
-      source: 'manual'
-    };
-    addPlayerToTeam(side, bucket, player);
-    closeModal();
-  });
-
-  actions.appendChild(cancelBtn);
-  actions.appendChild(addBtn);
-
-  container.appendChild(actions);
-
-  modal.body.appendChild(container);
-  openModal(modal);
-  // store current modal
-  currentModal = modal;
-}
-
-/* ---------------------------
-   Modal creation / open / close helpers
-----------------------------*/
-function createModal(title) {
-  // overlay
-  const overlay = document.createElement('div');
-  overlay.className = 'modal-overlay';
-
-  // box
-  const box = document.createElement('div');
-  box.className = 'modal-box-lg';
-
-  // header
-  const h = document.createElement('div');
-  h.className = 'modal-header';
-  const h1 = document.createElement('h3');
-  h1.textContent = title;
-  h.appendChild(h1);
-
-  // body
-  const body = document.createElement('div');
-  body.className = 'modal-body';
-
-  box.appendChild(h);
-  box.appendChild(body);
-
-  // append
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-
-  // click outside to close
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeModal();
-  });
-
-  return { overlay, box, body };
-}
-
-function openModal(modalObj) {
-  modalObj.overlay.style.zIndex = 9999;
-  modalObj.overlay.style.position = 'fixed';
-  modalObj.overlay.style.inset = '0';
-  modalObj.overlay.style.display = 'flex';
-  modalObj.overlay.style.alignItems = 'center';
-  modalObj.overlay.style.justifyContent = 'center';
-  // small fade
-  modalObj.overlay.style.animation = 'modalFade .18s ease';
-  // style box
-  modalObj.box.style.width = '520px';
-  modalObj.box.style.maxWidth = '95%';
-  modalObj.box.style.background = 'rgba(10,10,14,0.95)';
-  modalObj.box.style.border = '1px solid rgba(80,80,120,0.3)';
-  modalObj.box.style.borderRadius = '12px';
-  modalObj.box.style.padding = '16px';
-  modalObj.box.style.boxShadow = '0 10px 40px rgba(0,0,0,0.7)';
-}
-
-function closeModal() {
-  if (!currentModal) return;
-  try {
-    document.body.removeChild(currentModal.overlay);
-  } catch (e) {}
-  currentModal = null;
-}
-
-/* ---------------------------
-   Add player to team (with limit enforcement)
-----------------------------*/
-function addPlayerToTeam(side, bucket, player) {
-  const t = teams[side];
-  if (!t) return;
-
-  if (bucket === 'main') {
-    if (t.main.length >= 20) {
-      alert('Main players limit reached (20).');
-      return;
+    if (t.main.length >= 20) return alert('Main limit 20 reached');
+    // prevent duplicate same member in same team main/sub
+    if (player.id) {
+      const dup = t.main.concat(t.subs).find(p => p.id === player.id);
+      if (dup) return alert('This member already exists in the team.');
     }
     t.main.push(player);
   } else {
-    if (t.subs.length >= 10) {
-      alert('Sub players limit reached (10).');
-      return;
+    if (t.subs.length >= 10) return alert('Sub limit 10 reached');
+    if (player.id) {
+      const dup = t.main.concat(t.subs).find(p => p.id === player.id);
+      if (dup) return alert('This member already exists in the team.');
     }
     t.subs.push(player);
   }
   renderTeam(side);
 }
 
-/* ---------------------------
-   Member select refresh (if modal open)
-----------------------------*/
-function refreshMemberSelectOptions() {
-  const sel = document.getElementById('memberSelect');
-  if (!sel) return;
-  // clear existing except first default
-  while (sel.options.length > 1) sel.remove(1);
+function removePlayer(side, bucket, index) {
+  const t = teams[side];
+  if (!t) return;
+  if (bucket === 'main') {
+    t.main.splice(index,1);
+  } else {
+    t.subs.splice(index,1);
+  }
+  renderTeam(side);
+}
+
+/* -------------------------
+   Modal: select or create player
+------------------------- */
+let modalOverlay = null;
+function openAddModal(side, bucket) {
+  // build overlay
+  closeModal();
+
+  modalOverlay = document.createElement('div');
+  modalOverlay.style.position = 'fixed';
+  modalOverlay.style.inset = '0';
+  modalOverlay.style.background = 'rgba(0,0,0,0.6)';
+  modalOverlay.style.display = 'flex';
+  modalOverlay.style.alignItems = 'center';
+  modalOverlay.style.justifyContent = 'center';
+  modalOverlay.style.zIndex = 9999;
+
+  const box = document.createElement('div');
+  box.style.width = '560px';
+  box.style.maxWidth = '96%';
+  box.style.background = 'rgba(10,10,14,0.98)';
+  box.style.border = '1px solid rgba(80,80,120,0.3)';
+  box.style.padding = '16px';
+  box.style.borderRadius = '12px';
+  modalOverlay.appendChild(box);
+
+  const title = document.createElement('h3');
+  title.textContent = `${side==='A'?'Team A':'Team B'} — Add ${bucket==='main'?'Main':'Sub'} Player`;
+  title.style.color = '#00ffc8';
+  title.style.marginTop = '0';
+  box.appendChild(title);
+
+  // select member
+  const selLabel = document.createElement('div'); selLabel.textContent='Select existing member (optional)'; selLabel.style.color='#bbb';
+  const select = document.createElement('select'); select.className='input'; select.style.width='100%'; select.style.marginTop='6px';
+  const emptyOpt = document.createElement('option'); emptyOpt.value=''; emptyOpt.textContent='-- choose member or leave blank --'; select.appendChild(emptyOpt);
   membersCache.forEach(m => {
     const o = document.createElement('option');
     o.value = m.id;
-    o.textContent = `${m.name} — ${m.power ?? ''} ${m.powerType ? '('+m.powerType+')' : ''}`;
-    sel.appendChild(o);
+    o.textContent = `${m.name} — ${m.power ?? ''} ${m.powerType ? '('+m.powerType+')':''}`;
+    select.appendChild(o);
   });
+  box.appendChild(selLabel); box.appendChild(select);
+
+  // manual fields
+  const nmLabel = document.createElement('div'); nmLabel.textContent='Name (if not selecting)'; nmLabel.style.marginTop='10px'; nmLabel.style.color='#bbb';
+  const nmInput = document.createElement('input'); nmInput.className='input'; nmInput.placeholder='Player name';
+  box.appendChild(nmLabel); box.appendChild(nmInput);
+
+  const pLabel = document.createElement('div'); pLabel.textContent='Power'; pLabel.style.color='#bbb'; pLabel.style.marginTop='8px';
+  const pInput = document.createElement('input'); pInput.type='number'; pInput.className='input'; pInput.placeholder='0';
+  box.appendChild(pLabel); box.appendChild(pInput);
+
+  const sLabel = document.createElement('div'); sLabel.textContent='Squad Type'; sLabel.style.color='#bbb'; sLabel.style.marginTop='8px';
+  const sSelect = document.createElement('select'); sSelect.className='input';
+  ['', 'TANK','AIR','MISSILE','HYBRID'].forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v||'Select squad'; sSelect.appendChild(o); });
+  box.appendChild(sLabel); box.appendChild(sSelect);
+
+  const typeLabel = document.createElement('div'); typeLabel.textContent='Power Type'; typeLabel.style.color='#bbb'; typeLabel.style.marginTop='8px';
+  const typeSelect = document.createElement('select'); typeSelect.className='input';
+  ['Precise','Approx'].forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; typeSelect.appendChild(o); });
+  box.appendChild(typeLabel); box.appendChild(typeSelect);
+
+  // actions
+  const actions = document.createElement('div'); actions.style.display='flex'; actions.style.justifyContent='flex-end'; actions.style.gap='8px'; actions.style.marginTop='12px';
+  const cancel = document.createElement('button'); cancel.className='btn ghost'; cancel.textContent='Cancel'; cancel.addEventListener('click', closeModal);
+  const add = document.createElement('button'); add.className='btn primary'; add.textContent='Add'; add.addEventListener('click', () => {
+    // if selected
+    const selId = select.value;
+    if (selId) {
+      const mem = membersCache.find(m => m.id === selId);
+      if (!mem) { alert('Member not found'); return; }
+      const player = { id: mem.id, name: mem.name, power: toNumber(mem.power), powerType: mem.powerType || 'Precise' };
+      addPlayer(side, bucket, player);
+      closeModal();
+      return;
+    }
+    // else manual
+    const name = nmInput.value.trim();
+    const power = pInput.value !== '' ? toNumber(pInput.value) : 0;
+    const squad = sSelect.value || '';
+    const ptype = typeSelect.value || 'Precise';
+    if (!name) return alert('Enter name or select existing member.');
+    const player = { id: null, name, power, squad, powerType: ptype };
+    addPlayer(side, bucket, player);
+    closeModal();
+  });
+  actions.appendChild(cancel); actions.appendChild(add);
+  box.appendChild(actions);
+
+  modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+  document.body.appendChild(modalOverlay);
 }
 
-/* ---------------------------
-   Optional: Save teams to Firestore
-----------------------------*/
-async function saveTeamToFirestore(side) {
-  // Optional: uncomment to enable persistence
-  /*
-  const t = teams[side];
+function closeModal() {
+  if (modalOverlay) {
+    try { document.body.removeChild(modalOverlay); } catch(e) {}
+    modalOverlay = null;
+  }
+}
+
+/* -------------------------
+   Save / Load / Delete week
+------------------------- */
+function buildWeekPayload() {
   const payload = {
-    name: t.nameEl?.value || '',
-    squad: t.squadEl?.value || '',
-    main: t.main,
-    subs: t.subs,
-    totalMainPower: Number(t.ui.mainPower.textContent) || 0,
-    totalSubPower: Number(t.ui.subPower.textContent) || 0,
-    totalPower: Number(t.ui.totalPower.textContent) || 0,
-    updatedAt: serverTimestamp()
+    label: $('weekLabel').value || getISOWeekLabel(),
+    savedAt: serverTimestamp ? serverTimestamp() : new Date().toISOString(),
+    teamA: {
+      name: teams.A.nameEl?.value || '',
+      squad: teams.A.squadEl?.value || '',
+      main: teams.A.main,
+      subs: teams.A.subs
+    },
+    teamB: {
+      name: teams.B.nameEl?.value || '',
+      squad: teams.B.squadEl?.value || '',
+      main: teams.B.main,
+      subs: teams.B.subs
+    }
   };
-  await setDoc(doc(db, 'desert_brawl_teams', `${side}`), payload);
-  */
+  return payload;
 }
 
-/* ---------------------------
-   Init - wire everything
-----------------------------*/
-function init() {
-  initDOMBindings();
+async function saveWeek() {
+  const labelRaw = $('weekLabel').value.trim();
+  const label = labelRaw || getISOWeekLabel();
+  if (!label) return alert('Week label required');
+  const id = sanitizeId(label) || uid('week');
+
+  const payload = buildWeekPayload();
+  try {
+    await setDoc(doc(db, WEEKS_COLLECTION, id), payload);
+    alert('Week saved: ' + label);
+    if (typeof logAudit === 'function') logAudit('SAVE_WEEK', label, JSON.stringify({teamA: payload.teamA, teamB: payload.teamB}), (window?.currentAdminName || 'admin'));
+    // refresh list
+    await refreshSavedWeeksList();
+    $('savedWeeks').value = id;
+  } catch (e) {
+    console.error('saveWeek error', e);
+    alert('Save failed. Check console.');
+  }
+}
+
+async function loadSelectedWeek() {
+  const id = $('savedWeeks').value;
+  if (!id) return alert('Choose saved week to load');
+  try {
+    const docRef = doc(db, WEEKS_COLLECTION, id);
+    const snap = await getDoc(docRef);
+    if (!snap.exists()) return alert('Week not found');
+    const data = snap.data();
+    applyLoadedWeek(id, data);
+  } catch (e) {
+    console.error('load error', e);
+    alert('Load failed.');
+  }
+}
+
+function applyLoadedWeek(id, data) {
+  // set label
+  $('weekLabel').value = data.label || id;
+
+  // team A
+  teams.A.main = (data.teamA?.main || []).map(normalizePlayer);
+  teams.A.subs = (data.teamA?.subs || []).map(normalizePlayer);
+  teams.A.nameEl.value = data.teamA?.name || '';
+  teams.A.squadEl.value = data.teamA?.squad || '';
+
+  // team B
+  teams.B.main = (data.teamB?.main || []).map(normalizePlayer);
+  teams.B.subs = (data.teamB?.subs || []).map(normalizePlayer);
+  teams.B.nameEl.value = data.teamB?.name || '';
+  teams.B.squadEl.value = data.teamB?.squad || '';
+
+  renderTeams();
+}
+
+async function deleteSelectedWeek() {
+  const id = $('savedWeeks').value;
+  if (!id) return alert('Choose week to delete');
+  if (!confirm('Delete saved week permanently?')) return;
+  try {
+    await deleteDoc(doc(db, WEEKS_COLLECTION, id));
+    alert('Deleted');
+    await refreshSavedWeeksList();
+  } catch (e) {
+    console.error('delete error', e);
+    alert('Delete failed.');
+  }
+}
+
+/* -------------------------
+   Misc actions
+------------------------- */
+function clearAllTeams() {
+  if (!confirm('Clear both teams?')) return;
+  teams.A.main = []; teams.A.subs = []; teams.B.main = []; teams.B.subs = [];
+  $('weekLabel').value = '';
+  renderTeams();
+}
+
+function exportCurrentWeekJSON() {
+  const payload = buildWeekPayload();
+  const dataStr = JSON.stringify(payload, null, 2);
+  const blob = new Blob([dataStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${payload.label || 'week'}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* -------------------------
+   normalization helper
+------------------------- */
+function normalizePlayer(p) {
+  return {
+    id: p.id || null,
+    name: p.name || '',
+    power: toNumber(p.power),
+    squad: p.squad || '',
+    powerType: p.powerType || 'Precise'
+  };
+}
+
+/* -------------------------
+   Init
+------------------------- */
+function wire() {
+  initBindings();
   subscribeMembers();
+  refreshSavedWeeksList();
+  renderTeams();
 
-  // initial render
-  renderTeam('A');
-  renderTeam('B');
-
-  // keyboard shortcuts: Ctrl+1 / Ctrl+2 to focus team names
-  window.addEventListener('keydown', (e) => {
-    if (e.ctrlKey && e.key === '1') teams.A.nameEl?.focus();
-    if (e.ctrlKey && e.key === '2') teams.B.nameEl?.focus();
-  });
+  // set default week label
+  $('weekLabel').value = getISOWeekLabel();
 }
 
-/* ---------------------------
-   Run
-----------------------------*/
-document.addEventListener('DOMContentLoaded', init);
+function initBindings() {
+  // cached bindings done earlier (find elements)
+  teams.A.nameEl = $('teamAName'); teams.A.squadEl = $('teamASquad');
+  teams.A.ui.mainList = $('teamAMainList'); teams.A.ui.subList = $('teamASubList');
+  teams.A.ui.mainPower = $('teamAMainPower'); teams.A.ui.subPower = $('teamASubPower'); teams.A.ui.totalPower = $('teamATotalPower');
+  teams.A.ui.addMain = $('addTeamAMain'); teams.A.ui.addSub = $('addTeamASub');
+  teams.A.ui.mainCounts = $('teamAMainCounts'); teams.A.ui.mainCountLabel = $('teamAMainCount'); teams.A.ui.subCountLabel = $('teamASubCount');
 
-/* ---------------------------
-   Minimal CSS for modal & player-row
-   (You can copy these into your style.css)
-----------------------------*/
-/*
-.modal-overlay { }
-.modal-box-lg { }
-.modal-header h3 { color:#00ffc8; margin:0 0 8px 0; }
-.modal-body { color:#ddd; font-size:14px; }
+  teams.B.nameEl = $('teamBName'); teams.B.squadEl = $('teamBSquad');
+  teams.B.ui.mainList = $('teamBMainList'); teams.B.ui.subList = $('teamBSubList');
+  teams.B.ui.mainPower = $('teamBMainPower'); teams.B.ui.subPower = $('teamBSubPower'); teams.B.ui.totalPower = $('teamBTotalPower');
+  teams.B.ui.addMain = $('addTeamBMain'); teams.B.ui.addSub = $('addTeamBSub');
+  teams.B.ui.mainCounts = $('teamBMainCounts'); teams.B.ui.mainCountLabel = $('teamBMainCount'); teams.B.ui.subCountLabel = $('teamBSubCount');
 
-.player-row {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:8px 10px;
-  border-radius:8px;
-  background:rgba(0,0,0,0.18);
-  margin-bottom:8px;
-  gap:8px;
+  // bind simple events
+  $('addTeamAMain')?.addEventListener('click', () => openAddModal('A','main'));
+  $('addTeamASub')?.addEventListener('click', () => openAddModal('A','sub'));
+  $('addTeamBMain')?.addEventListener('click', () => openAddModal('B','main'));
+  $('addTeamBSub')?.addEventListener('click', () => openAddModal('B','sub'));
+  $('saveWeekBtn')?.addEventListener('click', saveWeek);
+  $('loadWeekBtn')?.addEventListener('click', loadSelectedWeek);
+  $('deleteWeekBtn')?.addEventListener('click', deleteSelectedWeek);
+  $('autoWeekBtn')?.addEventListener('click', () => { $('weekLabel').value = getISOWeekLabel(); });
+  $('clearAllBtn')?.addEventListener('click', clearAllTeams);
+  $('exportWeekBtn')?.addEventListener('click', exportCurrentWeekJSON);
 }
-.player-left { flex: 1; font-weight:600; color:#eaeaea; }
-.player-center { display:flex; gap:8px; align-items:center; }
-.player-power { font-size:14px; color:#00ffc8; font-weight:700; margin-right:6px; }
-.power-type { font-size:11px; color:#bbb; background: rgba(255,255,255,0.03); padding:3px 6px; border-radius:6px; }
-.player-right { }
-.btn.small { padding:6px 10px; border-radius:8px; }
-*/
+
+document.addEventListener('DOMContentLoaded', wire);
