@@ -863,3 +863,19 @@ body.bg {
   left: 14px;
   z-index: 9999;
 }
+.map-spot {
+  position: absolute;
+  width: 14px;              /* reduced size */
+  height: 14px;
+  background: rgba(0, 255, 180, 0.75);
+  border: 1px solid rgba(0, 255, 180, 0.9);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.map-spot:hover {
+  transform: translate(-50%, -50%) scale(1.25);
+  background: rgba(0, 255, 180, 1);
+}
