@@ -3,97 +3,86 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Desert Brawl — Position Assigner (Team Maps)</title>
+  <title>Desert Brawl — Position Assigner (Single Team)</title>
   <link rel="stylesheet" href="/css/style.css">
   <style>
-    body { background:#060609; color:#e6eef0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; padding:16px; }
-    .topbar { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:14px; }
-    .title { font-weight:700; color:#00ffc8; text-align:center; flex:1; }
-
-    .controls { display:flex; gap:8px; align-items:center; }
-    .btn { padding:8px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.03); background:transparent; color:#e6eef0; cursor:pointer; }
-    .btn.primary { background: linear-gradient(90deg,#03e6b9,#00bfff); color:#001217; border:0; font-weight:700; }
-
-    .layout { display:grid; grid-template-columns: 1fr 1fr; gap:16px; align-items:start; }
-    .panel { background: linear-gradient(180deg,#071018,#071019); border:1px solid rgba(0,255,200,0.05); padding:12px; border-radius:12px; min-height:640px; }
-
-    .panel h3 { margin:0 0 8px 0; }
-    .muted { color:#93a3a6; font-size:13px; }
-
-    .map-wrap { position:relative; border-radius:8px; overflow:hidden; background:#071018; padding:8px; }
-    .map-inner { position:relative; width:100%; height:560px; background:#050609; display:flex; align-items:center; justify-content:center; }
-    .map-inner img { width:100%; height:100%; object-fit:contain; user-select:none; -webkit-user-drag:none; display:block; }
-
-    .hotspot {
-      position:absolute; transform:translate(-50%,-50%); width:46px; height:46px; border-radius:50%;
-      display:flex; align-items:center; justify-content:center; background: rgba(0,0,0,0.5);
-      border:2px solid rgba(255,255,255,0.04); cursor:pointer; transition:0.12s;
+    :root{
+      --bg:#05060a; --panel:#071018; --accent:#00ffc8; --muted:#93a3a6; --cardBorder:rgba(255,255,255,0.03);
+      --btnPrimaryStart:#03e6b9; --btnPrimaryEnd:#00bfff;
     }
-    .hotspot:hover { transform:translate(-50%,-50%) scale(1.06); box-shadow: 0 10px 30px rgba(0,200,255,0.06); }
-    .hotspot .dot { width:10px; height:10px; border-radius:50%; background:#ffb86b; box-shadow:0 0 8px rgba(255,184,107,0.25); }
-
-    .hotspot .count { position:absolute; top:-8px; right:-8px; background:#00bfff; color:#001217; font-weight:700; font-size:11px; padding:2px 6px; border-radius:12px; border:1px solid rgba(255,255,255,0.05); }
-
-    .hotspot-label { position:absolute; top:calc(100% + 6px); left:50%; transform:translateX(-50%); font-size:12px; color:#cfe8e2; background:rgba(0,0,0,0.45); padding:4px 8px; border-radius:6px; white-space:nowrap; }
-
-    .team-list { margin-top:12px; display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; }
-    .player-chip { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px; border-radius:8px; background: rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.02); cursor:default; }
-    .player-name { font-weight:600; color:#eaeaea; }
-    .player-meta { color:#9aa3a6; font-size:12px; }
-
-    /* picker modal */
-    .overlay { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; z-index:22000; }
-    .picker { width:640px; max-width:96%; background:#061018; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.04); box-shadow:0 18px 46px rgba(0,0,0,0.6); }
-    .picker h4 { margin:0 0 6px 0; color:#00ffc8; }
-    .picker .list { max-height:320px; overflow:auto; display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-    .picker-entry { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px; border-radius:8px; background: rgba(255,255,255,0.02); cursor:pointer; }
-    .picker-entry.selected { outline:2px solid rgba(0,200,255,0.12); background: rgba(0,200,255,0.03); }
-    .picker-row { display:flex; gap:8px; align-items:center; }
-    .note-input { width:100%; padding:8px; border-radius:8px; border:1px solid rgba(255,255,255,0.04); background:transparent; color:#e6eef0; }
-
-    .picker-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:8px; }
-    @media (max-width: 980px) { .layout { grid-template-columns: 1fr; } .map-inner { height:460px; } }
+    html,body{height:100%; margin:0; background:var(--bg); color:#e6eef0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; }
+    .page{max-width:1200px;margin:18px auto;padding:12px;}
+    .topbar{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:12px;}
+    .title{font-weight:800;color:var(--accent);text-align:center;flex:1;font-size:18px;}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--cardBorder);background:transparent;color:inherit;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--btnPrimaryStart),var(--btnPrimaryEnd));border:0;color:#001217;font-weight:700}
+    .controls{display:flex;gap:8px;align-items:center}
+    .switcher{display:flex;gap:8px;margin-bottom:10px}
+    .switcher .btn{flex:1}
+    .panel{background:linear-gradient(180deg,var(--panel),#061019);border-radius:12px;padding:12px;border:1px solid var(--cardBorder)}
+    .map-wrap{border-radius:8px;overflow:hidden;border:1px solid rgba(255,255,255,0.02);margin-top:12px}
+    .map-inner{position:relative;width:100%;height:620px;background:#03040a;display:flex;align-items:center;justify-content:center}
+    .map-inner img{width:100%;height:100%;object-fit:contain;user-select:none;-webkit-user-drag:none}
+    .hotspot{position:absolute;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.04);cursor:pointer;transition:150ms}
+    .hotspot:hover{transform:translate(-50%,-50%) scale(1.06);box-shadow:0 14px 40px rgba(0,200,255,0.06)}
+    .hotspot .dot{width:12px;height:12px;border-radius:50%;background:#ffb86b;box-shadow:0 0 8px rgba(255,184,107,0.2)}
+    .hotspot .count{position:absolute;top:-8px;right:-8px;background:var(--btnPrimaryEnd);color:#001217;font-weight:700;font-size:11px;padding:3px 6px;border-radius:12px;border:1px solid rgba(255,255,255,0.05)}
+    .hotspot-label{position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%);font-size:12px;color:#cfe8e2;background:rgba(0,0,0,0.45);padding:4px 8px;border-radius:6px;white-space:nowrap}
+    .team-list{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:240px;overflow:auto}
+    .player-chip{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.02)}
+    .player-name{font-weight:700;color:#eaeaea}
+    .player-meta{font-size:13px;color:var(--muted)}
+    /* picker */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;z-index:99999}
+    .picker{width:760px;max-width:96%;background:linear-gradient(180deg,#051018,#071019);padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
+    .picker h4{margin:0 0 6px 0;color:var(--accent)}
+    .picker .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+    .picker .search{flex:1;padding:8px;border-radius:8px;border:1px solid var(--cardBorder);background:transparent;color:inherit}
+    .picker .list{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:6px}
+    .picker-entry{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);cursor:pointer}
+    .picker-entry.selected{outline:2px solid rgba(0,200,255,0.08);background:rgba(0,200,255,0.03)}
+    .picker-row{display:flex;gap:8px;align-items:center}
+    .note-input{width:100%;padding:8px;border-radius:8px;border:1px solid var(--cardBorder);background:transparent;color:inherit}
+    .picker-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
+    @media (max-width:880px){ .map-inner{height:460px} .picker{width:96%} }
   </style>
 </head>
 <body>
-  <div class="topbar">
-    <div style="display:flex; gap:12px; align-items:center; width:100%;">
-      <button class="btn" onclick="location.href='admin-fights.html'">← Back to Fights</button>
-      <div class="title">DESERT BRAWL — Position Assigner (Team Maps)</div>
+  <div class="page">
+    <div class="topbar">
+      <div style="display:flex;gap:12px;align-items:center;width:100%">
+        <button class="btn" onclick="location.href='/admin-fights.html'">← Back to Fights</button>
+        <div class="title">DESERT BRAWL — Position Assigner</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="savedWeeks" class="btn" style="background:transparent;color:inherit;border-radius:8px"></select>
+        <button id="loadWeek" class="btn">Load</button>
+        <button id="clearPositions" class="btn">Clear</button>
+        <button id="savePositions" class="btn primary">Save Positions</button>
+      </div>
     </div>
 
-    <div class="controls">
-      <select id="savedWeeks" class="input"></select>
-      <button id="loadWeek" class="btn">Load</button>
-      <button id="savePositions" class="btn primary">Save Positions</button>
+    <div class="switcher">
+      <button id="switchA" class="btn primary">Team A</button>
+      <button id="switchB" class="btn">Team B</button>
     </div>
+
+    <section class="panel" id="singlePanel">
+      <h3 id="panelTitle" style="margin:0;color:var(--accent)">Team A — Map</h3>
+      <div class="muted" id="panelHint">Click a hotspot → pick players (multi-select) → add optional note → Assign</div>
+
+      <div class="map-wrap">
+        <div class="map-inner" id="mapInnerSingle">
+          <img id="mapImageSingle" src="/assets/desert-storm-named-standard.png" alt="Desert Map" />
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div class="muted" id="teamListLabel">Team A Players</div>
+        <div id="teamListSingle" class="team-list"></div>
+      </div>
+    </section>
   </div>
-
-  <!-- TEAM SWITCHER -->
-<div style="display:flex; gap:10px; margin-bottom:16px;">
-  <button id="switchA" class="btn primary" style="flex:1;">Team A</button>
-  <button id="switchB" class="btn" style="flex:1;">Team B</button>
-</div>
-
-<!-- SINGLE PANEL — reused for A or B -->
-<section class="panel" id="singlePanel">
-  <h3 id="panelTitle" style="color:#00ffc8;">Team A — Map</h3>
-  <div class="muted">Click a hotspot → pick one or more players → add optional note → Assign.</div>
-
-  <div class="map-wrap" style="margin-top:10px;">
-    <div class="map-inner" id="mapInnerSingle">
-      <img id="mapImageSingle" src="/assets/desert-storm-named-standard1.png" />
-    </div>
-  </div>
-
-  <div style="margin-top:12px;">
-    <div class="muted" id="teamListLabel">Team A Players</div>
-    <div id="teamListSingle" class="team-list"></div>
-  </div>
-</section>
-
-
-  <!-- picker overlay is created dynamically -->
 
   <script type="module" src="/js/positions.js"></script>
 </body>

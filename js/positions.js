@@ -1,5 +1,5 @@
-// positions.js (v2) — Team-specific maps, multi-members per node, per-assignment note
-console.log('✅ positions.js (v2) loaded');
+// positions.js (v3) — Single-team map, multi-member per node, per-assignment notes
+console.log("✅ positions.js (v3) loaded");
 
 import { db } from './firebase-config.js';
 import {
@@ -14,7 +14,7 @@ import {
 /* ========== CONFIG ========== */
 const WEEKS_COLLECTION = 'desert_brawl_weeks';
 
-// final coordinates you gave (percent)
+/* Final coordinates (percent) provided by you */
 const MAP_SPOTS = [
   { key: 'Info Center',        x: 25.1, y: 17.7 },
   { key: 'Arsenal',            x: 50.6, y: 29.2 },
@@ -31,47 +31,56 @@ const MAP_SPOTS = [
   { key: 'Inner Bottom',       x: 49.9, y: 90.9 }
 ];
 
-/* ========== State ========== */
-let activeTeam = 'A'; // default//
+/* ========== STATE ========== */
 let currentWeekId = null;
 let weekData = null;
-let positions = { teamA: {}, teamB: {} }; // each map: posKey -> [ { id, name, note } ]
-let teamAMembers = [];
+let positions = { teamA: {}, teamB: {} }; // { posKey: [ { id, name, note } ] }
+let teamAMembers = []; // array of {id,name,power,squad,powerType}
 let teamBMembers = [];
+let activeTeam = 'A'; // 'A' or 'B'
 
 /* ========== DOM refs ========== */
 const $ = id => document.getElementById(id);
 const savedWeeksSel = $('savedWeeks');
 const loadWeekBtn = $('loadWeek');
 const savePositionsBtn = $('savePositions');
-const teamAList = $('teamAList');
-const teamBList = $('teamBList');
-const mapInnerA = $('mapInnerA');
-const mapInnerB = $('mapInnerB');
+const clearPositionsBtn = $('clearPositions');
+const switchA = $('switchA');
+const switchB = $('switchB');
 
-/* ========== Helpers ========== */
-function empty(el) { while (el.firstChild) el.removeChild(el.firstChild); }
+const mapInner = $('mapInnerSingle');
+const teamListSingle = $('teamListSingle');
+const panelTitle = $('panelTitle');
+const teamListLabel = $('teamListLabel');
 
-function normalizeLoadedPlayer(p) {
-  return {
-    id: p.id || null,
-    name: p.name || '',
-    power: p.power ?? 0,
-    squad: (p.squad || '').toUpperCase(),
-    powerType: p.powerType || 'Precise'
-  };
+/* ========== Utilities ========== */
+function empty(el) { while (el && el.firstChild) el.removeChild(el.firstChild); }
+function toNum(v){ const n=Number(v); return Number.isFinite(n)?n:0; }
+
+/* Helper: return assigned positions for a player in given team map */
+function assignedPositionsForPlayer(playerId, teamKey) {
+  if (!positions[teamKey]) return [];
+  const out = [];
+  Object.entries(positions[teamKey]).forEach(([pos, arr]) => {
+    if (!Array.isArray(arr)) return;
+    arr.forEach(a => {
+      if (a.id === playerId) out.push({ pos, note: a.note || '' });
+    });
+  });
+  return out;
 }
 
-function findPlayerNameById(pid) {
-  const m = teamAMembers.concat(teamBMembers).find(x => x.id === pid);
-  return m ? m.name : '';
+/* Helper: ensure positions map exists */
+function ensureTeamMap(teamKey) {
+  if (!positions[teamKey]) positions[teamKey] = {};
+  return positions[teamKey];
 }
 
-/* ========== Firestore list & load ========== */
+/* ========== Firestore: saved weeks list & load ========== */
 async function refreshSavedWeeks() {
   empty(savedWeeksSel);
-  const ph = document.createElement('option'); ph.value = ''; ph.textContent = '-- Select week --';
-  savedWeeksSel.appendChild(ph);
+  const placeholder = document.createElement('option'); placeholder.value=''; placeholder.textContent='-- Select week --';
+  savedWeeksSel.appendChild(placeholder);
   try {
     const snap = await getDocs(collection(db, WEEKS_COLLECTION));
     snap.docs.forEach(d => {
@@ -82,25 +91,29 @@ async function refreshSavedWeeks() {
     });
   } catch (e) {
     console.error('refreshSavedWeeks error', e);
-    alert('Failed to load saved weeks (check console).');
+    alert('Failed to load saved weeks. See console.');
   }
 }
 
 async function loadWeekById(id) {
-  if (!id) return;
+  if (!id) return alert('Choose a saved week ID');
   try {
     const ref = doc(db, WEEKS_COLLECTION, id);
     const snap = await getDoc(ref);
-    if (!snap.exists()) return alert('Week doc not found');
+    if (!snap.exists()) return alert('Week not found');
     const data = snap.data();
     weekData = data;
     currentWeekId = id;
 
     // build team member lists (main + subs)
-    teamAMembers = (data.teamA?.main || []).concat(data.teamA?.subs || []).map(normalizeLoadedPlayer);
-    teamBMembers = (data.teamB?.main || []).concat(data.teamB?.subs || []).map(normalizeLoadedPlayer);
+    teamAMembers = (data.teamA?.main || []).concat(data.teamA?.subs || []).map(m => ({
+      id: m.id || null, name: m.name || '', power: m.power ?? 0, squad: (m.squad||'').toUpperCase(), powerType: m.powerType || 'Precise'
+    }));
+    teamBMembers = (data.teamB?.main || []).concat(data.teamB?.subs || []).map(m => ({
+      id: m.id || null, name: m.name || '', power: m.power ?? 0, squad: (m.squad||'').toUpperCase(), powerType: m.powerType || 'Precise'
+    }));
 
-    // load positions shape (arrays)
+    // load positions arrays -> map structure
     positions = { teamA: {}, teamB: {} };
     const pA = data.positions?.teamA || [];
     const pB = data.positions?.teamB || [];
@@ -115,44 +128,37 @@ async function loadWeekById(id) {
       positions.teamB[it.pos].push({ id: it.id, name: it.name || '', note: it.note || '' });
     }
 
-    renderAll();
+    renderActiveTeamMap();
   } catch (e) {
     console.error('loadWeekById error', e);
     alert('Failed to load week (see console).');
   }
 }
 
-/* ========== Render functions ========== */
+/* ========== Rendering ========== */
 function renderActiveTeamMap() {
   const teamKey = activeTeam === 'A' ? 'teamA' : 'teamB';
+  panelTitle.textContent = `Team ${activeTeam} — Map`;
+  teamListLabel.textContent = `Team ${activeTeam} Players`;
 
-  const mapInner = $('mapInnerSingle');
-  const teamList = $('teamListSingle');
-
-  // Update panel labels
-  $('panelTitle').textContent = `Team ${activeTeam} — Map`;
-  $('teamListLabel').textContent = `Team ${activeTeam} Players`;
-
-  // Clear current players list
-  empty(teamList);
-
-  // Build player chips
+  // render player list
+  empty(teamListSingle);
   const players = activeTeam === 'A' ? teamAMembers : teamBMembers;
   players.forEach(p => {
-    const chip = document.createElement('div');
-    chip.className = 'player-chip';
+    const chip = document.createElement('div'); chip.className='player-chip';
+    const assigned = assignedPositionsForPlayer(p.id, teamKey).length;
     chip.innerHTML = `<div>
         <div class="player-name">${p.name}</div>
         <div class="player-meta">${p.squad} • ${p.power}</div>
       </div>
-      <div class="player-meta">${assignedPositionsForPlayer(p.id, teamKey).length}</div>`;
-    teamList.appendChild(chip);
+      <div class="player-meta">${assigned}</div>`;
+    teamListSingle.appendChild(chip);
   });
 
-  // Clear old hotspots
-  Array.from(mapInner.querySelectorAll('.hotspot')).forEach(x => x.remove());
+  // clear old hotspots
+  Array.from(mapInner.querySelectorAll('.hotspot')).forEach(n => n.remove());
 
-  // Draw hotspots
+  // draw hotspots
   MAP_SPOTS.forEach(spot => {
     const el = document.createElement('div');
     el.className = 'hotspot';
@@ -160,20 +166,16 @@ function renderActiveTeamMap() {
     el.style.top = spot.y + '%';
     el.dataset.key = spot.key;
 
-    const dot = document.createElement('div');
-    dot.className = 'dot';
+    const dot = document.createElement('div'); dot.className = 'dot';
     el.appendChild(dot);
 
-    const arr = positions[teamKey]?.[spot.key] || [];
+    const arr = (positions[teamKey]?.[spot.key]) || [];
     if (arr.length) {
-      const c = document.createElement('div');
-      c.className = 'count';
-      c.textContent = arr.length;
+      const c = document.createElement('div'); c.className='count'; c.textContent = arr.length;
       el.appendChild(c);
 
-      const label = document.createElement('div');
-      label.className = 'hotspot-label';
-      label.textContent = arr.slice(0, 3).map(a => a.name).join(', ') + (arr.length > 3 ? ` +${arr.length-3}` : '');
+      const label = document.createElement('div'); label.className='hotspot-label';
+      label.textContent = arr.slice(0,3).map(a => a.name).join(', ') + (arr.length > 3 ? ` +${arr.length-3}` : '');
       el.appendChild(label);
     }
 
@@ -182,111 +184,170 @@ function renderActiveTeamMap() {
   });
 }
 
-
-/* ========== Hotspot click -> picker modal (multi-select + note) ========== */
+/* ========== Hotspot picker modal ========== */
+/* Build a modal allowing multi-select and per-assignment notes. Selected players list is shown. */
 function onHotspotClick(teamKey, posKey) {
   openPicker(teamKey, posKey);
 }
 
-/* picker modal */
 function openPicker(teamKey, posKey) {
-  // current assigned list for convenience
-  const assigned = positions[teamKey]?.[posKey] ? [...positions[teamKey][posKey]] : [];
+  // get current assigned for this pos
+  const assigned = (positions[teamKey] && positions[teamKey][posKey]) ? positions[teamKey][posKey].map(a=>({...a})) : [];
 
-  // build list of selectable players for that team
-  const list = (teamKey === 'teamA' ? teamAMembers : teamBMembers);
+  // player list for the team
+  const players = teamKey === 'teamA' ? teamAMembers : teamBMembers;
 
-  // overlay
+  // overlay & box
   const overlay = document.createElement('div'); overlay.className='overlay';
   const box = document.createElement('div'); box.className='picker';
 
-  const hdr = document.createElement('div'); hdr.innerHTML = `<h4>Assign players → ${posKey}</h4><div class="muted">Select multiple players and add an optional note per assignment.</div>`;
+  // header
+  const hdr = document.createElement('div');
+  hdr.innerHTML = `<h4>Assign players → ${posKey}</h4><div class="muted">Select multiple players below. Add note per selected player. Click a row to toggle selection.</div>`;
   box.appendChild(hdr);
 
-  const entries = document.createElement('div'); entries.className='list';
+  // controls: search & squad filter (simple)
+  const controls = document.createElement('div'); controls.className='controls';
+  const search = document.createElement('input'); search.className='search'; search.placeholder='Search name, squad, role...';
+  controls.appendChild(search);
 
-  // helper to check if player is already assigned here
-  const isAssignedHere = (pid) => assigned.some(a => a.id === pid);
+  box.appendChild(controls);
 
-  // build entries with selection state and note input
-  list.forEach(p => {
-    const ent = document.createElement('div'); ent.className = 'picker-entry';
-    const left = document.createElement('div'); left.className = 'picker-row';
-    left.innerHTML = `<div style="min-width:220px"><strong>${p.name}</strong><div class="muted">${p.squad} • ${p.power}</div></div>`;
+  // selected list UI (top)
+  const selectedWrap = document.createElement('div'); selectedWrap.style.margin='8px 0';
+  selectedWrap.innerHTML = `<div style="font-size:13px;color:#9aa3a6;margin-bottom:6px">Selected players</div>`;
+  const selectedList = document.createElement('div'); selectedList.style.display='flex'; selectedList.style.flexDirection='column'; selectedList.style.gap='6px';
+  selectedWrap.appendChild(selectedList);
+  box.appendChild(selectedWrap);
 
-    // checkbox-like visual
-    const chk = document.createElement('div'); chk.style.marginRight = '8px';
-    chk.innerHTML = isAssignedHere(p.id) ? '✅' : '⬜';
-    left.prepend(chk);
-
-    // note input (pre-fill if already assigned here)
-    const noteInput = document.createElement('input');
-    noteInput.placeholder = 'Optional note';
-    noteInput.className = 'note-input';
-    const prev = assigned.find(a => a.id === p.id);
-    noteInput.value = prev ? (prev.note || '') : '';
-
-    // clicking entry toggles selection
-    ent.addEventListener('click', (ev) => {
-      // avoid toggling when clicking inside noteInput
-      if (ev.target === noteInput) return;
-      const was = isAssignedHere(p.id);
-      if (!was) {
-        // add with note value
-        assigned.push({ id: p.id, name: p.name, note: noteInput.value || '' });
-      } else {
-        // remove
-        const idx = assigned.findIndex(a => a.id === p.id);
-        if (idx >= 0) assigned.splice(idx,1);
-      }
-      // update visuals
-      chk.innerHTML = isAssignedHere(p.id) ? '✅' : '⬜';
-      ent.classList.toggle('selected', isAssignedHere(p.id));
-    });
-
-    // update note when changed (updates assigned if exists)
-    noteInput.addEventListener('input', () => {
-      const obj = assigned.find(a => a.id === p.id);
-      if (obj) obj.note = noteInput.value;
-    });
-
-    ent.appendChild(left);
-    // right side: note input
-    const right = document.createElement('div'); right.style.width='40%'; right.appendChild(noteInput);
-    ent.appendChild(right);
-    // mark initially selected
-    if (isAssignedHere(p.id)) ent.classList.add('selected');
-
-    entries.appendChild(ent);
-  });
-
-  box.appendChild(entries);
+  // main list
+  const listWrap = document.createElement('div'); listWrap.className='list';
+  box.appendChild(listWrap);
 
   // actions
   const actions = document.createElement('div'); actions.className='picker-actions';
   const cancel = document.createElement('button'); cancel.className='btn'; cancel.textContent='Cancel';
-  cancel.addEventListener('click', () => document.body.removeChild(overlay));
-  const save = document.createElement('button'); save.className='btn primary'; save.textContent='Assign selected';
-  save.addEventListener('click', () => {
-    // persist assigned array to positions[teamKey][posKey]
-    positions[teamKey] = positions[teamKey] || {};
-    // shallow clone to avoid external reference
-    positions[teamKey][posKey] = assigned.map(a => ({ id: a.id, name: a.name, note: a.note || '' }));
-    document.body.removeChild(overlay);
-    renderAll();
-  });
+  const clearBtn = document.createElement('button'); clearBtn.className='btn'; clearBtn.textContent='Clear Selection';
+  const saveBtn = document.createElement('button'); saveBtn.className='btn primary'; saveBtn.textContent='Assign Selected';
 
-  actions.appendChild(cancel); actions.appendChild(save);
+  actions.appendChild(cancel); actions.appendChild(clearBtn); actions.appendChild(saveBtn);
   box.appendChild(actions);
+
   overlay.appendChild(box);
   document.body.appendChild(overlay);
+
+  // helper state: map playerId -> { id, name, note, selected }
+  const state = {};
+  players.forEach(p => {
+    state[p.id] = { id: p.id, name: p.name, note: '', selected: false };
+  });
+  // pre-fill from assigned
+  assigned.forEach(a => {
+    if (!state[a.id]) state[a.id] = { id: a.id, name: a.name || findNameFromCache(a.id, players), note: a.note || '', selected: true };
+    else { state[a.id].note = a.note || ''; state[a.id].selected = true; }
+  });
+
+  // refresh selected list UI
+  function refreshSelectedUI() {
+    selectedList.innerHTML = '';
+    Object.values(state).filter(s=>s.selected).forEach(s => {
+      const row = document.createElement('div'); row.style.display='flex'; row.style.justifyContent='space-between'; row.style.alignItems='center'; row.style.gap='8px';
+      row.style.padding='6px'; row.style.border='1px solid rgba(255,255,255,0.03)'; row.style.borderRadius='8px'; row.style.background='rgba(0,200,255,0.02)';
+      const left = document.createElement('div'); left.innerHTML = `<div style="font-weight:700">${s.name}</div><div style="font-size:12px;color:#9aa3a6">${s.id}</div>`;
+      const note = document.createElement('input'); note.className='note-input'; note.placeholder='Note (visible)'; note.value = s.note || '';
+      note.addEventListener('input', (e) => { s.note = e.target.value; });
+      row.appendChild(left); row.appendChild(note);
+      selectedList.appendChild(row);
+    });
+  }
+
+  // build main list entries
+  function refreshMainList() {
+    listWrap.innerHTML = '';
+    const q = search.value.trim().toLowerCase();
+    players.forEach(p => {
+      if (q) {
+        const hay = (p.name + ' ' + (p.squad||'') + ' ' + (p.power||'')).toLowerCase();
+        if (!hay.includes(q)) return;
+      }
+      const ent = document.createElement('div'); ent.className='picker-entry';
+      if (state[p.id].selected) ent.classList.add('selected');
+      ent.innerHTML = `<div style="display:flex;gap:10px;align-items:center">
+          <div style="min-width:220px"><strong>${p.name}</strong><div class="muted" style="font-size:12px">${p.squad} • ${p.power}</div></div>
+        </div>`;
+      // click toggles selection (but clicking input doesn't toggle because there is none in row)
+      ent.addEventListener('click', (ev) => {
+        state[p.id].selected = !state[p.id].selected;
+        if (!state[p.id].selected) state[p.id].note = ''; // clear note when deselected
+        ent.classList.toggle('selected', state[p.id].selected);
+        refreshSelectedUI();
+      });
+
+      // show if this player already exists in other team mapping? NOT blocking: we allow multi-location-player and cross-team duplicates by design
+      const assignCount = countAssignmentsGlobal(p.id);
+      if (assignCount > 0) {
+        const hint = document.createElement('div'); hint.style.fontSize='12px'; hint.style.color='#ffb86b'; hint.style.marginLeft='6px';
+        hint.textContent = `Assigned ${assignCount} time(s)`;
+        ent.appendChild(hint);
+      }
+
+      listWrap.appendChild(ent);
+    });
+    refreshSelectedUI();
+  }
+
+  // search wiring
+  search.addEventListener('input', refreshMainList);
+
+  // clear selection
+  clearBtn.addEventListener('click', () => {
+    Object.values(state).forEach(s=>s.selected=false);
+    refreshMainList();
+  });
+
+  cancel.addEventListener('click', () => {
+    try { document.body.removeChild(overlay); } catch(e){}
+  });
+
+  saveBtn.addEventListener('click', () => {
+    // build assigned array for this pos
+    const arr = Object.values(state).filter(s=>s.selected).map(s => ({ id: s.id, name: s.name, note: s.note || '' }));
+    // assign
+    ensureTeamMap(teamKey);
+    // replace fully for this pos
+    positions[teamKey][posKey] = arr;
+    // close
+    try { document.body.removeChild(overlay); } catch(e){}
+    // re-render
+    renderActiveTeamMap();
+  });
+
+  // initial draw
+  refreshMainList();
 }
 
-/* ========== Save to Firestore ========== */
+/* helper: find name from players list */
+function findNameFromCache(id, players) {
+  const p = (players || []).find(x => x.id === id);
+  return p ? p.name : id || 'Unknown';
+}
+
+/* Count assignments across both team maps for hinting */
+function countAssignmentsGlobal(playerId) {
+  let cnt = 0;
+  ['teamA', 'teamB'].forEach(t => {
+    Object.values(positions[t] || {}).forEach(arr => {
+      arr.forEach(a => { if (a.id === playerId) cnt++; });
+    });
+  });
+  return cnt;
+}
+
+/* ========== Save positions back to Firestore under week doc ========== */
 async function savePositionsToWeek() {
-  if (!currentWeekId) return alert('No week loaded.');
-  // convert positions maps to arrays for firestore
-  const prepareArr = (map) => {
+  if (!currentWeekId) return alert('Load a week first.');
+  // convert map to arrays
+  const prepare = (map) => {
     const out = [];
     Object.entries(map || {}).forEach(([pos, arr]) => {
       if (!Array.isArray(arr)) return;
@@ -296,15 +357,13 @@ async function savePositionsToWeek() {
     });
     return out;
   };
-
   const payload = {
     positions: {
-      teamA: prepareArr(positions.teamA),
-      teamB: prepareArr(positions.teamB)
+      teamA: prepare(positions.teamA),
+      teamB: prepare(positions.teamB)
     },
     positionsSavedAt: serverTimestamp ? serverTimestamp() : new Date().toISOString()
   };
-
   try {
     await setDoc(doc(db, WEEKS_COLLECTION, currentWeekId), payload, { merge: true });
     alert('Positions saved.');
@@ -314,33 +373,28 @@ async function savePositionsToWeek() {
   }
 }
 
-/* ========== Clear all positions for loaded week ========== */
+/* ========== Clear all positions in memory (not saved) ========== */
 function clearAllPositions() {
-  if (!confirm('Clear all positions for both teams?')) return;
+  if (!confirm('Clear all positions for both teams (in current page)?')) return;
   positions = { teamA: {}, teamB: {} };
-  renderAll();
+  renderActiveTeamMap();
 }
 
-/* ========== Debug helper: click to capture coordinates (module-safe) ========== */
+/* ========== Debug helper (module safe) ========== */
 function _enableMapDebug() {
-  const wrapA = mapInnerA;
-  const wrapB = mapInnerB;
-
-  [wrapA, wrapB].forEach((wrap, idx) => {
-    if (!wrap) return;
-    wrap.addEventListener('click', function handler(e) {
-      const rect = wrap.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      console.log(`Map ${idx===0 ? 'A' : 'B'} clicked at: x=${x.toFixed(1)} , y=${y.toFixed(1)}`);
-    });
+  const wrap = mapInner;
+  if (!wrap) return console.warn('mapInner missing');
+  wrap.addEventListener('click', function(e){
+    const r = wrap.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width) * 100;
+    const y = ((e.clientY - r.top) / r.height) * 100;
+    console.log(`Clicked at: x=${x.toFixed(1)} , y=${y.toFixed(1)}`);
   });
-
-  console.log('%cMap debug enabled. Click on map A or B to capture coordinates.', 'color:#00ffc8;font-weight:bold;');
+  console.log('%cMap debug enabled. Click map to capture coordinates.', 'color:#00ffc8;font-weight:700');
 }
 window.enableMapDebug = _enableMapDebug;
 
-/* ========== Init wiring ========== */
+/* ========== Wiring & init ========== */
 function wireEvents() {
   loadWeekBtn.addEventListener('click', () => {
     const id = savedWeeksSel.value;
@@ -348,24 +402,22 @@ function wireEvents() {
     loadWeekById(id);
   });
   savePositionsBtn.addEventListener('click', savePositionsToWeek);
-$('switchA').addEventListener('click', () => {
-  activeTeam = 'A';
-  $('switchA').classList.add('primary');
-  $('switchB').classList.remove('primary');
-  renderActiveTeamMap();
-});
+  clearPositionsBtn.addEventListener('click', clearAllPositions);
 
-$('switchB').addEventListener('click', () => {
-  activeTeam = 'B';
-  $('switchB').classList.add('primary');
-  $('switchA').classList.remove('primary');
-  renderActiveTeamMap();
-});
+  switchA.addEventListener('click', () => {
+    activeTeam = 'A';
+    switchA.classList.add('primary'); switchB.classList.remove('primary');
+    renderActiveTeamMap();
+  });
+  switchB.addEventListener('click', () => {
+    activeTeam = 'B';
+    switchB.classList.add('primary'); switchA.classList.remove('primary');
+    renderActiveTeamMap();
+  });
 
-  // quick clear via context menu (not destructive)
+  // close overlay on Escape
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      // close any modals if present
       const ov = document.querySelector('.overlay');
       if (ov) try { document.body.removeChild(ov); } catch(e){}
     }
@@ -375,18 +427,15 @@ $('switchB').addEventListener('click', () => {
 async function init() {
   wireEvents();
   await refreshSavedWeeks();
-  // auto-load id param if provided
-  const params = new URLSearchParams(location.search);
-  const qid = params.get('id');
-  if (qid) {
-    savedWeeksSel.value = qid;
-    await loadWeekById(qid);
+
+  // auto-load first week if present
+  if (savedWeeksSel.options.length > 1) {
+    savedWeeksSel.selectedIndex = 1;
+    const id = savedWeeksSel.value;
+    if (id) await loadWeekById(id);
   } else {
-    // autoload first saved week if only one exists
-    if (savedWeeksSel.options.length === 2) {
-      savedWeeksSel.selectedIndex = 1;
-      await loadWeekById(savedWeeksSel.value);
-    }
+    // still render empty map
+    renderActiveTeamMap();
   }
 }
 
