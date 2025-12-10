@@ -841,3 +841,25 @@ body.bg {
   color: #fff;
   width: 100%;
 }
+#backToAdminBtn {
+  margin: 12px 0;
+  padding: 10px 18px;
+  border-radius: 8px;
+  border: 1px solid rgba(0,255,200,0.35);
+  background: rgba(5,10,15,0.7);
+  color: #00ffc8;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+#backToAdminBtn:hover {
+  background: rgba(0,255,200,0.1);
+}
+
+#backToAdminBtn {
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 9999;
+}
