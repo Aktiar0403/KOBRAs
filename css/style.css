@@ -879,3 +879,19 @@ body.bg {
   transform: translate(-50%, -50%) scale(1.25);
   background: rgba(0, 255, 180, 1);
 }
+.player-label {
+  position: absolute;
+  left: -80px;         /* shift label away from structure */
+  color: #8ad7ff;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.player-label .player-note {
+  display: block;
+  font-size: 11px;
+  color: #ccc;
+}
+

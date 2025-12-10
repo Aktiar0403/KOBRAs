@@ -177,13 +177,32 @@ function renderActiveTeamMap() {
 
     const arr = (positions[teamKey]?.[spot.key]) || [];
     if (arr.length) {
-      const c = document.createElement('div'); c.className='count'; c.textContent = arr.length;
-      el.appendChild(c);
+  // Count bubble
+  const c = document.createElement('div');
+  c.className = 'count';
+  c.textContent = arr.length;
+  el.appendChild(c);
 
-      const label = document.createElement('div'); label.className='hotspot-label';
-      label.textContent = arr.slice(0,3).map(a => a.name).join(', ') + (arr.length > 3 ? ` +${arr.length-3}` : '');
-      el.appendChild(label);
-    }
+  // Stacked player labels (left side)
+  let offsetY = -10;
+
+  arr.forEach((p, index) => {
+    const label = document.createElement('div');
+    label.className = 'player-label';
+
+    // If more players, stack downward
+    if (index > 0) offsetY += 16;
+    label.style.top = offsetY + 'px';
+
+    label.innerHTML = `
+      ${p.name}
+      ${p.note ? `<span class="player-note">${p.note}</span>` : ""}
+    `;
+
+    el.appendChild(label);
+  });
+}
+
 
     el.addEventListener('click', () => onHotspotClick(teamKey, spot.key));
     mapInner.appendChild(el);
