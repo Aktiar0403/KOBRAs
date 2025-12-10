@@ -434,4 +434,22 @@ async function loadListeners() {
       await loadWeekById(savedWeeksSel.value);
     }
   }
+  /* ============================
+   DEBUG: Capture map coordinates
+   ============================ */
+window.enableMapDebug = function() {
+  const img = document.getElementById("mapImage");
+  const wrap = document.getElementById("mapInner");
+
+  wrap.addEventListener("click", function(e) {
+    const rect = wrap.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    console.log(`Clicked at: x=${x.toFixed(1)} , y=${y.toFixed(1)}`);
+  });
+
+  console.log("%cMap debug enabled. Click anywhere to get coordinates.",
+    "color:#00ffc8;font-size:14px;font-weight:bold;");
+};
+
 }
