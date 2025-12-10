@@ -15,21 +15,27 @@ import {
 const WEEKS_COLLECTION = 'desert_brawl_weeks';
 
 /* Final coordinates (percent) provided by you */
+/* Final UPDATED coordinates (percent) */
 const MAP_SPOTS = [
-  { key: 'Info Center',        x: 25.1, y: 17.7 },
-  { key: 'Arsenal',            x: 50.6, y: 29.2 },
-  { key: 'Field Hospital IV',  x: 75.8, y: 18.1 },
-  { key: 'Field Hospital II',  x: 89.1, y: 39.5 },
-  { key: 'Oil Refinery II',    x: 88.2, y: 59.1 },
-  { key: 'Science Hub',        x: 73.6, y: 82.0 },
-  { key: 'Field Hospital III', x: 30.5, y: 81.9 },
-  { key: 'Mercenary Factory',  x: 50.5, y: 71.3 },
-  { key: 'Oil Refinery I',     x: 14.6, y: 36.9 },
-  { key: 'Field Hospital I',   x: 12.6, y: 58.1 },
-  { key: 'Nuclear Silo',       x: 50.3, y: 50.8 },
-  { key: 'Inner Top',          x: 50.6, y: 5.3 },
-  { key: 'Inner Bottom',       x: 49.9, y: 90.9 }
+  { key: 'Info Center',        x: 37.1, y: 13.1 },   // UPDATED
+  { key: 'Arsenal',            x: 50.6, y: 29.2 },   // OK
+
+  { key: 'Field Hospital IV',  x: 63.2, y: 13.1 },   // UPDATED
+  { key: 'Field Hospital II',  x: 69.8, y: 37.6 },   // UPDATED
+  { key: 'Oil Refinery II',    x: 70.1, y: 61.9 },   // UPDATED
+
+  { key: 'Science Hub',        x: 62.2, y: 88.7 },   // UPDATED
+  { key: 'Field Hospital III', x: 40.7, y: 86.3 },   // UPDATED
+
+  { key: 'Mercenary Factory',  x: 50.5, y: 71.3 },   // OK
+  { key: 'Oil Refinery I',     x: 31.9, y: 40.2 },   // UPDATED
+  { key: 'Field Hospital I',   x: 31.4, y: 62.3 },   // UPDATED
+
+  { key: 'Nuclear Silo',       x: 50.3, y: 50.8 },   // OK
+  { key: 'Inner Top',          x: 50.6, y: 5.3 },    // OK
+  { key: 'Inner Bottom',       x: 49.9, y: 90.9 }    // OK
 ];
+
 
 /* ========== STATE ========== */
 let currentWeekId = null;
