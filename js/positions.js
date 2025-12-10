@@ -437,19 +437,28 @@ async function loadListeners() {
   /* ============================
    DEBUG: Capture map coordinates
    ============================ */
-window.enableMapDebug = function() {
+function _enableMapDebug() {
   const img = document.getElementById("mapImage");
   const wrap = document.getElementById("mapInner");
+
+  if (!wrap) {
+    console.warn("mapInner not found — cannot enable debug mode.");
+    return;
+  }
 
   wrap.addEventListener("click", function(e) {
     const rect = wrap.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
-    console.log(`Clicked at: x=${x.toFixed(1)} , y=${y.toFixed(1)}`);
+    console.log(`📍 Clicked at → x=${x.toFixed(1)} , y=${y.toFixed(1)}`);
   });
 
-  console.log("%cMap debug enabled. Click anywhere to get coordinates.",
-    "color:#00ffc8;font-size:14px;font-weight:bold;");
-};
+  console.log("%cMap Debug Enabled — click anywhere on the map.",
+    "color:#00ffc8;font-size:14px;font-weight:700");
+}
+
+/* Must attach to window because this file loads as type='module' */
+window.enableMapDebug = _enableMapDebug;
+
 
 }
