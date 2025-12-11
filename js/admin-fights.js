@@ -860,6 +860,7 @@ function normalizePlayerObj(p) {
 }
 
 function init() {
+  setupTeamSwitcher();
   bindUI();
   subscribeMembers();
   refreshSavedWeeks();
@@ -867,5 +868,27 @@ function init() {
   renderTeam('B');
   $('weekLabel').value = getISOWeekLabel();
 }
+
+function setupTeamSwitcher() {
+  const btnA = document.getElementById("btnShowTeamA");
+  const btnB = document.getElementById("btnShowTeamB");
+  const boxA = document.getElementById("teamAContainer");
+  const boxB = document.getElementById("teamBContainer");
+
+  btnA.addEventListener("click", () => {
+    btnA.classList.add("active");
+    btnB.classList.remove("active");
+    boxA.style.display = "block";
+    boxB.style.display = "none";
+  });
+
+  btnB.addEventListener("click", () => {
+    btnB.classList.add("active");
+    btnA.classList.remove("active");
+    boxA.style.display = "none";
+    boxB.style.display = "block";
+  });
+}
+
 
 document.addEventListener('DOMContentLoaded', init);
