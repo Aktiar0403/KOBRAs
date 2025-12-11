@@ -224,7 +224,13 @@ export function renderCards(gridEl, members, options = {}) {
                   ${escapeHtml(mainName)}
                 </div>
 
-                
+                /<div style="text-align:right; width:75px;">
+                  <div style="font-weight:700; font-size:1.15rem;">
+                    ${escapeHtml(power)}
+                  </div>
+                  <div style="font-size:0.72rem; margin-top:3px; color:${powerType === "Approx" ? "rgba(255,210,0,1)" : "rgba(0,255,180,1)"};">
+                    ${escapeHtml(powerType)}
+                  </div>
                 </div>
               </div>
 
