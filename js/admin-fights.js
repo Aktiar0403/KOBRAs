@@ -317,7 +317,7 @@ function openAddPlayerModal(side, bucket) {
   const overlay = document.createElement('div');
   overlay.style.position='fixed'; 
   overlay.style.inset='0'; 
-  overlay.style.background='rgba(0,0,0,0.6)';
+  overlay.style.background='rgba(64, 47, 212, 0.25)';
   overlay.style.display='flex'; 
   overlay.style.alignItems='center'; 
   overlay.style.justifyContent='center'; 
