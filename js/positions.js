@@ -225,32 +225,6 @@ function openPicker(teamKey, posKey) {
   // overlay & box
   const overlay = document.createElement('div'); overlay.className='overlay';
   const box = document.createElement('div'); box.className='picker';
-// --- Align picker with hotspot ---
-const hotspotEl = document.querySelector(`[data-key="${posKey}"]`);
-if (hotspotEl) {
-  const rect = hotspotEl.getBoundingClientRect();
-
-  // Desired position: slightly above/right of hotspot
-  let left = rect.left + window.scrollX + 40;
-  let top  = rect.top + window.scrollY - 20;
-
-  // Prevent overflow RIGHT
-  const pickerWidth = 360;
-  if (left + pickerWidth > window.innerWidth - 20) {
-    left = window.innerWidth - pickerWidth - 20;
-  }
-
-  // Prevent overflow TOP
-  if (top < 20) top = 20;
-
-  // Apply absolute positioning instead of center-flex
-  overlay.style.alignItems = "flex-start";
-  overlay.style.justifyContent = "flex-start";
-
-  box.style.position = "absolute";
-  box.style.left = left + "px";
-  box.style.top = top + "px";
-}
 
   // header
   const hdr = document.createElement('div');
