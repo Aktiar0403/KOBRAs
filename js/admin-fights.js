@@ -616,7 +616,9 @@ function openAddPlayerModal(side, bucket) {
           item.style.background = 'transparent';
         } else {
           modalState.selectedIds.push(m.id);
-          item.style.background = 'rgba(0, 200, 255, 0.57)';
+          item.style.background = 'rgba(0,255,200,0.22)';
+item.style.boxShadow = '0 0 10px rgba(0,255,200,0.35)';
+item.style.border = '1px solid rgba(0,255,200,0.45)';
         }
       });
 
