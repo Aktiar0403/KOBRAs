@@ -204,6 +204,7 @@ function filteredAndSortedMembers() {
   return arr;
 }
 
+
 /* ==========================================================
    STATS (removed statFive computations and DOM update)
 ========================================================== */
