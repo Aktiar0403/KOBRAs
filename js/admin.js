@@ -29,7 +29,7 @@ const state = {
   members: [],
   filter: "RESET",
   search: "",
-  sort: "none",
+  sort: "none", // rank button NOT added, but sorting logic supports "rank"
   currentAdminName: ""
 };
 
@@ -40,14 +40,13 @@ const $ = (id) => document.getElementById(id);
 
 /* ==========================================================
    DOM ELEMENTS
-   NOTE: removed star-related DOM refs
 ========================================================== */
 const dom = {
   btnLogout: $("btnLogout"),
 
   statTotal: $("statTotal"),
   statAvg: $("statAvg"),
-  statMissing: $("statMissing"), // kept
+  statMissing: $("statMissing"),
 
   filterButtons: Array.from(document.querySelectorAll(".filter-btn")),
   sortButtons: Array.from(document.querySelectorAll(".sort-btn")),
@@ -68,7 +67,6 @@ const dom = {
   fieldName: $("fieldName"),
   fieldRole: $("fieldRole"),
 
-  // NEW FIELDS
   fieldSquadPrimary: $("fieldSquadPrimary"),
   fieldSquadHybrid: $("fieldSquadHybrid"),
   hybridLabel: $("hybridLabel"),
@@ -83,7 +81,7 @@ const dom = {
 let editingDocId = null;
 
 /* ==========================================================
-   OLD SQUAD PARSER FOR BACKWARD COMPATIBILITY
+   BACKWARD COMPATIBILITY SQUAD PARSER
 ========================================================== */
 function parseOldSquad(s) {
   s = String(s || "").toUpperCase();
@@ -94,16 +92,12 @@ function parseOldSquad(s) {
   else if (s.includes("MISSILE")) primary = "MISSILE";
 
   const hybrid = s.includes("HYBRID");
-
   return { primary, hybrid };
 }
 
 /* ==========================================================
-   SEARCH + FILTER + SORT + ZERO LOGIC
-   (removed star sorts)
+   HELPERS
 ========================================================== */
-const isZeroPower = (v) => Number(v) === 0;
-
 function getMemberSquadLabel(m) {
   if (m.squadPrimary) {
     return m.squadHybrid ? `HYBRID (${m.squadPrimary})` : m.squadPrimary;
@@ -115,6 +109,12 @@ function getMemberSquadLabel(m) {
   return m.squad || "—";
 }
 
+const isZeroPower = (v) => Number(v) === 0;
+
+/* ==========================================================
+   FILTER → SEARCH → SORT PIPELINE
+   (Updated sorting logic)
+========================================================== */
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
 
@@ -161,13 +161,10 @@ function filteredAndSortedMembers() {
   }
 
   /* -------------------------
-        3) SORTING (NEW LOGIC)
+        3) SORTING — Updated to support rank mode
   ------------------------- */
-
   switch (state.sort) {
-
     case "rank":
-      // Rank = POWER DESCENDING (consistent with cards.js)
       arr.sort((a, b) => Number(b.power) - Number(a.power));
       break;
 
@@ -181,9 +178,11 @@ function filteredAndSortedMembers() {
 
     case "missing":
       arr.sort((a, b) => {
-        const am = isZeroPower(a.power) || (a.powerType || "").toUpperCase() === "APPROX";
-        const bm = isZeroPower(b.power) || (b.powerType || "").toUpperCase() === "APPROX";
-        if (am !== bm) return bm - am; // missing first
+        const am =
+          isZeroPower(a.power) || (a.powerType || "").toUpperCase() === "APPROX";
+        const bm =
+          isZeroPower(b.power) || (b.powerType || "").toUpperCase() === "APPROX";
+        if (am !== bm) return bm - am;
         return Number(a.power) - Number(b.power);
       });
       break;
@@ -197,24 +196,23 @@ function filteredAndSortedMembers() {
       break;
 
     default:
-      // no sorting applied
       break;
   }
 
   return arr;
 }
 
-
 /* ==========================================================
-   STATS (removed statFive computations and DOM update)
+   STATS
 ========================================================== */
 function updateStats(view) {
-  let total = view.length,
-    sum = 0,
-    missing = 0;
+  let total = view.length;
+  let sum = 0;
+  let missing = 0;
 
   view.forEach((m) => {
     sum += Number(m.power) || 0;
+
     if (
       isZeroPower(m.power) ||
       (m.powerType || "").toUpperCase() === "APPROX"
@@ -225,12 +223,11 @@ function updateStats(view) {
 
   dom.statTotal.textContent = total;
   dom.statAvg.textContent = total ? (sum / total).toFixed(2) : "0.00";
-  // statFive removed
   dom.statMissing.textContent = missing;
 }
 
 /* ==========================================================
-   RENDER CARDS
+   RENDER
 ========================================================== */
 function render() {
   const view = filteredAndSortedMembers();
@@ -244,7 +241,6 @@ function render() {
 
 /* ==========================================================
    MODAL
-   (no stars field usage)
 ========================================================== */
 dom.btnModalCancel.addEventListener("click", () => {
   dom.modal.classList.add("hidden");
@@ -259,8 +255,7 @@ function openAddModal() {
   dom.fieldRole.value = "";
   dom.fieldSquadPrimary.value = "TANK";
   dom.fieldSquadHybrid.checked = false;
-  if (dom.hybridLabel) dom.hybridLabel.textContent = "No";
-
+  dom.hybridLabel.textContent = "No";
   dom.fieldPower.value = "";
   dom.fieldPowerType.value = "Precise";
 
@@ -275,10 +270,9 @@ function openEditModal(m) {
   dom.fieldRole.value = m.role || "";
 
   const parsed = parseOldSquad(m.squad);
-
   dom.fieldSquadPrimary.value = m.squadPrimary || parsed.primary || "TANK";
   dom.fieldSquadHybrid.checked = m.squadHybrid || parsed.hybrid || false;
-  if (dom.hybridLabel) dom.hybridLabel.textContent = dom.fieldSquadHybrid.checked ? "Yes" : "No";
+  dom.hybridLabel.textContent = dom.fieldSquadHybrid.checked ? "Yes" : "No";
 
   dom.fieldPower.value = m.power ?? "";
   dom.fieldPowerType.value = m.powerType || "Precise";
@@ -288,7 +282,6 @@ function openEditModal(m) {
 
 /* ==========================================================
    SAVE MEMBER
-   - STOP writing `stars` to Firestore (option B)
 ========================================================== */
 dom.btnModalSave.addEventListener("click", async () => {
   if (!dom.fieldName.value.trim()) {
@@ -311,7 +304,7 @@ dom.btnModalSave.addEventListener("click", async () => {
 
     power: cleanNumber(dom.fieldPower.value),
     powerType: dom.fieldPowerType.value,
-    // stars intentionally NOT saved
+
     lastUpdated: serverTimestamp()
   };
 
@@ -332,7 +325,7 @@ dom.btnModalSave.addEventListener("click", async () => {
 });
 
 /* ==========================================================
-   DELETE
+   DELETE MEMBER
 ========================================================== */
 async function deleteMember(m) {
   if (!confirm(`Delete ${m.name}?`)) return;
@@ -347,9 +340,7 @@ async function deleteMember(m) {
 }
 
 /* ==========================================================
-   CSV IMPORT / EXPORT
-   - Import will no longer write `stars` to Firestore
-   - Export uses existing utilsExportCSV (may include stars if present in old docs)
+   CSV EXPORT / IMPORT
 ========================================================== */
 dom.btnExport.addEventListener("click", () =>
   utilsExportCSV(state.members)
@@ -366,6 +357,7 @@ dom.csvInput.addEventListener("change", (e) => {
   const reader = new FileReader();
   reader.onload = async (ev) => {
     const imported = utilsParseCSV(ev.target.result);
+
     if (!confirm(`Replace with ${imported.length} rows?`)) return;
 
     // Delete existing
@@ -387,7 +379,6 @@ dom.csvInput.addEventListener("change", (e) => {
         squad: hybrid ? `${primary} HYBRID` : primary,
         power: cleanNumber(m.power),
         powerType: m.powerType || "Precise",
-        // stars intentionally not written
         lastUpdated: serverTimestamp()
       });
     }
@@ -435,7 +426,7 @@ function subscribeMembers() {
 }
 
 /* ==========================================================
-   ADMIN AUTH & INIT
+   AUTH + INIT
 ========================================================== */
 import { auth } from "./firebase-config.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
