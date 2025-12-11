@@ -896,3 +896,53 @@ body.bg {
   color: #ccc;
 }
 
+/* Responsive layout container */
+.layout {
+  width: 100%;
+  display: block; /* important: removes old 2-column layout */
+}
+
+/* Cards panel always full width */
+.cards-panel {
+  width: 100%;
+}
+
+/* ================================
+   RESPONSIVE CARD GRID SYSTEM
+================================ */
+
+/* Default: MOBILE — 1 column */
+.cards-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 16px;
+}
+
+/* TABLET — 2 columns */
+@media (min-width: 600px) {
+  .cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* DESKTOP — 4 columns */
+@media (min-width: 900px) {
+  .cards-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* LARGE DESKTOP — 5 columns */
+@media (min-width: 1400px) {
+  .cards-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* ULTRA-WIDE — 6 columns */
+@media (min-width: 1800px) {
+  .cards-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
