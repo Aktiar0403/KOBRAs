@@ -892,5 +892,55 @@ function setupTeamSwitcher() {
   });
 }
 
+document.getElementById("printSquadsBtn").addEventListener("click", () => {
+  const win = window.open("", "_blank");
+  const styles = `
+    <style>
+      body { font-family: Arial; padding: 20px; }
+      h2 { margin-top: 20px; }
+      table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+      th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+      th { background: #f3f3f3; }
+      .title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+      .section { margin-top: 30px; }
+    </style>
+  `;
 
+  const makeTable = (title, list) => {
+    let html = `<div class="section"><h3>${title}</h3>`;
+    html += `<table><tr><th>Name</th><th>Squad</th><th>Power</th></tr>`;
+    list.forEach(p => {
+      html += `<tr>
+        <td>${p.name}</td>
+        <td>${p.squad || ''}</td>
+        <td>${p.power}</td>
+      </tr>`;
+    });
+    html += "</table></div>";
+    return html;
+  };
+
+  const html = `
+    <html>
+    <head>${styles}</head>
+    <body>
+      <div class="title">Desert Brawl – Team Sheets</div>
+
+      ${makeTable("Team A — Main Squad", teams.A.main)}
+      ${makeTable("Team A — Subs", teams.A.subs)}
+
+      ${makeTable("Team B — Main Squad", teams.B.main)}
+      ${makeTable("Team B — Subs", teams.B.subs)}
+
+    </body>
+    </html>
+  `;
+
+  win.document.write(html);
+  win.document.close();
+
+  setTimeout(() => {
+    win.print();
+  }, 300);
+});
 document.addEventListener('DOMContentLoaded', init);
