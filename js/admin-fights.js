@@ -603,7 +603,7 @@ function openAddPlayerModal(side, bucket) {
       item.style.borderRadius='8px'; 
       item.style.marginBottom='6px'; 
       item.style.cursor='pointer';
-      item.style.background = modalState.selectedIds.includes(m.id) ? 'rgba(0, 200, 255, 0.69)' : 'transparent';
+      item.style.background = modalState.selectedIds.includes(m.id) ? 'rgba(0, 200, 255, 0.2)' : 'transparent';
       
       // If member exists in other team, grey it out and add note
       const inOther = isMemberInOtherTeam(m.id, side);
@@ -616,7 +616,7 @@ function openAddPlayerModal(side, bucket) {
           item.style.background = 'transparent';
         } else {
           modalState.selectedIds.push(m.id);
-          item.style.background = 'rgba(0,200,255,0.06)';
+          item.style.background = 'rgba(0, 200, 255, 0.57)';
         }
       });
 
