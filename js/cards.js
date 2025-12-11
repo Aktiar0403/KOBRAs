@@ -254,30 +254,62 @@ export function renderCards(gridEl, members, options = {}) {
         </div>
 
         <!-- Squad icon container (right) - unchanged -->
-        <div style="
-          width:90px;
-          min-width:90px;
-          max-width:90px;
-          flex-shrink:0;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          padding-left:6px;
-        ">
-          <div style="
-            width:50px;
-            height:50px;
-            border-radius:6px;
-            border:${hybrid ? "6px" : "2px"} solid ${squadInfo.neon};
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            background:rgba(255,255,255,0.03);
-            box-shadow:0 0 ${hybrid ? "22px" : "12px"} ${hybrid ? GOLD.neonLight : squadInfo.neonLight};
-          ">
-            <img src="${squadInfo.icon}" style="width:44px;height:44px;object-fit:contain;filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${squadInfo.neon});">
-          </div>
-        </div>
+        <!-- RIGHT SIDE: POWER ABOVE + ICON + TYPE BELOW -->
+<div style="
+  width:70px;
+  min-width:70px;
+  max-width:70px;
+  flex-shrink:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+">
+
+  <!-- POWER ABOVE ICON -->
+  <div style="
+    font-size:1.05rem;
+    font-weight:700;
+    color:#fff;
+    text-shadow:0 0 6px rgba(255,255,255,0.4);
+  ">
+    ${escapeHtml(power)}
+  </div>
+
+  <!-- SQUAD ICON -->
+  <div style="
+    width:48px;
+    height:48px;
+    border-radius:8px;
+    border:${hybrid ? "6px" : "2px"} solid ${squadInfo.neon};
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,255,255,0.03);
+    box-shadow:0 0 ${hybrid ? "22px" : "12px"} ${hybrid ? GOLD.neonLight : squadInfo.neonLight};
+  ">
+    <img src="${squadInfo.icon}" style="
+      width:40px;
+      height:40px;
+      object-fit:contain;
+      filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${squadInfo.neon});
+    ">
+  </div>
+
+  <!-- PRECISION TYPE BELOW ICON -->
+  <div style="
+    font-size:0.72rem;
+    font-weight:600;
+    margin-top:2px;
+    color:${powerType === "Approx" ? "rgba(255,210,0,1)" : "rgba(0,255,180,1)"};
+    text-align:center;
+  ">
+    ${escapeHtml(powerType)}
+  </div>
+
+</div>
+
 
       </div>
 
