@@ -118,7 +118,9 @@ function getMemberSquadLabel(m) {
 function filteredAndSortedMembers() {
   let arr = state.members.slice();
 
-  // FILTERING
+  /* -------------------------
+        1) FILTERING
+  ------------------------- */
   const f = state.filter.toUpperCase();
   if (f !== "RESET") {
     if (f === "MISSING_ZERO") {
@@ -140,7 +142,9 @@ function filteredAndSortedMembers() {
     }
   }
 
-  // SEARCH
+  /* -------------------------
+        2) SEARCH
+  ------------------------- */
   const q = state.search.toLowerCase();
   if (q) {
     arr = arr.filter((m) =>
@@ -156,20 +160,45 @@ function filteredAndSortedMembers() {
     );
   }
 
-  // SORTING (removed stars sorts)
-  if (state.sort === "power-desc") {
-    arr.sort((a, b) => Number(b.power) - Number(a.power));
-  } else if (state.sort === "power-asc") {
-    arr.sort((a, b) => Number(a.power) - Number(b.power));
-  } else if (state.sort === "missing") {
-    arr.sort((a, b) => {
-      const am =
-        isZeroPower(a.power) || (a.powerType || "").toUpperCase() === "APPROX";
-      const bm =
-        isZeroPower(b.power) || (b.powerType || "").toUpperCase() === "APPROX";
-      if (am !== bm) return bm - am;
-      return Number(a.power) - Number(b.power);
-    });
+  /* -------------------------
+        3) SORTING (NEW LOGIC)
+  ------------------------- */
+
+  switch (state.sort) {
+
+    case "rank":
+      // Rank = POWER DESCENDING (consistent with cards.js)
+      arr.sort((a, b) => Number(b.power) - Number(a.power));
+      break;
+
+    case "power-desc":
+      arr.sort((a, b) => Number(b.power) - Number(a.power));
+      break;
+
+    case "power-asc":
+      arr.sort((a, b) => Number(a.power) - Number(b.power));
+      break;
+
+    case "missing":
+      arr.sort((a, b) => {
+        const am = isZeroPower(a.power) || (a.powerType || "").toUpperCase() === "APPROX";
+        const bm = isZeroPower(b.power) || (b.powerType || "").toUpperCase() === "APPROX";
+        if (am !== bm) return bm - am; // missing first
+        return Number(a.power) - Number(b.power);
+      });
+      break;
+
+    case "name-asc":
+      arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      break;
+
+    case "name-desc":
+      arr.sort((a, b) => (b.name || "").localeCompare(a.name || ""));
+      break;
+
+    default:
+      // no sorting applied
+      break;
   }
 
   return arr;
