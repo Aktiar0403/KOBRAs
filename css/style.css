@@ -933,3 +933,25 @@ body.bg {
   }
 }
 
+.team-switcher {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin: 16px 0;
+}
+
+.switch-btn {
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(0,255,200,0.3);
+  color: #00ffc8;
+  font-size: 15px;
+  transition: 0.2s ease;
+}
+
+.switch-btn.active {
+  background: rgba(0,255,200,0.15);
+  border-color: #00ffc8;
+}

@@ -5,10 +5,16 @@
   <title>Desert Brawl — Teams</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="./css/style.css" />
+  <div class="team-switcher">
+  <button id="btnShowTeamA" class="switch-btn active">Team A</button>
+  <button id="btnShowTeamB" class="switch-btn">Team B</button>
+</div>
   <style>
+    
     /* Minimal layout tweaks to ensure this page looks good with premium theme */
     .page-shell { max-width:1200px; margin:18px auto; padding:16px; }
     .header { text-align:center; margin-bottom:18px; color:#00ffc8; }
+    
     .teams-row { display:flex; gap:20px; align-items:flex-start; }
     .team-panel { flex:1; background:rgba(10,10,14,0.65); padding:18px; border-radius:12px; border:1px solid rgba(80,80,120,0.2); }
     .team-panel h2 { margin:0 0 10px 0; color:#00ffc8; font-size:20px; }
@@ -75,7 +81,7 @@
     <div class="teams-row">
 
       <!-- Team A -->
-      <div class="team-panel" id="teamA">
+      <div class="team-panel" id="teamAContainer">
         <h2>Team A</h2>
         <div class="team-meta">
           <input id="teamAName" placeholder="Team A label (optional)" />
@@ -103,7 +109,7 @@
       </div>
 
       <!-- Team B -->
-      <div class="team-panel" id="teamB">
+      <div class="team-panel" id="teamBContainer" style="display:none;">
         <h2>Team B</h2>
         <div class="team-meta">
           <input id="teamBName" placeholder="Team B label (optional)" />
