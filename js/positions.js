@@ -1,5 +1,6 @@
-// positions.js (v3) — Single-team map, multi-member per node, per-assignment notes
-console.log("✅ positions.js (v3) loaded");
+// positions.js (v4) — Single-team map, multi-member per node, per-assignment notes
+// + draggable picker handle (small handle style) + per-hotspot pickerPositions persisted to Firestore
+console.log("✅ positions.js (v4) loaded");
 
 import { db } from './firebase-config.js';
 import {
@@ -14,28 +15,22 @@ import {
 /* ========== CONFIG ========== */
 const WEEKS_COLLECTION = 'desert_brawl_weeks';
 
-/* Final coordinates (percent) provided by you */
 /* Final UPDATED coordinates (percent) */
 const MAP_SPOTS = [
-  { key: 'Info Center',        x: 37.1, y: 13.1 },   // UPDATED
-  { key: 'Arsenal',            x: 50.6, y: 29.2 },   // OK
-
-  { key: 'Field Hospital IV',  x: 63.2, y: 13.1 },   // UPDATED
-  { key: 'Field Hospital II',  x: 69.8, y: 37.6 },   // UPDATED
-  { key: 'Oil Refinery II',    x: 70.1, y: 61.9 },   // UPDATED
-
-  { key: 'Science Hub',        x: 62.2, y: 88.7 },   // UPDATED
-  { key: 'Field Hospital III', x: 40.7, y: 86.3 },   // UPDATED
-
-  { key: 'Mercenary Factory',  x: 50.5, y: 71.3 },   // OK
-  { key: 'Oil Refinery I',     x: 31.9, y: 40.2 },   // UPDATED
-  { key: 'Field Hospital I',   x: 31.4, y: 62.3 },   // UPDATED
-
-  { key: 'Nuclear Silo',       x: 50.3, y: 50.8 },   // OK
-  { key: 'Inner Top',          x: 50.6, y: 5.3 },    // OK
-  { key: 'Inner Bottom',       x: 49.9, y: 90.9 }    // OK
+  { key: 'Info Center',        x: 37.1, y: 13.1 },
+  { key: 'Arsenal',            x: 50.6, y: 29.2 },
+  { key: 'Field Hospital IV',  x: 63.2, y: 13.1 },
+  { key: 'Field Hospital II',  x: 69.8, y: 37.6 },
+  { key: 'Oil Refinery II',    x: 70.1, y: 61.9 },
+  { key: 'Science Hub',        x: 62.2, y: 88.7 },
+  { key: 'Field Hospital III', x: 40.7, y: 86.3 },
+  { key: 'Mercenary Factory',  x: 50.5, y: 71.3 },
+  { key: 'Oil Refinery I',     x: 31.9, y: 40.2 },
+  { key: 'Field Hospital I',   x: 31.4, y: 62.3 },
+  { key: 'Nuclear Silo',       x: 50.3, y: 50.8 },
+  { key: 'Inner Top',          x: 50.6, y: 5.3 },
+  { key: 'Inner Bottom',       x: 49.9, y: 90.9 }
 ];
-
 
 /* ========== STATE ========== */
 let currentWeekId = null;
@@ -44,6 +39,9 @@ let positions = { teamA: {}, teamB: {} }; // { posKey: [ { id, name, note } ] }
 let teamAMembers = []; // array of {id,name,power,squad,powerType}
 let teamBMembers = [];
 let activeTeam = 'A'; // 'A' or 'B'
+
+// per-hotspot picker positions persisted in memory and loaded/saved with week doc
+let pickerPositions = { teamA: {}, teamB: {} };
 
 /* ========== DOM refs ========== */
 const $ = id => document.getElementById(id);
@@ -134,6 +132,12 @@ async function loadWeekById(id) {
       positions.teamB[it.pos].push({ id: it.id, name: it.name || '', note: it.note || '' });
     }
 
+    // load pickerPositions if present
+    pickerPositions = {
+      teamA: data.pickerPositions?.teamA || {},
+      teamB: data.pickerPositions?.teamB || {}
+    };
+
     renderActiveTeamMap();
   } catch (e) {
     console.error('loadWeekById error', e);
@@ -177,32 +181,23 @@ function renderActiveTeamMap() {
 
     const arr = (positions[teamKey]?.[spot.key]) || [];
     if (arr.length) {
-  // Count bubble
-  const c = document.createElement('div');
-  c.className = 'count';
-  c.textContent = arr.length;
-  el.appendChild(c);
+      // Count bubble
+      const c = document.createElement('div');
+      c.className = 'count';
+      c.textContent = arr.length;
+      el.appendChild(c);
 
-  // Stacked player labels (left side)
-  let offsetY = -10;
-
-  arr.forEach((p, index) => {
-    const label = document.createElement('div');
-    label.className = 'player-label';
-
-    // If more players, stack downward
-    if (index > 0) offsetY += 16;
-    label.style.top = offsetY + 'px';
-
-    label.innerHTML = `
-      ${p.name}
-      ${p.note ? `<span class="player-note">${p.note}</span>` : ""}
-    `;
-
-    el.appendChild(label);
-  });
-}
-
+      // Stacked player labels (left side)
+      let offsetY = -10;
+      arr.forEach((p, index) => {
+        const label = document.createElement('div');
+        label.className = 'player-label';
+        if (index > 0) offsetY += 16;
+        label.style.top = offsetY + 'px';
+        label.innerHTML = `${p.name} ${p.note ? `<span class="player-note">${p.note}</span>` : ""}`;
+        el.appendChild(label);
+      });
+    }
 
     el.addEventListener('click', () => onHotspotClick(teamKey, spot.key));
     mapInner.appendChild(el);
@@ -226,16 +221,54 @@ function openPicker(teamKey, posKey) {
   const overlay = document.createElement('div'); overlay.className='overlay';
   const box = document.createElement('div'); box.className='picker';
 
+  // default box sizing (if not set by pickerPositions)
+  box.style.width = box.style.width || '380px';
+  box.style.height = box.style.height || '420px';
+
+  // restore saved position for this hotspot (if exists)
+  if (pickerPositions[teamKey] && pickerPositions[teamKey][posKey]) {
+    const p = pickerPositions[teamKey][posKey];
+    box.style.left = (p.left || 40) + 'px';
+    box.style.top = (p.top || 120) + 'px';
+  } else {
+    // default starting position (you can change)
+    box.style.left = box.style.left || '40px';
+    box.style.top = box.style.top || '120px';
+  }
+
+  // make picker fixed so draggable moves it relative to viewport
+  box.style.position = 'fixed';
+  box.style.zIndex = 100000;
+
+  // small drag handle on top-right (per your request: Option C)
+  const dragHandle = document.createElement('div');
+  dragHandle.className = 'picker-drag-handle';
+  dragHandle.style.position = 'absolute';
+  dragHandle.style.top = '8px';
+  dragHandle.style.right = '8px';
+  dragHandle.style.width = '28px';
+  dragHandle.style.height = '28px';
+  dragHandle.style.borderRadius = '6px';
+  dragHandle.style.display = 'flex';
+  dragHandle.style.alignItems = 'center';
+  dragHandle.style.justifyContent = 'center';
+  dragHandle.style.cursor = 'grab';
+  dragHandle.style.background = 'rgba(255,255,255,0.03)';
+  dragHandle.style.border = '1px solid rgba(255,255,255,0.04)';
+  dragHandle.title = 'Drag';
+  dragHandle.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#00ffc8" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h4M3 6h4M3 14h4M3 18h4M13 10h8M13 6h8M13 14h8M13 18h8"/></svg>';
+  box.appendChild(dragHandle);
+
   // header
   const hdr = document.createElement('div');
-  hdr.innerHTML = `<h4>Assign players → ${posKey}</h4><div class="muted">Select multiple players below. Add note per selected player. Click a row to toggle selection.</div>`;
+  hdr.style.paddingRight = '44px'; // space for handle
+  hdr.innerHTML = `<h4 style="margin:0;color:var(--accent)">Assign players → ${posKey}</h4><div class="muted" style="margin-top:6px">Select multiple players below. Add note per selected player. Click a row to toggle selection.</div>`;
   box.appendChild(hdr);
 
-  // controls: search & squad filter (simple)
+  // controls: search
   const controls = document.createElement('div'); controls.className='controls';
   const search = document.createElement('input'); search.className='search'; search.placeholder='Search name, squad, role...';
   controls.appendChild(search);
-
   box.appendChild(controls);
 
   // selected list UI (top)
@@ -247,6 +280,7 @@ function openPicker(teamKey, posKey) {
 
   // main list
   const listWrap = document.createElement('div'); listWrap.className='list';
+  listWrap.style.maxHeight = '260px';
   box.appendChild(listWrap);
 
   // actions
@@ -272,7 +306,92 @@ function openPicker(teamKey, posKey) {
     else { state[a.id].note = a.note || ''; state[a.id].selected = true; }
   });
 
-  // refresh selected list UI
+  /* -------------------------
+     Draggable handle logic
+     - Only the small handle is draggable (Option C)
+     - Touch + mouse supported
+     - Saves position per-hotspot on drag end and auto-saves to Firestore
+     ------------------------- */
+  let isDragging = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+  function clampToViewport(left, top, width = box.offsetWidth, height = box.offsetHeight) {
+    const minLeft = 8;
+    const minTop = 8;
+    const maxLeft = window.innerWidth - width - 8;
+    const maxTop = window.innerHeight - height - 8;
+    return {
+      left: Math.min(Math.max(left, minLeft), Math.max(maxLeft, minLeft)),
+      top: Math.min(Math.max(top, minTop), Math.max(maxTop, minTop))
+    };
+  }
+
+  function onDragStart(e) {
+    e.preventDefault();
+    isDragging = true;
+    const rect = box.getBoundingClientRect();
+    startLeft = rect.left;
+    startTop = rect.top;
+    startX = e.touches ? e.touches[0].clientX : e.clientX;
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', onDragEnd);
+    document.addEventListener('touchmove', onDragMove, { passive: false });
+    document.addEventListener('touchend', onDragEnd);
+    dragHandle.style.cursor = 'grabbing';
+  }
+
+  function onDragMove(e) {
+    if (!isDragging) return;
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dx = clientX - startX;
+    const dy = clientY - startY;
+    const newLeft = startLeft + dx;
+    const newTop = startTop + dy;
+    const clamped = clampToViewport(newLeft, newTop);
+    box.style.left = clamped.left + 'px';
+    box.style.top = clamped.top + 'px';
+  }
+
+  async function onDragEnd() {
+    if (!isDragging) return;
+    isDragging = false;
+    dragHandle.style.cursor = 'grab';
+
+    // Save final position for this hotspot (per-team)
+    if (!pickerPositions[teamKey]) pickerPositions[teamKey] = {};
+    pickerPositions[teamKey][posKey] = {
+      left: parseFloat(box.style.left),
+      top: parseFloat(box.style.top)
+    };
+
+    // Auto-save to Firestore (so positions persist immediately)
+    if (currentWeekId) {
+      try {
+        const ref = doc(db, WEEKS_COLLECTION, currentWeekId);
+        await setDoc(ref, { pickerPositions }, { merge: true });
+        // optional: console log
+        // console.log('picker positions auto-saved', pickerPositions[teamKey][posKey]);
+      } catch (err) {
+        console.warn('Failed to auto-save picker position:', err);
+      }
+    }
+
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('mouseup', onDragEnd);
+    document.removeEventListener('touchmove', onDragMove);
+    document.removeEventListener('touchend', onDragEnd);
+  }
+
+  dragHandle.addEventListener('mousedown', onDragStart);
+  dragHandle.addEventListener('touchstart', onDragStart, { passive: false });
+
+  /* -------------------------
+     Selected list UI refresh
+     ------------------------- */
   function refreshSelectedUI() {
     selectedList.innerHTML = '';
     Object.values(state).filter(s=>s.selected).forEach(s => {
@@ -286,7 +405,9 @@ function openPicker(teamKey, posKey) {
     });
   }
 
-  // build main list entries
+  /* -------------------------
+     Build main list entries
+     ------------------------- */
   function refreshMainList() {
     listWrap.innerHTML = '';
     const q = search.value.trim().toLowerCase();
@@ -300,7 +421,7 @@ function openPicker(teamKey, posKey) {
       ent.innerHTML = `<div style="display:flex;gap:10px;align-items:center">
           <div style="min-width:220px"><strong>${p.name}</strong><div class="muted" style="font-size:12px">${p.squad} • ${p.power}</div></div>
         </div>`;
-      // click toggles selection (but clicking input doesn't toggle because there is none in row)
+      // click toggles selection
       ent.addEventListener('click', (ev) => {
         state[p.id].selected = !state[p.id].selected;
         if (!state[p.id].selected) state[p.id].note = ''; // clear note when deselected
@@ -308,7 +429,7 @@ function openPicker(teamKey, posKey) {
         refreshSelectedUI();
       });
 
-      // show if this player already exists in other team mapping? NOT blocking: we allow multi-location-player and cross-team duplicates by design
+      // show if this player already exists elsewhere
       const assignCount = countAssignmentsGlobal(p.id);
       if (assignCount > 0) {
         const hint = document.createElement('div'); hint.style.fontSize='12px'; hint.style.color='#ffb86b'; hint.style.marginLeft='6px';
@@ -334,13 +455,30 @@ function openPicker(teamKey, posKey) {
     try { document.body.removeChild(overlay); } catch(e){}
   });
 
-  saveBtn.addEventListener('click', () => {
+  saveBtn.addEventListener('click', async () => {
     // build assigned array for this pos
     const arr = Object.values(state).filter(s=>s.selected).map(s => ({ id: s.id, name: s.name, note: s.note || '' }));
     // assign
     ensureTeamMap(teamKey);
     // replace fully for this pos
     positions[teamKey][posKey] = arr;
+    // Save positions and pickerPositions (so saved together)
+    try {
+      if (currentWeekId) {
+        const payload = {
+          positions: {
+            teamA: prepare(positions.teamA),
+            teamB: prepare(positions.teamB)
+          },
+          pickerPositions,
+          positionsSavedAt: serverTimestamp ? serverTimestamp() : new Date().toISOString()
+        };
+        await setDoc(doc(db, WEEKS_COLLECTION, currentWeekId), payload, { merge: true });
+      }
+    } catch (err) {
+      console.warn('Failed to save assignments:', err);
+    }
+
     // close
     try { document.body.removeChild(overlay); } catch(e){}
     // re-render
@@ -387,11 +525,12 @@ async function savePositionsToWeek() {
       teamA: prepare(positions.teamA),
       teamB: prepare(positions.teamB)
     },
+    pickerPositions: pickerPositions,   // ★ persist picker positions
     positionsSavedAt: serverTimestamp ? serverTimestamp() : new Date().toISOString()
   };
   try {
     await setDoc(doc(db, WEEKS_COLLECTION, currentWeekId), payload, { merge: true });
-    alert('Positions saved.');
+    alert('Positions & picker positions saved.');
   } catch (e) {
     console.error('savePositionsToWeek error', e);
     alert('Save failed (see console).');
