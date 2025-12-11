@@ -330,7 +330,7 @@ function openAddPlayerModal(side, bucket) {
   box.style.maxHeight='86%'; 
   box.style.overflow='auto';
   box.style.background='rgba(6,6,10,0.98)'; 
-  box.style.border='1px solid rgba(80,80,120,0.3)'; 
+  box.style.border='1px solid rgba(1, 190, 204, 1)'; 
   box.style.padding='14px'; 
   box.style.borderRadius='12px';
   overlay.appendChild(box);
