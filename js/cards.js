@@ -1,10 +1,16 @@
-// cards.js (clean - no stars display)
+// cards.js (clean - rank badge, no initials avatar)
 
 const styleTag = document.createElement("style");
 styleTag.innerHTML = `
 @keyframes glossMove {
   0% { top:-160%; left:-160%; }
   100% { top:160%; left:160%; }
+}
+/* subtle pulse for top 3 medals */
+@keyframes medalPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  100% { transform: scale(1); }
 }
 `;
 document.head.appendChild(styleTag);
@@ -80,7 +86,31 @@ function parseOldSquad(str) {
   return { primary, hybrid };
 }
 
+/* Rank visuals for badge only (card glow unchanged - squad-based) */
+function getRankVisual(rank) {
+  if (rank === 1) return { medal: "🥇", glow: "gold", color: "rgba(255,210,60,1)", pulse: true };
+  if (rank === 2) return { medal: "🥈", glow: "silver", color: "rgba(220,220,220,1)", pulse: true };
+  if (rank === 3) return { medal: "🥉", glow: "bronze", color: "rgba(205,127,50,1)", pulse: true };
+
+  if (rank <= 5)
+    return { medal: "", glow: "gold", color: "rgba(255,210,60,1)", pulse: false };
+
+  if (rank <= 15)
+    return { medal: "", glow: "neon", color: "rgba(0,255,180,1)", pulse: false };
+
+  return { medal: "", glow: "none", color: "rgba(255,255,255,0.65)", pulse: false };
+}
+
 export function renderCards(gridEl, members, options = {}) {
+  // 1) Sort by squad power (highest first) and auto-generate ranks + visuals
+  members = [...members]
+    .sort((a, b) => Number(b.power || 0) - Number(a.power || 0))
+    .map((m, i) => ({
+      ...m,
+      rankNumber: i + 1,
+      rankVisual: getRankVisual(i + 1)
+    }));
+
   gridEl.innerHTML = "";
   const showAdminActions = !!options.showAdminActions;
 
@@ -106,6 +136,7 @@ export function renderCards(gridEl, members, options = {}) {
       ? "Updated " + timeAgoInitial(lastTsMs)
       : "Updated never";
 
+    // Keep existing squad-based glow for the card
     const glowIntensity = hybrid ? 55 : Math.min(45, Number(power) * 0.9);
 
     const card = document.createElement("div");
@@ -159,29 +190,36 @@ export function renderCards(gridEl, members, options = {}) {
       card.style.transform = "translateY(0)";
     };
 
+    // build inner HTML — note: initials avatar replaced with numeric rank badge
     card.innerHTML += `
       <div style="display:flex;">
 
-        <!-- 
-          FIX #1 — Limit left content width so it cannot push icon away 
-        -->
+        <!-- Left content (name, role, badge) -->
         <div style="
           flex:1;
           min-width:0;
           max-width:calc(100% - 90px);
           overflow:hidden;
         ">
-          <div style="display:flex; gap:0.75rem;">
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            
+            <!-- RANK BADGE (replaces initials avatar) -->
             <div style="
-              width:44px;height:44px;border-radius:50%;
-              background:#ccc;display:flex;align-items:center;justify-content:center;
-              font-weight:600;color:#222;
+              width:44px;height:44px;border-radius:10px;
+              background:rgba(255,255,255,0.03);
+              border:2px solid ${m.rankVisual.color};
+              display:flex;align-items:center;justify-content:center;
+              font-weight:700;font-size:1.05rem;color:${m.rankVisual.color};
+              box-shadow:0 0 ${m.rankVisual.glow === 'gold' ? '18px rgba(255,210,60,0.45)' : 
+                               m.rankVisual.glow === 'neon' ? '14px rgba(0,255,180,0.28)' : 
+                               '0 transparent'};
+              ${m.rankVisual.pulse ? 'animation: medalPulse 1.6s ease-in-out infinite;' : ''}
             ">
-              ${generateInitialsAvatar(fullName)}
+              ${escapeHtml(m.rankVisual.medal || (m.rankNumber ?? "-"))}
             </div>
 
-            <div style="flex:1;">
-              <div style="display:flex; justify-content:space-between;">
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <div style="font-size:1rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                   ${escapeHtml(mainName)}
                 </div>
@@ -215,9 +253,7 @@ export function renderCards(gridEl, members, options = {}) {
           </div>
         </div>
 
-        <!-- 
-          FIX #2 — Prevent icon container from shrinking or expanding 
-        -->
+        <!-- Squad icon container (right) - unchanged -->
         <div style="
           width:90px;
           min-width:90px;
@@ -272,11 +308,7 @@ function timeAgoInitial(ms) {
   return Math.floor(diff / 86400) + " days ago";
 }
 
-function generateInitialsAvatar(name) {
-  if (!name) return "";
-  const p = name.trim().split(/\s+/);
-  return (p[0][0] + (p[1]?.[0] || "")).toUpperCase();
-}
+// removed the initials avatar generator — initials were replaced by rank badge
 
 function escapeHtml(s) {
   return String(s || "")
