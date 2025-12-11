@@ -1,6 +1,10 @@
-// positions.js (v4) — Single-team map, multi-member per node, per-assignment notes
+// positions.js (v5) — Single-team map, multi-member per node, per-assignment notes
 // + draggable picker handle (small handle style) + per-hotspot pickerPositions persisted to Firestore
-console.log("✅ positions.js (v4) loaded");
+// + GLOBAL map layout stored in `desert_brawl_map_layout/default` with an Edit Hotspots mode (Option 1)
+// - Drag hotspots in Edit Mode, Save Layout to Firestore
+// - Picker behavior unchanged (opens on hotspot click when NOT in Edit Mode)
+// - Mobile + touch supported
+console.log("✅ positions.js (v5) loaded");
 
 import { db } from './firebase-config.js';
 import {
@@ -14,8 +18,10 @@ import {
 
 /* ========== CONFIG ========== */
 const WEEKS_COLLECTION = 'desert_brawl_weeks';
+const MAP_LAYOUT_COLLECTION = 'desert_brawl_map_layout';
+const MAP_LAYOUT_DOCID = 'default';
 
-/* Final UPDATED coordinates (percent) */
+/* Default coordinates (percent) — used as fallback when no saved layout */
 const MAP_SPOTS = [
   { key: 'Info Center',        x: 37.1, y: 13.1 },
   { key: 'Arsenal',            x: 50.6, y: 29.2 },
@@ -42,6 +48,12 @@ let activeTeam = 'A'; // 'A' or 'B'
 
 // per-hotspot picker positions persisted in memory and loaded/saved with week doc
 let pickerPositions = { teamA: {}, teamB: {} };
+
+// GLOBAL map layout loaded from firestore (percent coords per key)
+let mapLayout = { spots: {} };
+
+// Edit mode flag
+let hotspotEditMode = false;
 
 /* ========== DOM refs ========== */
 const $ = id => document.getElementById(id);
@@ -78,6 +90,52 @@ function assignedPositionsForPlayer(playerId, teamKey) {
 function ensureTeamMap(teamKey) {
   if (!positions[teamKey]) positions[teamKey] = {};
   return positions[teamKey];
+}
+
+/* ========== Map layout (global) helpers ========== */
+
+/**
+ * Get coordinate for a spot key.
+ * Preference order:
+ * 1) mapLayout.spots[key] if exists
+ * 2) fallback to MAP_SPOTS default
+ */
+function getSpotCoords(key) {
+  if (mapLayout && mapLayout.spots && mapLayout.spots[key]) {
+    return { x: Number(mapLayout.spots[key].x), y: Number(mapLayout.spots[key].y) };
+  }
+  const found = MAP_SPOTS.find(s => s.key === key);
+  return found ? { x: found.x, y: found.y } : { x: 50, y: 50 };
+}
+
+/* Load global map layout from Firestore */
+async function loadGlobalMapLayout() {
+  try {
+    const ref = doc(db, MAP_LAYOUT_COLLECTION, MAP_LAYOUT_DOCID);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) {
+      // no saved layout — keep defaults
+      mapLayout = { spots: {} };
+      return;
+    }
+    const data = snap.data();
+    mapLayout = { spots: data.spots || {} };
+  } catch (err) {
+    console.warn('Failed to load global map layout:', err);
+    mapLayout = { spots: {} };
+  }
+}
+
+/* Save global map layout to Firestore */
+async function saveGlobalMapLayout() {
+  try {
+    const ref = doc(db, MAP_LAYOUT_COLLECTION, MAP_LAYOUT_DOCID);
+    await setDoc(ref, { spots: mapLayout.spots || {} }, { merge: true });
+    alert('Map layout saved.');
+  } catch (err) {
+    console.error('Failed to save global map layout:', err);
+    alert('Save failed (check console).');
+  }
 }
 
 /* ========== Firestore: saved weeks list & load ========== */
@@ -168,12 +226,13 @@ function renderActiveTeamMap() {
   // clear old hotspots
   Array.from(mapInner.querySelectorAll('.hotspot')).forEach(n => n.remove());
 
-  // draw hotspots
+  // draw hotspots using mapLayout if available
   MAP_SPOTS.forEach(spot => {
+    const coords = getSpotCoords(spot.key); // percent coords
     const el = document.createElement('div');
     el.className = 'hotspot';
-    el.style.left = spot.x + '%';
-    el.style.top = spot.y + '%';
+    el.style.left = coords.x + '%';
+    el.style.top = coords.y + '%';
     el.dataset.key = spot.key;
 
     const dot = document.createElement('div'); dot.className = 'dot';
@@ -187,7 +246,7 @@ function renderActiveTeamMap() {
       c.textContent = arr.length;
       el.appendChild(c);
 
-      // Stacked player labels (left side)
+      // Stacked player labels
       let offsetY = -10;
       arr.forEach((p, index) => {
         const label = document.createElement('div');
@@ -199,14 +258,132 @@ function renderActiveTeamMap() {
       });
     }
 
-    el.addEventListener('click', () => onHotspotClick(teamKey, spot.key));
+    // Hotspot interactions
+    if (hotspotEditMode) {
+      // in edit mode hotspots are draggable
+      makeHotspotEditable(el, spot.key);
+    } else {
+      // normal behavior: open picker on click
+      el.addEventListener('click', () => onHotspotClick(teamKey, spot.key));
+    }
+
     mapInner.appendChild(el);
   });
+}
+
+/* ========== Hotspot edit utilities ========== */
+
+/**
+ * Make a hotspot element draggable (edit mode).
+ * Updates mapLayout.spots[key] (percent coords) live as it's dragged.
+ */
+function makeHotspotEditable(hotspotEl, posKey) {
+  hotspotEl.style.touchAction = 'none';
+  hotspotEl.style.cursor = 'move';
+
+  // show small coords badge while editing
+  let coordBadge = null;
+  function showBadge(xPct, yPct) {
+    if (!coordBadge) {
+      coordBadge = document.createElement('div');
+      coordBadge.style.position = 'absolute';
+      coordBadge.style.padding = '4px 6px';
+      coordBadge.style.borderRadius = '6px';
+      coordBadge.style.background = 'rgba(0,0,0,0.6)';
+      coordBadge.style.color = '#fff';
+      coordBadge.style.fontSize = '12px';
+      coordBadge.style.transform = 'translate(-50%, -140%)';
+      coordBadge.style.pointerEvents = 'none';
+      hotspotEl.appendChild(coordBadge);
+    }
+    coordBadge.textContent = `${xPct.toFixed(1)}%, ${yPct.toFixed(1)}%`;
+  }
+
+  let dragging = false;
+  let startClientX = 0, startClientY = 0;
+  let startLeftPx = 0, startTopPx = 0;
+
+  function onStart(e) {
+    e.preventDefault();
+    dragging = true;
+    const rect = hotspotEl.getBoundingClientRect();
+    startLeftPx = rect.left;
+    startTopPx = rect.top;
+    startClientX = e.touches ? e.touches[0].clientX : e.clientX;
+    startClientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('touchend', onEnd);
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dx = clientX - startClientX;
+    const dy = clientY - startClientY;
+
+    // compute new absolute px position of hotspot center relative to mapInner
+    const mapRect = mapInner.getBoundingClientRect();
+    // current center position in px
+    const newCenterX = startLeftPx + dx + (hotspotEl.offsetWidth / 2);
+    const newCenterY = startTopPx + dy + (hotspotEl.offsetHeight / 2);
+
+    // convert to percent relative to mapInner
+    const xPct = ((newCenterX - mapRect.left) / mapRect.width) * 100;
+    const yPct = ((newCenterY - mapRect.top) / mapRect.height) * 100;
+
+    // clamp 0..100
+    const xClamped = Math.min(100, Math.max(0, xPct));
+    const yClamped = Math.min(100, Math.max(0, yPct));
+
+    // update visual position (left/top in percent)
+    hotspotEl.style.left = xClamped + '%';
+    hotspotEl.style.top = yClamped + '%';
+
+    // show coords badge
+    showBadge(xClamped, yClamped);
+
+    // update in-memory layout as user drags (live)
+    if (!mapLayout.spots) mapLayout.spots = {};
+    mapLayout.spots[posKey] = { x: Number(xClamped.toFixed(2)), y: Number(yClamped.toFixed(2)) };
+  }
+
+  async function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+
+    // remove listeners
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onEnd);
+    document.removeEventListener('touchmove', onMove);
+    document.removeEventListener('touchend', onEnd);
+
+    // persist to Firestore (auto-save)
+    try {
+      await saveGlobalMapLayout();
+    } catch (err) {
+      console.warn('Failed to auto-save map layout on drag end', err);
+    }
+
+    // remove badge after a short delay
+    if (coordBadge) {
+      setTimeout(() => { try { coordBadge.remove(); } catch(e){} }, 600);
+    }
+  }
+
+  hotspotEl.addEventListener('mousedown', onStart);
+  hotspotEl.addEventListener('touchstart', onStart, { passive: false });
 }
 
 /* ========== Hotspot picker modal ========== */
 /* Build a modal allowing multi-select and per-assignment notes. Selected players list is shown. */
 function onHotspotClick(teamKey, posKey) {
+  // if in edit mode, clicks should not open picker
+  if (hotspotEditMode) return;
   openPicker(teamKey, posKey);
 }
 
@@ -240,7 +417,7 @@ function openPicker(teamKey, posKey) {
   box.style.position = 'fixed';
   box.style.zIndex = 100000;
 
-  // small drag handle on top-right (per your request: Option C)
+  // small drag handle on top-right (Option C)
   const dragHandle = document.createElement('div');
   dragHandle.className = 'picker-drag-handle';
   dragHandle.style.position = 'absolute';
@@ -307,8 +484,8 @@ function openPicker(teamKey, posKey) {
   });
 
   /* -------------------------
-     Draggable handle logic
-     - Only the small handle is draggable (Option C)
+     Draggable handle logic (Option C)
+     - Only the small handle is draggable
      - Touch + mouse supported
      - Saves position per-hotspot on drag end and auto-saves to Firestore
      ------------------------- */
@@ -373,8 +550,6 @@ function openPicker(teamKey, posKey) {
       try {
         const ref = doc(db, WEEKS_COLLECTION, currentWeekId);
         await setDoc(ref, { pickerPositions }, { merge: true });
-        // optional: console log
-        // console.log('picker positions auto-saved', pickerPositions[teamKey][posKey]);
       } catch (err) {
         console.warn('Failed to auto-save picker position:', err);
       }
@@ -544,6 +719,76 @@ function clearAllPositions() {
   renderActiveTeamMap();
 }
 
+/* ========== UI: Edit Hotspots Controls (in topbar) ========== */
+function ensureEditControls() {
+  // create controls if not present
+  const topbar = document.querySelector('.topbar');
+  if (!topbar) return;
+
+  // container
+  let ctl = document.getElementById('hotspotEditControls');
+  if (!ctl) {
+    ctl = document.createElement('div');
+    ctl.id = 'hotspotEditControls';
+    ctl.style.display = 'flex';
+    ctl.style.gap = '8px';
+    ctl.style.alignItems = 'center';
+    topbar.appendChild(ctl);
+  }
+
+  // Edit toggle
+  let toggle = document.getElementById('toggleHotspotEdit');
+  if (!toggle) {
+    toggle = document.createElement('button');
+    toggle.id = 'toggleHotspotEdit';
+    toggle.className = 'btn';
+    toggle.textContent = '🔧 Edit Hotspots';
+    toggle.title = 'Toggle hotspot edit mode';
+    ctl.appendChild(toggle);
+
+    toggle.addEventListener('click', () => {
+      hotspotEditMode = !hotspotEditMode;
+      toggle.textContent = hotspotEditMode ? '✋ Exit Edit Mode' : '🔧 Edit Hotspots';
+      // Save a visual indicator
+      toggle.classList.toggle('active', hotspotEditMode);
+      // Re-render map so events switch between edit vs picker
+      renderActiveTeamMap();
+    });
+  }
+
+  // Save layout button
+  let saveBtn = document.getElementById('saveMapLayoutBtn');
+  if (!saveBtn) {
+    saveBtn = document.createElement('button');
+    saveBtn.id = 'saveMapLayoutBtn';
+    saveBtn.className = 'btn';
+    saveBtn.textContent = '💾 Save Layout';
+    saveBtn.title = 'Save hotspot layout to global map layout';
+    ctl.appendChild(saveBtn);
+
+    saveBtn.addEventListener('click', async () => {
+      await saveGlobalMapLayout();
+    });
+  }
+
+  // Reset layout to defaults (optional)
+  let resetBtn = document.getElementById('resetMapLayoutBtn');
+  if (!resetBtn) {
+    resetBtn = document.createElement('button');
+    resetBtn.id = 'resetMapLayoutBtn';
+    resetBtn.className = 'btn';
+    resetBtn.textContent = '↺ Reset Map';
+    resetBtn.title = 'Reset layout to defaults (local only)';
+    ctl.appendChild(resetBtn);
+
+    resetBtn.addEventListener('click', () => {
+      if (!confirm('Reset hotspot positions to default coordinates?')) return;
+      mapLayout = { spots: {} };
+      renderActiveTeamMap();
+    });
+  }
+}
+
 /* ========== Debug helper (module safe) ========== */
 function _enableMapDebug() {
   const wrap = mapInner;
@@ -590,6 +835,8 @@ function wireEvents() {
 
 async function init() {
   wireEvents();
+  ensureEditControls();          // create edit UI
+  await loadGlobalMapLayout();   // load global layout first
   await refreshSavedWeeks();
 
   // auto-load first week if present
