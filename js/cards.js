@@ -1,4 +1,4 @@
-// cards.js (clean - rank badge, no initials avatar)
+// cards.js (updated — rank badge, medals, power above icon, names fixed)
 
 const styleTag = document.createElement("style");
 styleTag.innerHTML = `
@@ -6,7 +6,7 @@ styleTag.innerHTML = `
   0% { top:-160%; left:-160%; }
   100% { top:160%; left:160%; }
 }
-/* subtle pulse for top 3 medals */
+
 @keyframes medalPulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.06); }
@@ -86,7 +86,7 @@ function parseOldSquad(str) {
   return { primary, hybrid };
 }
 
-/* Rank visuals for badge only (card glow unchanged - squad-based) */
+/* Rank visuals: applies ONLY to the rank badge */
 function getRankVisual(rank) {
   if (rank === 1) return { medal: "🥇", glow: "gold", color: "rgba(255,210,60,1)", pulse: true };
   if (rank === 2) return { medal: "🥈", glow: "silver", color: "rgba(220,220,220,1)", pulse: true };
@@ -102,7 +102,8 @@ function getRankVisual(rank) {
 }
 
 export function renderCards(gridEl, members, options = {}) {
-  // 1) Sort by squad power (highest first) and auto-generate ranks + visuals
+
+  // Sort members by POWER and assign ranks
   members = [...members]
     .sort((a, b) => Number(b.power || 0) - Number(a.power || 0))
     .map((m, i) => ({
@@ -136,7 +137,6 @@ export function renderCards(gridEl, members, options = {}) {
       ? "Updated " + timeAgoInitial(lastTsMs)
       : "Updated never";
 
-    // Keep existing squad-based glow for the card
     const glowIntensity = hybrid ? 55 : Math.min(45, Number(power) * 0.9);
 
     const card = document.createElement("div");
@@ -190,20 +190,20 @@ export function renderCards(gridEl, members, options = {}) {
       card.style.transform = "translateY(0)";
     };
 
-    // build inner HTML — note: initials avatar replaced with numeric rank badge
+    // FULL CARD INNER HTML (updated layout)
     card.innerHTML += `
       <div style="display:flex;">
 
-        <!-- Left content (name, role, badge) -->
+        <!-- LEFT SIDE: Rank badge + name + role + label -->
         <div style="
           flex:1;
           min-width:0;
-          max-width:calc(100% - 90px);
+          max-width:calc(100% - 70px);
           overflow:hidden;
         ">
           <div style="display:flex; gap:0.75rem; align-items:center;">
-            
-            <!-- RANK BADGE (replaces initials avatar) -->
+
+            <!-- RANK BADGE -->
             <div style="
               width:44px;height:44px;border-radius:10px;
               background:rgba(255,255,255,0.03);
@@ -219,19 +219,8 @@ export function renderCards(gridEl, members, options = {}) {
             </div>
 
             <div style="flex:1; min-width:0;">
-              <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                <div style="font-size:1rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                  ${escapeHtml(mainName)}
-                </div>
-
-                /<div style="text-align:right; width:75px;">
-                  <div style="font-weight:700; font-size:1.15rem;">
-                    ${escapeHtml(power)}
-                  </div>
-                  <div style="font-size:0.72rem; margin-top:3px; color:${powerType === "Approx" ? "rgba(255,210,0,1)" : "rgba(0,255,180,1)"};">
-                    ${escapeHtml(powerType)}
-                  </div>
-                </div>
+              <div style="font-size:1rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                ${escapeHtml(mainName)}
               </div>
 
               ${bracketName ? `<div style="font-size:0.85rem;color:rgba(255,255,255,0.55); margin-top:4px;">${escapeHtml(bracketName)}</div>` : ""}
@@ -250,24 +239,38 @@ export function renderCards(gridEl, members, options = {}) {
                 ${escapeHtml(updatedLabel)}
               </div>
             </div>
+
           </div>
         </div>
 
-        <!-- Squad icon container (right) - unchanged -->
+        <!-- RIGHT SIDE: POWER ABOVE ICON + TYPE BELOW ICON -->
         <div style="
-          width:90px;
-          min-width:90px;
-          max-width:90px;
+          width:70px;
+          min-width:70px;
+          max-width:70px;
           flex-shrink:0;
           display:flex;
+          flex-direction:column;
           align-items:center;
           justify-content:center;
-          padding-left:6px;
+          gap:6px;
         ">
+
+          <!-- POWER -->
           <div style="
-            width:50px;
-            height:50px;
-            border-radius:6px;
+            font-size:1.1rem;
+            font-weight:700;
+            color:#fff;
+            text-shadow:0 0 6px rgba(255,255,255,0.45);
+          ">
+            ${escapeHtml(power)}
+          </div>
+
+          <!-- ICON BOX -->
+          <div style="
+            width:48px;
+            height:48px;
+            border-radius:8px;
             border:${hybrid ? "6px" : "2px"} solid ${squadInfo.neon};
             display:flex;
             align-items:center;
@@ -275,8 +278,23 @@ export function renderCards(gridEl, members, options = {}) {
             background:rgba(255,255,255,0.03);
             box-shadow:0 0 ${hybrid ? "22px" : "12px"} ${hybrid ? GOLD.neonLight : squadInfo.neonLight};
           ">
-            <img src="${squadInfo.icon}" style="width:44px;height:44px;object-fit:contain;filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${squadInfo.neon});">
+            <img src="${squadInfo.icon}" 
+              style="width:40px;height:40px;object-fit:contain;
+              filter: drop-shadow(0 0 ${hybrid ? "12px" : "6px"} ${squadInfo.neon});
+            ">
           </div>
+
+          <!-- APPROX / PRECISE -->
+          <div style="
+            font-size:0.75rem;
+            font-weight:600;
+            margin-top:2px;
+            color:${powerType === "Approx" ? "rgba(255,210,0,1)" : "rgba(0,255,180,1)"};
+            text-align:center;
+          ">
+            ${escapeHtml(powerType)}
+          </div>
+
         </div>
 
       </div>
@@ -307,8 +325,6 @@ function timeAgoInitial(ms) {
   if (diff < 86400) return Math.floor(diff / 3600) + " hrs ago";
   return Math.floor(diff / 86400) + " days ago";
 }
-
-// removed the initials avatar generator — initials were replaced by rank badge
 
 function escapeHtml(s) {
   return String(s || "")
