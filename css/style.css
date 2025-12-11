@@ -933,16 +933,3 @@ body.bg {
   }
 }
 
-/* LARGE DESKTOP — 5 columns */
-@media (min-width: 1400px) {
-  .cards-grid {
-    grid-template-columns: repeat(5, 1fr);
-  }
-}
-
-/* ULTRA-WIDE — 6 columns */
-@media (min-width: 1800px) {
-  .cards-grid {
-    grid-template-columns: repeat(6, 1fr);
-  }
-}
