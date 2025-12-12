@@ -602,106 +602,13 @@ btnClear.addEventListener("click", clearDeployment);
   // nothing else needed here
 })();
 /* ------------------------------
-   ONE-PAGE PRINT SYSTEM
+   TWO-CARD PER ROW PRINT SYSTEM
 ------------------------------*/
 
-// Build printable HTML (compact, fits one page)
-function buildPrintHTML(printData) {
-    let html = `
-    <html>
-    <head>
-        <title>Deployment Print</title>
-        <style>
-            body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
-
-            h1 { text-align:center; margin-bottom: 12px; }
-
-            h2 { margin: 0 0 6px 0; font-size: 18px; }
-
-            .structure-block {
-                border: 1px solid #666;
-                border-radius: 6px;
-                padding: 10px;
-                margin-bottom: 10px;
-            }
-
-            .squad-line {
-                margin: 4px 0;
-            }
-
-            ul { margin: 6px 0 0 16px; padding: 0; }
-            li { margin-bottom: 4px; }
-
-            /* ⭐ Force everything on ONE page */
-            @media print {
-                body {
-                    zoom: 70%; /* scale down to fit everything */
-                }
-                .structure-block {
-                    page-break-inside: avoid;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Desert Brawl — Deployment Summary</h1>
-    `;
-
-    Object.entries(printData).forEach(([key, data]) => {
-        const counts = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
-
-        data.players.forEach(p => {
-            const sq = (p.squad || "").toUpperCase();
-            if (counts[sq] !== undefined) counts[sq]++;
-        });
-
-        html += `
-            <div class="structure-block">
-                <h2>${key}</h2>
-
-                <div class="squad-line"><strong>Total Power:</strong> ${data.totalPower}</div>
-
-                <div class="squad-line"><strong>Squads:</strong>
-                    TANK: ${counts.TANK} •
-                    AIR: ${counts.AIR} •
-                    MISSILE: ${counts.MISSILE} •
-                    HYBRID: ${counts.HYBRID}
-                </div>
-
-                <h3 style="margin:6px 0 4px 0;">Players</h3>
-                <ul>
-        `;
-
-        data.players.forEach(p => {
-            html += `
-                <li>
-                    <strong>${p.name}</strong> (${p.squad}, ${p.power})
-                    ${p.note ? `<br><em>Note:</em> ${p.note}` : ""}
-                </li>
-            `;
-        });
-
-        html += `
-                </ul>
-            </div>
-        `;
-    });
-
-    html += `
-    </body>
-    </html>
-    `;
-
-    return html;
-}
-
-// Convert internal deployment → printable format
 function preparePrintableData() {
     const out = {};
-
     STRUCTURES.forEach(s => {
         const arr = deployment.structures[s.key] || [];
-
         out[s.key] = {
             players: arr.map(p => ({
                 name: p.name,
@@ -712,23 +619,125 @@ function preparePrintableData() {
             totalPower: arr.reduce((sum, p) => sum + Number(p.power || 0), 0)
         };
     });
-
     return out;
 }
 
+function buildPrintHTML(printData) {
+    let html = `
+    <html>
+    <head>
+        <title>Deployment Print</title>
+
+        <style>
+            body { 
+                font-family: Arial, sans-serif; 
+                padding: 20px; 
+                color: #000;
+            }
+
+            h1 { 
+                text-align: center; 
+                margin-bottom: 20px; 
+            }
+
+            /* ⭐ Two cards per row */
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+            }
+
+            .card {
+                border: 1px solid #444;
+                border-radius: 8px;
+                padding: 12px;
+                page-break-inside: avoid;
+            }
+
+            h2 {
+                margin: 0 0 8px 0;
+                font-size: 18px;
+            }
+
+            ul { margin: 6px 0 0 18px; padding: 0; }
+            li { margin-bottom: 4px; }
+
+            @media print {
+                /* Fit entire deployment on page */
+                body { zoom: 70%; }
+
+                .grid {
+                    grid-template-columns: 1fr 1fr !important;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        <h1>Desert Brawl — Deployment Summary</h1>
+
+        <div class="grid">
+    `;
+
+    Object.entries(printData).forEach(([key, data]) => {
+        // squad counts
+        const counts = { TANK: 0, AIR: 0, MISSILE: 0, HYBRID: 0 };
+        data.players.forEach(p => {
+            const sq = (p.squad || "").toUpperCase();
+            if (counts[sq] !== undefined) counts[sq]++;
+        });
+
+        html += `
+        <div class="card">
+            <h2>${key}</h2>
+
+            <div><strong>Total Power:</strong> ${data.totalPower}</div>
+
+            <div style="margin:4px 0;">
+                <strong>Squads:</strong>
+                TANK: ${counts.TANK} • 
+                AIR: ${counts.AIR} • 
+                MISSILE: ${counts.MISSILE} • 
+                HYBRID: ${counts.HYBRID}
+            </div>
+
+            <h3 style="margin: 6px 0 4px 0;">Players</h3>
+            <ul>
+        `;
+
+        data.players.forEach(p => {
+            html += `
+            <li>
+                <strong>${p.name}</strong> (${p.squad}, ${p.power})
+                ${p.note ? `<br><em>Note:</em> ${p.note}` : ""}
+            </li>
+            `;
+        });
+
+        html += `
+            </ul>
+        </div>
+        `;
+    });
+
+    html += `
+        </div> <!-- end grid -->
+    </body>
+    </html>
+    `;
+
+    return html;
+}
+
 function printDeploymentNow() {
-    const printData = preparePrintableData();
-    const html = buildPrintHTML(printData);
+    const data = preparePrintableData();
+    const html = buildPrintHTML(data);
 
     const w = window.open("", "_blank");
     w.document.write(html);
     w.document.close();
 
-    // Wait for render before printing
-    setTimeout(() => {
-        w.print();
-        w.close();
-    }, 200);
+    setTimeout(() => { w.print(); w.close(); }, 200);
 }
 
 window.printDeploymentNow = printDeploymentNow;
