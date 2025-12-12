@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Deployment Print View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="stylesheet" href="./css/style.css">
+
+  <style>
+    body {
+      background:#05060a;
+      color:#e6eef0;
+      font-family: Inter, system-ui;
+      padding:20px;
+    }
+
+    .print-wrapper {
+      max-width:1100px;
+      margin:0 auto;
+    }
+
+    h1 {
+      text-align:center;
+      color:#00ffc8;
+      margin-bottom:25px;
+      font-size:26px;
+      font-weight:800;
+    }
+
+    .structure-card {
+      background:rgba(10,15,20,0.75);
+      border:1px solid rgba(255,255,255,0.05);
+      padding:16px;
+      border-radius:12px;
+      margin-bottom:30px;
+      page-break-inside: avoid;
+    }
+
+    .structure-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .structure-title {
+      font-size:20px;
+      font-weight:700;
+      color:#00ffc8;
+    }
+
+    .structure-totals {
+      font-size:14px;
+      color:#93a3a6;
+      display:flex;
+      gap:14px;
+    }
+
+    .squad-summary {
+      display:flex;
+      gap:8px;
+      margin-top:6px;
+      flex-wrap:wrap;
+    }
+
+    .squad-pill {
+      padding:4px 10px;
+      border-radius:10px;
+      font-size:12px;
+      background:rgba(255,255,255,0.05);
+      color:#cfe8e2;
+    }
+
+    .player-list {
+      margin-top:12px;
+      border-top:1px solid rgba(255,255,255,0.05);
+      padding-top:12px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .player-row {
+      display:flex;
+      justify-content:space-between;
+      background:rgba(255,255,255,0.02);
+      border:1px solid rgba(255,255,255,0.03);
+      padding:8px 10px;
+      border-radius:8px;
+    }
+
+    .player-name {
+      font-weight:600;
+      color:#eaeaea;
+    }
+
+    .player-meta {
+      font-size:13px;
+      color:#93a3a6;
+      text-align:right;
+    }
+
+    @media print {
+      body { background:white; color:black; }
+      .structure-card {
+        border:1px solid #ccc !important;
+        background:white !important;
+      }
+      .player-row {
+        background:#f6f6f6 !important;
+        border-color:#ddd !important;
+      }
+      h1 { color:black !important; }
+      .structure-title { color:black !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="print-wrapper">
+  <h1>Deployment — Team Structure Overview</h1>
+
+  <div id="printContainer"></div>
+</div>
+
+<script src="./js/structures-print.js"></script>
+
+</body>
+</html>
