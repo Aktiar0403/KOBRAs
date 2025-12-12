@@ -542,6 +542,8 @@ async function saveDeployment() {
     console.error("saveDeployment error", err);
     alert("Save failed (console).");
   }
+  window.currentDeployment = structures;  // Store the deployment
+   alert("Deployment Saved!");
 }
 
 /* -----------------------------
@@ -599,3 +601,74 @@ btnClear.addEventListener("click", clearDeployment);
   // allow player items to be draggable after teams load (they are added in renderPlayers)
   // nothing else needed here
 })();
+// ------------------------------
+// PRINTING SYSTEM
+// ------------------------------
+
+function buildPrintHTML(structures) {
+    let html = `
+    <div style="font-family:Arial;padding:20px;color:#000;">
+        <h1 style="text-align:center;margin-bottom:20px;">Desert Brawl Deployment</h1>
+    `;
+
+    Object.entries(structures).forEach(([key, data]) => {
+        const players = data.players || [];
+
+        // Count squads
+        const squadCounts = {};
+        players.forEach(p => {
+            const sq = p.squad || "UNKNOWN";
+            squadCounts[sq] = (squadCounts[sq] || 0) + 1;
+        });
+
+        html += `
+            <div style="margin-bottom:24px;padding:14px;border:1px solid #888;border-radius:8px;">
+                <h2>${key}</h2>
+                <p><strong>Total Power:</strong> ${data.totalPower || 0}</p>
+
+                <p><strong>Squad Counts:</strong> 
+                    ${Object.entries(squadCounts)
+                        .map(([sq, ct]) => `${sq}: ${ct}`)
+                        .join(" • ")}
+                </p>
+
+                <h3>Players</h3>
+                <ul style="padding-left:20px;">
+        `;
+
+        players.forEach(p => {
+            html += `
+                <li>
+                    <strong>${p.name}</strong> (${p.squad}, ${p.power})
+                </li>
+            `;
+        });
+
+        html += `</ul></div>`;
+    });
+
+    html += `</div>`;
+    return html;
+}
+
+function printDeployment(structures) {
+    const printArea = document.getElementById("printArea");
+    printArea.innerHTML = buildPrintHTML(structures);
+    
+    const originalContent = document.body.innerHTML;
+    const printContent = printArea.innerHTML;
+
+    document.body.innerHTML = printContent;
+    window.print();
+    document.body.innerHTML = originalContent;
+}
+
+// Expose globally
+window.printDeployment = printDeployment;
+document.getElementById("printDeploymentBtn").onclick = () => {
+    if (!window.currentDeployment) {
+        alert("Please load or save a deployment first.");
+        return;
+    }
+    printDeployment(window.currentDeployment);
+};
