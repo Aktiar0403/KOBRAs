@@ -542,7 +542,7 @@ async function saveDeployment() {
     console.error("saveDeployment error", err);
     alert("Save failed (console).");
   }
-  window.currentDeployment = structures;  // Store the deployment
+  window.currentDeployment = deployment;  // Store the deployment
    alert("Deployment Saved!");
 }
 
