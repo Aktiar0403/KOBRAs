@@ -602,18 +602,107 @@ btnClear.addEventListener("click", clearDeployment);
   // nothing else needed here
 })();
 /* ------------------------------
-   PRINT SYSTEM (fixed)
+   ONE-PAGE PRINT SYSTEM
 ------------------------------*/
 
-// Convert internal deployment data → clean printable structure
+// Build printable HTML (compact, fits one page)
+function buildPrintHTML(printData) {
+    let html = `
+    <html>
+    <head>
+        <title>Deployment Print</title>
+        <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #000; }
+
+            h1 { text-align:center; margin-bottom: 12px; }
+
+            h2 { margin: 0 0 6px 0; font-size: 18px; }
+
+            .structure-block {
+                border: 1px solid #666;
+                border-radius: 6px;
+                padding: 10px;
+                margin-bottom: 10px;
+            }
+
+            .squad-line {
+                margin: 4px 0;
+            }
+
+            ul { margin: 6px 0 0 16px; padding: 0; }
+            li { margin-bottom: 4px; }
+
+            /* ⭐ Force everything on ONE page */
+            @media print {
+                body {
+                    zoom: 70%; /* scale down to fit everything */
+                }
+                .structure-block {
+                    page-break-inside: avoid;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Desert Brawl — Deployment Summary</h1>
+    `;
+
+    Object.entries(printData).forEach(([key, data]) => {
+        const counts = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
+
+        data.players.forEach(p => {
+            const sq = (p.squad || "").toUpperCase();
+            if (counts[sq] !== undefined) counts[sq]++;
+        });
+
+        html += `
+            <div class="structure-block">
+                <h2>${key}</h2>
+
+                <div class="squad-line"><strong>Total Power:</strong> ${data.totalPower}</div>
+
+                <div class="squad-line"><strong>Squads:</strong>
+                    TANK: ${counts.TANK} •
+                    AIR: ${counts.AIR} •
+                    MISSILE: ${counts.MISSILE} •
+                    HYBRID: ${counts.HYBRID}
+                </div>
+
+                <h3 style="margin:6px 0 4px 0;">Players</h3>
+                <ul>
+        `;
+
+        data.players.forEach(p => {
+            html += `
+                <li>
+                    <strong>${p.name}</strong> (${p.squad}, ${p.power})
+                    ${p.note ? `<br><em>Note:</em> ${p.note}` : ""}
+                </li>
+            `;
+        });
+
+        html += `
+                </ul>
+            </div>
+        `;
+    });
+
+    html += `
+    </body>
+    </html>
+    `;
+
+    return html;
+}
+
+// Convert internal deployment → printable format
 function preparePrintableData() {
     const out = {};
 
     STRUCTURES.forEach(s => {
-        const key = s.key;
-        const arr = deployment.structures[key] || [];
+        const arr = deployment.structures[s.key] || [];
 
-        out[key] = {
+        out[s.key] = {
             players: arr.map(p => ({
                 name: p.name,
                 power: p.power,
@@ -627,82 +716,23 @@ function preparePrintableData() {
     return out;
 }
 
-// Build HTML for print
-function buildPrintHTML(printData) {
-    let html = `
-    <div style="font-family:Arial;padding:20px;color:#000;">
-        <h1 style="text-align:center;margin-bottom:20px;">Desert Brawl Deployment</h1>
-    `;
-
-    Object.entries(printData).forEach(([key, data]) => {
-
-        // Squad counts (no OTHER)
-        const counts = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
-
-        data.players.forEach(p => {
-            const sq = (p.squad || "").toUpperCase();
-            if (counts[sq] !== undefined) counts[sq]++;
-        });
-
-        html += `
-            <div style="margin-bottom:24px;padding:14px;border:1px solid #555;border-radius:8px;">
-                <h2 style="margin:0 0 12px 0;">${key}</h2>
-                
-                <p><strong>Total Power:</strong> ${data.totalPower}</p>
-
-                <p>
-                    <strong>Squad Counts:</strong>
-                    TANK: ${counts.TANK} • 
-                    AIR: ${counts.AIR} • 
-                    MISSILE: ${counts.MISSILE} • 
-                    HYBRID: ${counts.HYBRID}
-                </p>
-
-                <h3 style="margin-top:10px;">Players</h3>
-                <ul style="padding-left:20px;">
-        `;
-
-        data.players.forEach(p => {
-            html += `
-                <li>
-                    <strong>${p.name}</strong> (${p.squad}, ${p.power})
-                    ${p.note ? `<br><em>Note:</em> ${p.note}` : ""}
-                </li>
-            `;
-        });
-
-        html += `</ul></div>`;
-    });
-
-    html += `</div>`;
-    return html;
-}
-
-// Print function
 function printDeploymentNow() {
-    const data = preparePrintableData();
+    const printData = preparePrintableData();
+    const html = buildPrintHTML(printData);
 
-    const html = buildPrintHTML(data);
-    const printWindow = window.open("", "_blank");
+    const w = window.open("", "_blank");
+    w.document.write(html);
+    w.document.close();
 
-    printWindow.document.write(`
-        <html>
-            <head>
-                <title>Deployment Print</title>
-            </head>
-            <body>${html}</body>
-        </html>
-    `);
-
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
+    // Wait for render before printing
+    setTimeout(() => {
+        w.print();
+        w.close();
+    }, 200);
 }
 
-// Expose globally
 window.printDeploymentNow = printDeploymentNow;
 
-// Hook button
 document.getElementById("printDeploymentBtn").onclick = () => {
     if (!currentWeekId) {
         alert("Load a week first.");
