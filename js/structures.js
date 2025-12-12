@@ -601,151 +601,40 @@ btnClear.addEventListener("click", clearDeployment);
   // allow player items to be draggable after teams load (they are added in renderPlayers)
   // nothing else needed here
 })();
-/* ------------------------------
-   TWO-CARD PER ROW PRINT SYSTEM
-------------------------------*/
+/* -------------------------------------------
+   JPG EXPORT - Capture REAL Deployment UI
+------------------------------------------- */
 
-function preparePrintableData() {
-    const out = {};
-    STRUCTURES.forEach(s => {
-        const arr = deployment.structures[s.key] || [];
-        out[s.key] = {
-            players: arr.map(p => ({
-                name: p.name,
-                power: p.power,
-                squad: p.squad,
-                note: p.note || ""
-            })),
-            totalPower: arr.reduce((sum, p) => sum + Number(p.power || 0), 0)
-        };
-    });
-    return out;
-}
+async function downloadDeploymentAsJPG() {
+    const target = document.getElementById("structuresGrid");
 
-function buildPrintHTML(printData) {
-    let html = `
-    <html>
-    <head>
-        <title>Deployment Print</title>
-
-        <style>
-            body { 
-                font-family: Arial, sans-serif; 
-                padding: 20px; 
-                color: #000;
-            }
-
-            h1 { 
-                text-align: center; 
-                margin-bottom: 20px; 
-            }
-
-            /* ⭐ Two cards per row */
-            .grid {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 12px;
-            }
-
-            .card {
-                border: 1px solid #444;
-                border-radius: 8px;
-                padding: 12px;
-                page-break-inside: avoid;
-            }
-
-            h2 {
-                margin: 0 0 8px 0;
-                font-size: 18px;
-            }
-
-            ul { margin: 6px 0 0 18px; padding: 0; }
-            li { margin-bottom: 4px; }
-
-            @media print {
-                /* Fit entire deployment on page */
-                body { zoom: 70%; }
-
-                .grid {
-                    grid-template-columns: 1fr 1fr !important;
-                }
-            }
-        </style>
-    </head>
-
-    <body>
-        <h1>Desert Brawl — Deployment Summary</h1>
-
-        <div class="grid">
-    `;
-
-    Object.entries(printData).forEach(([key, data]) => {
-        // squad counts
-        const counts = { TANK: 0, AIR: 0, MISSILE: 0, HYBRID: 0 };
-        data.players.forEach(p => {
-            const sq = (p.squad || "").toUpperCase();
-            if (counts[sq] !== undefined) counts[sq]++;
-        });
-
-        html += `
-        <div class="card">
-            <h2>${key}</h2>
-
-            <div><strong>Total Power:</strong> ${data.totalPower}</div>
-
-            <div style="margin:4px 0;">
-                <strong>Squads:</strong>
-                TANK: ${counts.TANK} • 
-                AIR: ${counts.AIR} • 
-                MISSILE: ${counts.MISSILE} • 
-                HYBRID: ${counts.HYBRID}
-            </div>
-
-            <h3 style="margin: 6px 0 4px 0;">Players</h3>
-            <ul>
-        `;
-
-        data.players.forEach(p => {
-            html += `
-            <li>
-                <strong>${p.name}</strong> (${p.squad}, ${p.power})
-                ${p.note ? `<br><em>Note:</em> ${p.note}` : ""}
-            </li>
-            `;
-        });
-
-        html += `
-            </ul>
-        </div>
-        `;
-    });
-
-    html += `
-        </div> <!-- end grid -->
-    </body>
-    </html>
-    `;
-
-    return html;
-}
-
-function printDeploymentNow() {
-    const data = preparePrintableData();
-    const html = buildPrintHTML(data);
-
-    const w = window.open("", "_blank");
-    w.document.write(html);
-    w.document.close();
-
-    setTimeout(() => { w.print(); w.close(); }, 200);
-}
-
-window.printDeploymentNow = printDeploymentNow;
-
-document.getElementById("printDeploymentBtn").onclick = () => {
-    if (!currentWeekId) {
-        alert("Load a week first.");
+    if (!target) {
+        alert("Structures UI not found.");
         return;
     }
-    printDeploymentNow();
-};
+
+    // Temporarily boost resolution
+    target.style.transform = "scale(1)";
+    target.style.transformOrigin = "top left";
+
+    // Wait one frame for layout
+    await new Promise(res => setTimeout(res, 80));
+
+    const canvas = await html2canvas(target, {
+        scale: 2,                     // Higher quality JPG
+        backgroundColor: null,       // Use page theme
+        useCORS: true,
+        allowTaint: true
+    });
+
+    // Convert to JPG
+    const jpgURL = canvas.toDataURL("image/jpeg", 0.95);
+
+    // Trigger download
+    const link = document.createElement("a");
+    link.download = "deployment.jpg";
+    link.href = jpgURL;
+    link.click();
+}
+
+document.getElementById("downloadJpgBtn").onclick = downloadDeploymentAsJPG;

@@ -78,8 +78,10 @@
         <div style="display:flex;gap:8px;align-items:center" class="controls">
           <select id="selectWeek" class="btn"><option value="">-- Select week --</option></select>
           <select id="selectTeam" class="btn"><option value="A">Team A</option><option value="B">Team B</option></select>
-          <button id="printDeploymentBtn" class="btn ghost">🖨️ Print Deployment</button>
           <button id="btnLoadTeam" class="btn primary">Load Team</button>
+          
+          <button id="downloadJpgBtn" class="btn">📸 Download JPG</button>
+
         </div>
       </div>
 
@@ -122,7 +124,7 @@
       </div>
     </div>
   </div>
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script type="module" src="/js/structures.js"></script>
   <div id="printArea" style="display:none;"></div>
 
