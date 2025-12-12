@@ -601,45 +601,72 @@ btnClear.addEventListener("click", clearDeployment);
   // allow player items to be draggable after teams load (they are added in renderPlayers)
   // nothing else needed here
 })();
-// ------------------------------
-// PRINTING SYSTEM
-// ------------------------------
+/* ------------------------------
+   PRINT SYSTEM (fixed)
+------------------------------*/
 
-function buildPrintHTML(structures) {
+// Convert internal deployment data → clean printable structure
+function preparePrintableData() {
+    const out = {};
+
+    STRUCTURES.forEach(s => {
+        const key = s.key;
+        const arr = deployment.structures[key] || [];
+
+        out[key] = {
+            players: arr.map(p => ({
+                name: p.name,
+                power: p.power,
+                squad: p.squad,
+                note: p.note || ""
+            })),
+            totalPower: arr.reduce((sum, p) => sum + Number(p.power || 0), 0)
+        };
+    });
+
+    return out;
+}
+
+// Build HTML for print
+function buildPrintHTML(printData) {
     let html = `
     <div style="font-family:Arial;padding:20px;color:#000;">
         <h1 style="text-align:center;margin-bottom:20px;">Desert Brawl Deployment</h1>
     `;
 
-    Object.entries(structures).forEach(([key, data]) => {
-        const players = data.players || [];
+    Object.entries(printData).forEach(([key, data]) => {
 
-        // Count squads
-        const squadCounts = {};
-        players.forEach(p => {
-            const sq = p.squad || "UNKNOWN";
-            squadCounts[sq] = (squadCounts[sq] || 0) + 1;
+        // Squad counts (no OTHER)
+        const counts = { TANK:0, AIR:0, MISSILE:0, HYBRID:0 };
+
+        data.players.forEach(p => {
+            const sq = (p.squad || "").toUpperCase();
+            if (counts[sq] !== undefined) counts[sq]++;
         });
 
         html += `
-            <div style="margin-bottom:24px;padding:14px;border:1px solid #888;border-radius:8px;">
-                <h2>${key}</h2>
-                <p><strong>Total Power:</strong> ${data.totalPower || 0}</p>
+            <div style="margin-bottom:24px;padding:14px;border:1px solid #555;border-radius:8px;">
+                <h2 style="margin:0 0 12px 0;">${key}</h2>
+                
+                <p><strong>Total Power:</strong> ${data.totalPower}</p>
 
-                <p><strong>Squad Counts:</strong> 
-                    ${Object.entries(squadCounts)
-                        .map(([sq, ct]) => `${sq}: ${ct}`)
-                        .join(" • ")}
+                <p>
+                    <strong>Squad Counts:</strong>
+                    TANK: ${counts.TANK} • 
+                    AIR: ${counts.AIR} • 
+                    MISSILE: ${counts.MISSILE} • 
+                    HYBRID: ${counts.HYBRID}
                 </p>
 
-                <h3>Players</h3>
+                <h3 style="margin-top:10px;">Players</h3>
                 <ul style="padding-left:20px;">
         `;
 
-        players.forEach(p => {
+        data.players.forEach(p => {
             html += `
                 <li>
                     <strong>${p.name}</strong> (${p.squad}, ${p.power})
+                    ${p.note ? `<br><em>Note:</em> ${p.note}` : ""}
                 </li>
             `;
         });
@@ -651,24 +678,35 @@ function buildPrintHTML(structures) {
     return html;
 }
 
-function printDeployment(structures) {
-    const printArea = document.getElementById("printArea");
-    printArea.innerHTML = buildPrintHTML(structures);
-    
-    const originalContent = document.body.innerHTML;
-    const printContent = printArea.innerHTML;
+// Print function
+function printDeploymentNow() {
+    const data = preparePrintableData();
 
-    document.body.innerHTML = printContent;
-    window.print();
-    document.body.innerHTML = originalContent;
+    const html = buildPrintHTML(data);
+    const printWindow = window.open("", "_blank");
+
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Deployment Print</title>
+            </head>
+            <body>${html}</body>
+        </html>
+    `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
 }
 
 // Expose globally
-window.printDeployment = printDeployment;
+window.printDeploymentNow = printDeploymentNow;
+
+// Hook button
 document.getElementById("printDeploymentBtn").onclick = () => {
-    if (!window.currentDeployment) {
-        alert("Please load or save a deployment first.");
+    if (!currentWeekId) {
+        alert("Load a week first.");
         return;
     }
-    printDeployment(window.currentDeployment);
+    printDeploymentNow();
 };
