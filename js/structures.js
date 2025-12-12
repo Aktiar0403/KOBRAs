@@ -601,122 +601,41 @@ btnClear.addEventListener("click", clearDeployment);
   // allow player items to be draggable after teams load (they are added in renderPlayers)
   // nothing else needed here
 })();
-// ===============================
-// NEW PRINT SYSTEM (Two Cards Per Row, JPG Output)
-// ===============================
 
-async function printDeploymentJPG() {
-    if (!window.currentDeployment) {
-        alert("Load or save a deployment first.");
+/* -------------------------------------------
+   JPG EXPORT (FINAL WORKING VERSION)
+--------------------------------------------*/
+function downloadDeploymentJPG() {
+    const target = document.getElementById("structuresGrid");
+    if (!target) {
+        alert("Structure grid not found.");
         return;
     }
 
-    const data = window.currentDeployment.structures;
-    if (!data) {
-        alert("No deployment data found.");
-        return;
-    }
+    // Temporarily boost resolution for HD export
+    target.style.transform = "scale(1)";
+    target.style.transformOrigin = "top left";
 
-    // Create print container
-    const printContainer = document.createElement("div");
-    printContainer.id = "printContainer";
-    printContainer.style.width = "1200px";
-    printContainer.style.background = "#05060a";
-    printContainer.style.padding = "20px";
-    printContainer.style.display = "grid";
-    printContainer.style.gridTemplateColumns = "1fr 1fr";
-    printContainer.style.gap = "20px";
-    printContainer.style.color = "#e6eef0";
-    printContainer.style.fontFamily = "Inter";
+    const options = {
+        backgroundColor: "#05060a",   // same as app background
+        scale: 3,                     // SUPER HD export
+        useCORS: true
+    };
 
-    // Build structure cards
-    Object.entries(data).forEach(([key, players]) => {
-
-        // total power
-        const totalPower = players.reduce((s,p)=> s + Number(p.power || 0), 0);
-
-        // squad counts
-        const sq = { TANK:0, AIR:0, MISSILE:0, HYBRID:0, OTHER:0 };
-        players.forEach(p=>{
-            const s = (p.squad||"").toUpperCase();
-            if (s.includes("TANK")) sq.TANK++;
-            else if (s.includes("AIR")) sq.AIR++;
-            else if (s.includes("MISSILE")) sq.MISSILE++;
-            else if (s.includes("HYBRID")) sq.HYBRID++;
-            else sq.OTHER++;
-        });
-
-        const card = document.createElement("div");
-        card.style.background = "linear-gradient(180deg,#071018,#05070c)";
-        card.style.border = "1px solid rgba(255,255,255,0.05)";
-        card.style.borderRadius = "12px";
-        card.style.padding = "16px";
-
-        card.innerHTML = `
-            <h2 style="color:#00ffc8;margin-top:0">${key}</h2>
-
-            <div style="margin-bottom:8px;font-size:14px">
-                <strong>Total Power:</strong> ${totalPower}
-            </div>
-
-            <div style="display:flex;gap:6px;margin-bottom:12px;">
-                ${Object.entries(sq)
-                    .filter(([k,v])=>v>0)
-                    .map(([k,v])=>`
-                        <div style="
-                            padding:4px 8px;
-                            background:rgba(255,255,255,0.05);
-                            border-radius:8px;
-                            font-size:11px;
-                        ">${k}: ${v}</div>
-                    `).join("")}
-            </div>
-
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                ${players.map(p => `
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        background:rgba(255,255,255,0.03);
-                        padding:8px;
-                        border-radius:8px;
-                    ">
-                        <div>
-                            <div style="font-weight:700">${p.name}</div>
-                            <div style="font-size:12px;color:#93a3a6">
-                                ${p.squad} • ${p.power}
-                            </div>
-                            ${p.note ? `<div style="font-size:12px;color:#ffddaa">Note: ${p.note}</div>` : ""}
-                        </div>
-                        <div style="font-weight:800;color:#00ffc8">${p.power}</div>
-                    </div>
-                `).join("")}
-            </div>
-        `;
-
-        printContainer.appendChild(card);
+    html2canvas(target, options).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "desert-brawl-deployment.jpg";
+        link.href = canvas.toDataURL("image/jpeg", 0.95);
+        link.click();
+    }).catch(err => {
+        console.error("JPG export error:", err);
+        alert("Failed to export JPG. See console.");
     });
-
-    document.body.appendChild(printContainer);
-
-    // Convert to JPG
-    const canvas = await html2canvas(printContainer, {
-        backgroundColor: "#05060a",
-        scale: 2
-    });
-
-    const img = canvas.toDataURL("image/jpeg", 0.95);
-
-    // Download JPEG
-    const link = document.createElement("a");
-    link.download = "deployment.jpg";
-    link.href = img;
-    link.click();
-
-    // Cleanup
-    printContainer.remove();
 }
 
-// expose globally
-window.printDeploymentJPG = printDeploymentJPG;
+// Universal click handler so button works even if loaded late
+document.addEventListener("click", e => {
+    if (e.target.id === "downloadJPG") {
+        downloadDeploymentJPG();
+    }
+});
