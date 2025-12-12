@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Desert Brawl — Deployment</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    :root{
+      --bg:#05060a; --panel:#071018; --accent:#00ffc8; --muted:#93a3a6; --cardBorder:rgba(255,255,255,0.03);
+      --gold:#ffd23f;
+    }
+    html,body{height:100%; margin:0; background:var(--bg); color:#e6eef0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial; }
+    .page{max-width:1200px;margin:18px auto;padding:12px;}
+    .topbar{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:12px;}
+    .title{font-weight:800;color:var(--accent);text-align:left;flex:1;font-size:18px;}
+    .btn{padding:8px 12px;border-radius:10px;border:1px solid var(--cardBorder);background:transparent;color:inherit;cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#00bfff);border:0;color:#001217;font-weight:700}
+    .panel{background:linear-gradient(180deg,var(--panel),#061019);border-radius:12px;padding:12px;border:1px solid var(--cardBorder)}
+    .layout{display:grid;grid-template-columns: 1fr 380px; gap:14px; align-items:start;}
+    @media (max-width:980px){ .layout{grid-template-columns: 1fr; } }
+
+    /* Left: hospitals */
+    .hospitals { display:flex; gap:12px; flex-direction:column; }
+    .hospitals-row { display:flex; gap:12px; }
+    .hospital { flex:1; min-height:220px; border-radius:12px; padding:12px; background:rgba(255,255,255,0.02); border:1px dashed rgba(255,255,255,0.03); position:relative; }
+    .hospital .title { font-weight:700; color:var(--gold); margin-bottom:8px; }
+    .drop-spot { min-height:120px; border-radius:8px; background:rgba(0,0,0,0.12); padding:8px; overflow:auto; }
+    .hospital .meta { display:flex; justify-content:space-between; margin-bottom:8px; color:var(--muted); font-size:13px; }
+
+    /* Player card (draggable) */
+    .player-item { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px; border-radius:8px; background:linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border:1px solid rgba(255,255,255,0.02); margin-bottom:8px; cursor:grab; }
+    .player-item.dragging { opacity:0.6; transform:scale(0.98); }
+    .player-left { display:flex; gap:8px; align-items:center; }
+    .player-initial { width:44px;height:44px;border-radius:50%; background:#0e1518;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent); border:1px solid rgba(255,255,255,0.03); }
+    .player-name { font-weight:700; }
+    .player-meta { font-size:12px; color:var(--muted); }
+
+    /* Right column */
+    .right-col { display:flex; flex-direction:column; gap:14px; }
+    .structure-cards { display:flex; flex-direction:column; gap:8px; }
+    .structure { padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); background:rgba(255,255,255,0.01); display:flex; justify-content:space-between; align-items:center; }
+    .structure .s-left { display:flex; flex-direction:column; }
+    .structure .s-title { font-weight:700; }
+    .structure .s-power { font-weight:800; color:var(--accent); }
+    .players-list { max-height:320px; overflow:auto; padding:10px; border-radius:8px; background:rgba(0,0,0,0.06); border:1px solid rgba(255,255,255,0.02); }
+    .subtitle { color:var(--muted); font-size:13px; margin-bottom:6px; }
+
+    /* Drop visual */
+    .drop-spot.over { outline: 2px dashed rgba(0,255,200,0.22); background: rgba(0,255,200,0.02); }
+
+    /* small badges */
+    .badge { padding:4px 8px; border-radius:999px; background:rgba(255,255,255,0.03); font-weight:700; font-size:12px; }
+
+    /* controls row */
+    .controls { display:flex; gap:8px; align-items:center; }
+
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div style="display:flex; gap:12px; align-items:center;">
+        <button onclick="location.href='/admin-fights.html'" class="btn">← Back</button>
+        <div class="title">Desert Brawl — Deployment</div>
+        <div class="controls">
+          <select id="selectWeek" class="btn" style="background:#071018;color:inherit;border-radius:8px;">
+            <option value="">-- Select week --</option>
+          </select>
+          <select id="selectTeam" class="btn" style="background:#071018;color:inherit;border-radius:8px;">
+            <option value="A">Team A</option>
+            <option value="B">Team B</option>
+          </select>
+          <button id="btnLoadTeam" class="btn primary">Load Team</button>
+        </div>
+      </div>
+
+      <div>
+        <button id="btnSaveDeployment" class="btn">💾 Save Deployment</button>
+        <button id="btnClearDeployment" class="btn">Clear</button>
+      </div>
+    </div>
+
+    <div class="panel layout">
+      <!-- LEFT: Hospitals + map-like area -->
+      <div>
+        <div class="hospitals">
+          <div class="hospitals-row">
+            <div id="hospital1" class="hospital panel">
+              <div class="meta"><div class="title">🏥 Hospital I</div><div class="badge" id="hospital1Power">0</div></div>
+              <div id="hospital1Drop" class="drop-spot"></div>
+              <div style="margin-top:8px;color:var(--muted);font-size:13px;">Max 5 players</div>
+            </div>
+
+            <div id="hospital2" class="hospital panel">
+              <div class="meta"><div class="title">🏥 Hospital II</div><div class="badge" id="hospital2Power">0</div></div>
+              <div id="hospital2Drop" class="drop-spot"></div>
+              <div style="margin-top:8px;color:var(--muted);font-size:13px;">Max 5 players</div>
+            </div>
+          </div>
+
+          <!-- optional area for totals -->
+          <div style="display:flex;gap:12px;margin-top:12px;">
+            <div class="panel" style="flex:1;">
+              <div style="font-size:13px;color:var(--muted)">Team Total Power</div>
+              <div style="font-size:20px;font-weight:800;color:var(--accent)" id="teamTotalPower">0</div>
+            </div>
+            <div class="panel" style="width:160px;">
+              <div style="font-size:13px;color:var(--muted)">Assigned Count</div>
+              <div style="font-size:20px;font-weight:800;color:var(--accent)" id="assignedCount">0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: players + other structures -->
+      <div class="right-col">
+        <div>
+          <div class="subtitle">Players (20 main + 10 subs)</div>
+          <div id="playersList" class="players-list panel"></div>
+        </div>
+
+        <div>
+          <div class="subtitle">Other Structures</div>
+          <div id="structures" class="structure-cards">
+            <div class="structure panel" data-key="Info Center" id="struct-Info Center">
+              <div class="s-left"><div class="s-title">🏛 Info Center</div><div class="player-assigned" id="struct-Info Center-player">—</div></div>
+              <div><div class="s-power" id="struct-Info Center-power">0</div></div>
+            </div>
+
+            <div class="structure panel" data-key="Oil Refinery" id="struct-Oil Refinery">
+              <div class="s-left"><div class="s-title">🛢 Oil Refinery</div><div class="player-assigned" id="struct-Oil Refinery-player">—</div></div>
+              <div><div class="s-power" id="struct-Oil Refinery-power">0</div></div>
+            </div>
+
+            <div class="structure panel" data-key="Science Hub" id="struct-Science Hub">
+              <div class="s-left"><div class="s-title">🧪 Science Hub</div><div class="player-assigned" id="struct-Science Hub-player">—</div></div>
+              <div><div class="s-power" id="struct-Science Hub-power">0</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="/js/deployment.js"></script>
+</body>
+</html>
