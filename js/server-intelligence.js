@@ -72,22 +72,28 @@ async function loadPlayers() {
    FILTERING CORE
 ============================= */
 function applyFilters() {
-  filteredPlayers = allPlayers.filter(p => {
-    if (activeWarzone !== "ALL" && p.warzone !== activeWarzone) return false;
-    if (activeAlliance !== "ALL" && p.alliance !== activeAlliance) return false;
-    if (
-      searchInput.value &&
-      !p.name.toLowerCase().includes(searchInput.value.toLowerCase())
-    ) return false;
-    return true;
-  });
+  let filtered = [...allPlayers];
 
-  renderTable();
-  updateSegments();
-  updateAllianceDominance();
-  updatePowerSegments(filteredPlayers);
+  if (activeWarzone) {
+    filtered = filtered.filter(p => String(p.warzone) === String(activeWarzone));
+  }
 
+  if (activeAlliance) {
+    filtered = filtered.filter(p => p.alliance === activeAlliance);
+  }
+
+  const q = searchInput.value.trim().toLowerCase();
+  if (q) {
+    filtered = filtered.filter(p =>
+      p.name?.toLowerCase().includes(q)
+    );
+  }
+
+  renderTable(filtered);
+  updatePowerSegments(filtered);
+  renderAllianceDominance(filtered);
 }
+
 
 /* =============================
    TABLE
@@ -107,7 +113,7 @@ function renderTable() {
       <td>${p.name}</td>
       <td>${p.alliance}</td>
       <td>${p.warzone}</td>
-      <td>${p.totalPower.toLocaleString()}</td>
+      <td>${Number(p.totalPower || 0).toLocaleString()}</td>
     `;
     tableBody.appendChild(tr);
   });
