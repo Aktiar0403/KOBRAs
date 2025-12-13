@@ -1,238 +1,77 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <title>KOBRA — Server Intelligence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <link rel="stylesheet" href="/css/style.css"/>
+  <meta charset="UTF-8" />
+  <title>Server Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <style>
-    :root {
-      --bg:#05060a;
-      --panel:#071018;
-      --accent:#00ffc8;
-      --muted:#9aa3a6;
-      --border:rgba(255,255,255,0.04);
-    }
-
-    body {
-      background:var(--bg);
-      color:#e6eef0;
-      font-family:Inter,system-ui;
-      margin:0;
-    }
-
-    .page {
-      max-width:1400px;
-      margin:16px auto;
-      padding:16px;
-    }
-
-    h1 {
-      margin:0 0 6px;
-      color:var(--accent);
-    }
-
-    /* FILTER BAR */
-    .filters {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      margin:16px 0;
-      flex-wrap:wrap;
-    }
-
-    select {
-      background:#0b0f16;
-      color:#e6eef0;
-      border:1px solid var(--border);
-      padding:8px 10px;
-      border-radius:8px;
-    }
-
-    /* POWER CARDS */
-    .stats {
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-      gap:12px;
-      margin-bottom:16px;
-    }
-
-    .stat-card {
-      background:linear-gradient(180deg,var(--panel),#061019);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:14px;
-    }
-
-    .stat-card h3 {
-      margin:0;
-      font-size:14px;
-      color:var(--muted);
-    }
-
-    .stat-card .value {
-      font-size:26px;
-      font-weight:800;
-      margin-top:6px;
-      color:var(--accent);
-    }
-
-    /* TABLE */
-    .table-wrap {
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:12px;
-      overflow:hidden;
-    }
-
-    table {
-      width:100%;
-      border-collapse:collapse;
-    }
-
-    thead {
-      background:#0b0f16;
-    }
-
-    th, td {
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      text-align:left;
-      font-size:14px;
-    }
-
-    th {
-      color:var(--muted);
-      font-weight:600;
-    }
-
-    tbody tr:hover {
-      background:rgba(0,255,200,0.03);
-    }
-
-    .power {
-      font-weight:700;
-      color:var(--accent);
-    }
-
-    /* DATA TOOLS */
-    .data-tools {
-      display:flex;
-      justify-content:flex-end;
-      gap:8px;
-      margin-top:12px;
-      opacity:0.6;
-    }
-
-    .data-tools button {
-      background:transparent;
-      border:1px solid var(--border);
-      color:#cfe8e2;
-      padding:6px 10px;
-      border-radius:8px;
-      cursor:pointer;
-      font-size:12px;
-    }
-
-    .data-tools button:hover {
-      opacity:1;
-    }
-  </style>
+  <link rel="stylesheet" href="./css/server-intelligence.css" />
 </head>
+<body class="bg">
 
-<body>
-<div class="page">
+  <div class="page">
 
-  <h1>Server Intelligence</h1>
-  <div class="muted">Live ranking & power distribution</div>
+    <h1 class="title">Server Intelligence</h1>
+    <p class="subtitle">Live ranking & power distribution</p>
 
-  <!-- FILTERS -->
-  <div class="filters">
-    <select id="warzoneFilter">
-      <option value="ALL">All Warzones</option>
-    </select>
-
-    <select id="allianceFilter">
-      <option value="ALL">All Alliances</option>
-    </select>
-
-    <div style="margin-left:auto;color:var(--muted)">
-      Total Players: <strong id="totalCount">0</strong>
+    <!-- STATS CARDS -->
+    <div class="stats-row">
+      <div class="stat-card whale">
+        <span class="label">Whales</span>
+        <span id="whaleCount" class="value">0</span>
+      </div>
+      <div class="stat-card shark">
+        <span class="label">Sharks</span>
+        <span id="sharkCount" class="value">0</span>
+      </div>
+      <div class="stat-card piranha">
+        <span class="label">Piranhas</span>
+        <span id="piranhaCount" class="value">0</span>
+      </div>
+      <div class="stat-card total">
+        <span class="label">Total Players</span>
+        <span id="totalCount" class="value">0</span>
+      </div>
     </div>
-  </div>
-  <!-- FILTER CARDS -->
-<div class="filter-cards">
 
-  <!-- SEARCH -->
-  <div class="filter-card">
-    <div class="filter-title">Search Player</div>
+    <!-- SEARCH -->
     <input
       id="nameSearch"
-      class="filter-input"
-      placeholder="Type player name..."
+      class="search-input"
+      placeholder="Search player name..."
     />
-  </div>
 
-  <!-- WARZONE -->
-  <div class="filter-card">
-    <div class="filter-title">Warzone</div>
-    <select id="warzoneFilter" class="filter-select">
-      <option value="ALL">All Warzones</option>
-    </select>
-  </div>
+    <!-- FILTERS -->
+    <div class="filter-row">
+      <div class="filter-card">
+        <label>Warzone</label>
+        <select id="warzoneFilter"></select>
+      </div>
 
-  <!-- ALLIANCE -->
-  <div class="filter-card">
-    <div class="filter-title">Alliance</div>
-    <select id="allianceFilter" class="filter-select">
-      <option value="ALL">All Alliances</option>
-    </select>
-  </div>
-
-</div>
-
-
-  <!-- POWER STATS -->
-  <div class="stats">
-    <div class="stat-card">
-      <h3>🐋 Whales (180M+)</h3>
-      <div class="value" id="whaleCount">0</div>
+      <div class="filter-card">
+        <label>Alliance</label>
+        <select id="allianceFilter"></select>
+      </div>
     </div>
-    <div class="stat-card">
-      <h3>🦈 Sharks (160M+)</h3>
-      <div class="value" id="sharkCount">0</div>
+
+    <!-- DATA TABLE -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Alliance</th>
+            <th>Warzone</th>
+            <th>Total Power</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
     </div>
-    <div class="stat-card">
-      <h3>🐟 Piranhas (140M+)</h3>
-      <div class="value" id="piranhaCount">0</div>
-    </div>
+
   </div>
 
-  <!-- TABLE -->
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Name</th>
-          <th>Alliance</th>
-          <th>Warzone</th>
-          <th>Total Power</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
-    </table>
-  </div>
-
-  <!-- DATA TOOLS -->
-  <div class="data-tools">
-    <button id="pasteBtn">Paste Data</button>
-    <button id="excelBtn">Import Excel</button>
-  </div>
-
-</div>
-
-<script type="module" src="/js/server-intelligence.js"></script>
+  <script type="module" src="./js/server-intelligence.js"></script>
 </body>
 </html>

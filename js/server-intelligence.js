@@ -8,11 +8,8 @@ import {
   orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* =====================================================
-   DOM REFERENCES
-===================================================== */
+/* DOM */
 const tableBody = document.getElementById("tableBody");
-
 const nameSearch = document.getElementById("nameSearch");
 const warzoneFilter = document.getElementById("warzoneFilter");
 const allianceFilter = document.getElementById("allianceFilter");
@@ -20,50 +17,37 @@ const allianceFilter = document.getElementById("allianceFilter");
 const whaleEl = document.getElementById("whaleCount");
 const sharkEl = document.getElementById("sharkCount");
 const piranhaEl = document.getElementById("piranhaCount");
-const totalCountEl = document.getElementById("totalCount");
+const totalEl = document.getElementById("totalCount");
 
-/* Optional non-prominent import buttons */
-const pasteBtn = document.getElementById("pasteBtn");
-const excelBtn = document.getElementById("excelBtn");
-
-/* =====================================================
-   STATE
-===================================================== */
+/* STATE */
 let allPlayers = [];
-let filteredPlayers = [];
-
+let filtered = [];
 let activeWarzone = "ALL";
 let activeAlliance = "ALL";
 
-/* =====================================================
-   FIRESTORE: REALTIME LOAD
-===================================================== */
-const ref = collection(db, "server_players");
-const q = query(ref, orderBy("totalPower", "desc"));
+/* FIRESTORE */
+const qRef = query(
+  collection(db, "server_players"),
+  orderBy("totalPower", "desc")
+);
 
-onSnapshot(q, snap => {
-  allPlayers = snap.docs.map(d => normalizePlayer(d.data()));
+onSnapshot(qRef, snap => {
+  allPlayers = snap.docs.map(d => normalize(d.data()));
   populateFilters();
   applyFilters();
 });
 
-/* =====================================================
-   NORMALIZE DATA (VERY IMPORTANT)
-===================================================== */
-function normalizePlayer(p) {
+/* NORMALIZE */
+function normalize(p) {
   return {
-    name: String(p.name || "-").trim(),
+    name: String(p.name || "").trim(),
     alliance: String(p.alliance || "UNKNOWN").trim(),
-    warzone: String(
-      p.warzone || p.warZone || p.zone || p.server || "UNKNOWN"
-    ).trim(),
-    totalPower: Number(p.totalPower || p.power || 0)
+    warzone: String(p.warzone || "UNKNOWN").trim(),
+    totalPower: Number(p.totalPower || 0)
   };
 }
 
-/* =====================================================
-   FILTER EVENTS
-===================================================== */
+/* EVENTS */
 nameSearch.addEventListener("input", applyFilters);
 
 warzoneFilter.addEventListener("change", e => {
@@ -76,34 +60,30 @@ allianceFilter.addEventListener("change", e => {
   applyFilters();
 });
 
-/* =====================================================
-   APPLY FILTERS (SEARCH + DROPDOWNS)
-===================================================== */
+/* FILTER */
 function applyFilters() {
-  const q = nameSearch.value.trim().toLowerCase();
+  const q = nameSearch.value.toLowerCase();
 
-  filteredPlayers = allPlayers.filter(p => {
+  filtered = allPlayers.filter(p => {
     if (activeWarzone !== "ALL" && p.warzone !== activeWarzone) return false;
     if (activeAlliance !== "ALL" && p.alliance !== activeAlliance) return false;
     if (q && !p.name.toLowerCase().includes(q)) return false;
     return true;
   });
 
-  renderTable(filteredPlayers);
-  updateStats(filteredPlayers);
+  renderTable(filtered);
+  updateStats(filtered);
 }
 
-/* =====================================================
-   TABLE RENDER
-===================================================== */
+/* TABLE */
 function renderTable(players) {
   tableBody.innerHTML = "";
-  totalCountEl.textContent = players.length;
+  totalEl.textContent = players.length;
 
-  players.forEach((p, index) => {
+  players.forEach((p, i) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${index + 1}</td>
+      <td>${i + 1}</td>
       <td>${p.name}</td>
       <td>${p.alliance}</td>
       <td>${p.warzone}</td>
@@ -113,73 +93,43 @@ function renderTable(players) {
   });
 }
 
-/* =====================================================
-   WHALE / SHARK / PIRANHA STATS (FILTER AWARE)
-===================================================== */
+/* STATS */
 function updateStats(players) {
-  let whales = 0;
-  let sharks = 0;
-  let piranhas = 0;
+  let w = 0, s = 0, p = 0;
 
-  players.forEach(p => {
-    if (p.totalPower >= 180_000_000) whales++;
-    else if (p.totalPower >= 160_000_000) sharks++;
-    else if (p.totalPower >= 140_000_000) piranhas++;
+  players.forEach(x => {
+    if (x.totalPower >= 180_000_000) w++;
+    else if (x.totalPower >= 160_000_000) s++;
+    else if (x.totalPower >= 140_000_000) p++;
   });
 
-  whaleEl.textContent = whales;
-  sharkEl.textContent = sharks;
-  piranhaEl.textContent = piranhas;
+  whaleEl.textContent = w;
+  sharkEl.textContent = s;
+  piranhaEl.textContent = p;
 }
 
-/* =====================================================
-   FILTER DROPDOWNS POPULATION
-===================================================== */
+/* FILTER OPTIONS */
 function populateFilters() {
-  fillSelect(warzoneFilter, allPlayers.map(p => p.warzone));
-  fillSelect(allianceFilter, allPlayers.map(p => p.alliance));
+  fill(warzoneFilter, allPlayers.map(p => p.warzone));
+  fill(allianceFilter, allPlayers.map(p => p.alliance));
 }
 
-function fillSelect(select, values) {
+function fill(select, arr) {
   const current = select.value || "ALL";
-  const unique = [...new Set(values)]
-    .filter(v => v && v !== "UNKNOWN")
-    .sort();
+  const unique = [...new Set(arr)].sort();
 
   select.innerHTML = `<option value="ALL">All</option>`;
   unique.forEach(v => {
-    const opt = document.createElement("option");
-    opt.value = v;
-    opt.textContent = v;
-    select.appendChild(opt);
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    select.appendChild(o);
   });
 
   select.value = unique.includes(current) ? current : "ALL";
 }
 
-/* =====================================================
-   IMPORT / PASTE (NON-PROMINENT, SAFE)
-===================================================== */
-if (pasteBtn) {
-  pasteBtn.addEventListener("click", () => {
-    const raw = prompt(
-      "Paste data format:\nRank [Alliance] Name — Warzone — Power"
-    );
-    if (!raw) return;
-    alert("Paste received. Parser can be attached next.");
-  });
-}
-
-if (excelBtn) {
-  excelBtn.addEventListener("click", () => {
-    alert("Excel import hook ready (parser pending).");
-  });
-}
-
-/* =====================================================
-   HELPERS
-===================================================== */
+/* HELPERS */
 function formatPower(v) {
-  if (!v) return "-";
   return (v / 1_000_000).toFixed(1) + "M";
 }
