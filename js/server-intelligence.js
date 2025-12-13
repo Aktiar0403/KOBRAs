@@ -71,6 +71,69 @@ async function loadPlayers() {
 /* =============================
    FILTERING CORE
 ============================= */
+function renderAllianceDominance(players) {
+  const grid = document.getElementById("dominanceGrid");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  // Dominance only makes sense when a warzone is selected
+  if (!activeWarzone) {
+    grid.innerHTML = `<div class="muted">Select a warzone to view alliance dominance</div>`;
+    return;
+  }
+
+  // Aggregate power by alliance
+  const alliancePower = {};
+  let totalPower = 0;
+
+  players.forEach(p => {
+    const power = Number(p.totalPower || 0);
+    if (!p.alliance) return;
+
+    alliancePower[p.alliance] = (alliancePower[p.alliance] || 0) + power;
+    totalPower += power;
+  });
+
+  if (!totalPower) {
+    grid.innerHTML = `<div class="muted">No data for selected warzone</div>`;
+    return;
+  }
+
+  // Convert to sorted array
+  const ranked = Object.entries(alliancePower)
+    .map(([alliance, power]) => ({
+      alliance,
+      power,
+      pct: ((power / totalPower) * 100).toFixed(1)
+    }))
+    .sort((a, b) => b.power - a.power)
+    .slice(0, 5); // Top 5 only
+
+  // Render cards
+  ranked.forEach((row, index) => {
+    const card = document.createElement("div");
+    card.className = "dominance-card";
+
+    card.innerHTML = `
+      <div class="dom-rank">#${index + 1}</div>
+      <div class="dom-name">${row.alliance}</div>
+      <div class="dom-bar">
+        <div class="dom-fill" style="width:${row.pct}%"></div>
+      </div>
+      <div class="dom-meta">
+        <span>${row.pct}%</span>
+        <span>${row.power.toLocaleString()}</span>
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+
+
+
 function applyFilters() {
   let filtered = [...allPlayers];
 

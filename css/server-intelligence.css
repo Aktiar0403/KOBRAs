@@ -70,3 +70,47 @@ th,td { padding:10px; border-bottom:1px solid #1e2a38; }
   border-color: #ffdd55;
   box-shadow: 0 0 18px rgba(255,220,120,0.25);
 }
+.dominance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.dominance-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.dom-rank {
+  font-size: 12px;
+  color: #00ffc8;
+  font-weight: 700;
+}
+
+.dom-name {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+
+.dom-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 6px 0;
+}
+
+.dom-fill {
+  height: 100%;
+  background: linear-gradient(90deg,#00ffc8,#00bfff);
+}
+
+.dom-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.7;
+}
