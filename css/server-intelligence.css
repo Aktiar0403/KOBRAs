@@ -735,3 +735,8 @@ tbody td {
   font-weight: 800;
   letter-spacing: 0.3px;
 }
+@media (max-width: 640px) {
+  .col-power {
+    display: none;
+  }
+}
