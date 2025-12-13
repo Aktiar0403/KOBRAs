@@ -612,3 +612,30 @@ tbody td {
     display: none;
   }
 }
+@media (max-width: 640px) {
+  body {
+    overflow-x: hidden;
+  }
+}
+@media (max-width: 640px) {
+
+  table,
+  thead,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody tr {
+    background: rgba(255,255,255,0.02);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    padding: 8px 10px;
+  }
+}
