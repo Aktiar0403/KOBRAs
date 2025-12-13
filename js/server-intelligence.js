@@ -52,22 +52,31 @@ async function loadPlayers() {
       const d = doc.data();
       return {
         id: doc.id,
-        rank: Number(d.rank || 0),
+        rank: Number(d.rank ?? 0),
         name: d.name || "",
         alliance: d.alliance || "",
         warzone: Number(d.warzone),
-        totalPower: Number(d.totalPower || 0)
+        totalPower: Number(d.totalPower ?? 0)
       };
     });
 
-    console.log(`✅ Loaded players: ${allPlayers.length}`);
+    console.log("✅ Loaded players:", allPlayers.length);
 
+    // 🔥 RESET FILTERS AFTER LOAD
+    activeWarzone = "ALL";
+    activeAlliance = "ALL";
+
+    // 🔥 REBUILD FILTER UI
     buildWarzoneCards();
+
+    // 🔥 APPLY FILTERS
     applyFilters();
+
   } catch (err) {
-    console.error("❌ Firestore load failed:", err);
+    console.error("❌ Failed to load server_players:", err);
   }
 }
+
 
 /* =============================
    FILTERING
