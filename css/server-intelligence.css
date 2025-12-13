@@ -559,3 +559,56 @@ tbody td {
     opacity: 0.85;
   }
 }
+@media (max-width: 640px) {
+  table {
+    width: 100%;
+    max-width: 100%;
+    table-layout: fixed;
+  }
+
+  tbody tr {
+    max-width: 100vw;
+  }
+}
+@media (max-width: 640px) {
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: 36px minmax(0,1fr) 72px;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 6px;
+    row-gap: 2px;
+  }
+
+  .col-rank {
+    grid-column: 1;
+    grid-row: 1;
+    text-align: center;
+  }
+
+  .col-name {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0; /* 🔑 allows ellipsis */
+  }
+
+  .col-power {
+    grid-column: 3;
+    grid-row: 1;
+    text-align: right;
+  }
+
+  .col-meta {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    font-size: 11px;
+    opacity: 0.75;
+    text-align: left;
+  }
+
+  /* Hide table header on mobile */
+  thead {
+    display: none;
+  }
+}
