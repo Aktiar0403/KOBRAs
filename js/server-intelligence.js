@@ -118,16 +118,19 @@ function renderTable(players) {
 
   players.forEach((p, index) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
-      <td>${index + 1}</td>
-      <td>${p.name}</td>
-      <td>${p.alliance}</td>
-      <td>${p.warzone}</td>
-      <td>${formatPowerM(p.totalPower)}</td>
+      <td class="col-rank">${index + 1}</td>
+      <td class="col-name">${p.name}</td>
+      <td class="col-power">${formatPowerM(p.totalPower)}</td>
+      <td class="col-alliance">${p.alliance}</td>
+      <td class="col-warzone">${p.warzone}</td>
     `;
+
     tableBody.appendChild(tr);
   });
 }
+
 
 /* =============================
    WARZONE FILTER

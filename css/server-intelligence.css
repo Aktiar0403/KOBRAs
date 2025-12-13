@@ -206,3 +206,96 @@ th {
     display: none; /* hide alliance column on very small screens */
   }
 }
+/* ===========================
+   KOBRA ELEGANT TABLE
+=========================== */
+
+.table-wrap {
+  background: linear-gradient(180deg, #0b1020, #060a14);
+  border-radius: 16px;
+  padding: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+  overflow-x: auto;
+}
+
+/* Table core */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+}
+
+/* Header */
+thead th {
+  text-align: left;
+  padding: 10px 8px;
+  color: #9fb7c0;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  white-space: nowrap;
+}
+
+/* Body rows */
+tbody tr {
+  transition: background 0.15s ease;
+}
+
+tbody tr:hover {
+  background: rgba(0,255,200,0.05);
+}
+
+/* Cells */
+td {
+  padding: 8px 8px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  white-space: nowrap;
+}
+
+/* Column tuning */
+.col-rank {
+  width: 50px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.col-name {
+  font-weight: 600;
+  color: #e6eef0;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.col-power {
+  font-weight: 800;
+  color: #00ffc8;
+  letter-spacing: 0.4px;
+}
+
+.col-alliance {
+  color: #ffd27d;
+  font-weight: 600;
+}
+
+.col-warzone {
+  color: #93a3a6;
+  text-align: right;
+}
+
+/* Remove last row border */
+tbody tr:last-child td {
+  border-bottom: none;
+}
+@media (max-width: 640px) {
+  table {
+    font-size: 12.5px;
+  }
+
+  .col-warzone {
+    display: none; /* hide warzone on small screens */
+  }
+
+  thead th:last-child {
+    display: none;
+  }
+}
