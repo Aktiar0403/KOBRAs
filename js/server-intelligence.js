@@ -3,32 +3,33 @@ console.log("✅ Server Intelligence JS loaded");
 import { db, auth } from "./firebase-config.js";
 import {
   collection,
-  getDocs,
-  addDoc,
-  query,
-  orderBy
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
-/* ===============================
+/* =============================
    CONFIG
-================================ */
+============================= */
 const COLLECTION = "server_players";
 
-/* ===============================
+const WHALE_MIN = 180_000_000;
+const SHARK_MIN = 160_000_000;
+const PIRANHA_MIN = 140_000_000;
+
+/* =============================
    STATE
-================================ */
+============================= */
 let allPlayers = [];
 let filteredPlayers = [];
 
-let activeWarzone = null;
-let activeAlliance = null;
-let searchQuery = "";
+let activeWarzone = "ALL";
+let activeAlliance = "ALL";
 
-/* ===============================
+/* =============================
    DOM
-================================ */
+============================= */
 const $ = id => document.getElementById(id);
 
 const searchInput = $("searchInput");
@@ -42,215 +43,188 @@ const piranhaCount = $("piranhaCount");
 
 const dominanceGrid = $("dominanceGrid");
 
-const pasteData = $("pasteData");
-const excelInput = $("excelInput");
-const saveBtn = $("saveBtn");
-
-/* ===============================
-   AUTH GUARD (ADMIN ONLY)
-================================ */
-onAuthStateChanged(auth, user => {
+/* =============================
+   AUTH + LOAD
+============================= */
+onAuthStateChanged(auth, async user => {
   if (!user) {
     alert("Admin login required");
     window.location.href = "admin-login.html";
     return;
   }
-  loadPlayers();
+
+  await loadPlayers();
+  buildFilterCards();
+  applyFilters();
 });
 
-/* ===============================
-   LOAD PLAYERS FROM FIRESTORE
-================================ */
+/* =============================
+   LOAD DATA
+============================= */
 async function loadPlayers() {
-  const snap = await getDocs(
-    query(collection(db, COLLECTION), orderBy("power", "desc"))
+  allPlayers = [];
+  const snap = await getDocs(collection(db, COLLECTION));
+
+  snap.forEach(doc => {
+    const d = doc.data();
+
+    allPlayers.push({
+      id: doc.id,
+      name: d.name || "Unknown",
+      alliance: d.alliance || "—",
+      warzone: String(d.warzone ?? "—"),
+      rank: Number(d.rank ?? 0),
+      totalPower: Number(d.totalPower ?? 0)
+    });
+  });
+
+  console.log("🔥 Loaded players:", allPlayers.length);
+}
+
+/* =============================
+   FILTER CARDS
+============================= */
+function buildFilterCards() {
+  buildCards(
+    warzoneCards,
+    [...new Set(allPlayers.map(p => p.warzone))],
+    val => activeWarzone = val
   );
 
-  allPlayers = snap.docs.map(d => normalizePlayer(d.data()));
-  applyFilters();
+  buildCards(
+    allianceCards,
+    [...new Set(allPlayers.map(p => p.alliance))],
+    val => activeAlliance = val
+  );
 }
 
-/* ===============================
-   NORMALIZE (CRITICAL)
-================================ */
-function normalizePlayer(p) {
-  return {
-    name: p.name || "Unnamed",
-    alliance: p.alliance || "Unknown",
-    warzone: p.warzone || "Unknown",
-    power: Number(p.power || 0)
+function buildCards(container, values, onSelect) {
+  container.innerHTML = "";
+
+  const all = document.createElement("div");
+  all.className = "filter-card active";
+  all.textContent = "All";
+  all.onclick = () => {
+    onSelect("ALL");
+    applyFilters();
   };
+  container.appendChild(all);
+
+  values.sort().forEach(v => {
+    const c = document.createElement("div");
+    c.className = "filter-card";
+    c.textContent = v;
+    c.onclick = () => {
+      onSelect(v);
+      applyFilters();
+    };
+    container.appendChild(c);
+  });
 }
 
-/* ===============================
-   FILTER PIPELINE
-================================ */
+/* =============================
+   APPLY FILTERS
+============================= */
 function applyFilters() {
+  const q = searchInput.value.toLowerCase();
+
   filteredPlayers = allPlayers.filter(p => {
-    if (searchQuery && !p.name.toLowerCase().includes(searchQuery)) return false;
-    if (activeWarzone && p.warzone !== activeWarzone) return false;
-    if (activeAlliance && p.alliance !== activeAlliance) return false;
+    if (activeWarzone !== "ALL" && p.warzone !== activeWarzone) return false;
+    if (activeAlliance !== "ALL" && p.alliance !== activeAlliance) return false;
+    if (q && !p.name.toLowerCase().includes(q)) return false;
     return true;
   });
 
   renderTable();
-  renderSegments();
+  updatePowerSegments();
   renderDominance();
 }
 
-/* ===============================
+/* =============================
    TABLE
-================================ */
+============================= */
 function renderTable() {
   tableBody.innerHTML = "";
 
   filteredPlayers.forEach((p, i) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>${i + 1}</td>
       <td>${p.name}</td>
       <td>${p.alliance}</td>
       <td>${p.warzone}</td>
-      <td>${p.power.toLocaleString()}</td>
-      <td>${powerCategory(p.power)}</td>
+      <td>${p.totalPower.toLocaleString()}</td>
+      <td>${powerTier(p.totalPower)}</td>
     `;
+
     tableBody.appendChild(tr);
   });
 }
 
-/* ===============================
+/* =============================
    POWER SEGMENTS
-================================ */
-function renderSegments() {
-  let whale = 0, shark = 0, piranha = 0;
+============================= */
+function updatePowerSegments() {
+  let whales = 0, sharks = 0, piranhas = 0;
 
   filteredPlayers.forEach(p => {
-    if (p.power >= 180_000_000) whale++;
-    else if (p.power >= 160_000_000) shark++;
-    else if (p.power >= 140_000_000) piranha++;
+    if (p.totalPower >= WHALE_MIN) whales++;
+    else if (p.totalPower >= SHARK_MIN) sharks++;
+    else if (p.totalPower >= PIRANHA_MIN) piranhas++;
   });
 
-  whaleCount.textContent = whale;
-  sharkCount.textContent = shark;
-  piranhaCount.textContent = piranha;
+  whaleCount.textContent = whales;
+  sharkCount.textContent = sharks;
+  piranhaCount.textContent = piranhas;
 }
 
-function powerCategory(power) {
-  if (power >= 180_000_000) return "Whale";
-  if (power >= 160_000_000) return "Shark";
-  if (power >= 140_000_000) return "Piranha";
-  return "Normal";
+function powerTier(p) {
+  if (p >= WHALE_MIN) return "🐋 Whale";
+  if (p >= SHARK_MIN) return "🦈 Shark";
+  if (p >= PIRANHA_MIN) return "🐟 Piranha";
+  return "—";
 }
 
-/* ===============================
-   WARZONE & ALLIANCE FILTER CARDS
-================================ */
-function buildFilterCards() {
-  const warzones = [...new Set(allPlayers.map(p => p.warzone))];
-  const alliances = [...new Set(allPlayers.map(p => p.alliance))];
-
-  warzoneCards.innerHTML = "";
-  allianceCards.innerHTML = "";
-
-  warzones.forEach(wz => {
-    const c = createFilterCard(wz, "warzone");
-    warzoneCards.appendChild(c);
-  });
-
-  alliances.forEach(al => {
-    const c = createFilterCard(al, "alliance");
-    allianceCards.appendChild(c);
-  });
-}
-
-function createFilterCard(label, type) {
-  const div = document.createElement("div");
-  div.className = "filter-card";
-  div.textContent = label;
-
-  div.onclick = () => {
-    if (type === "warzone") {
-      activeWarzone = activeWarzone === label ? null : label;
-    } else {
-      activeAlliance = activeAlliance === label ? null : label;
-    }
-    applyFilters();
-  };
-
-  return div;
-}
-
-/* ===============================
+/* =============================
    ALLIANCE DOMINANCE %
-================================ */
+============================= */
 function renderDominance() {
   dominanceGrid.innerHTML = "";
 
-  const map = {};
+  if (activeWarzone === "ALL") {
+    dominanceGrid.innerHTML =
+      "<div class='muted'>Select a Warzone to view dominance</div>";
+    return;
+  }
 
-  filteredPlayers.forEach(p => {
-    map[p.warzone] = map[p.warzone] || {};
-    map[p.warzone][p.alliance] =
-      (map[p.warzone][p.alliance] || 0) + p.power;
+  const zonePlayers = filteredPlayers;
+  const totalPower = zonePlayers.reduce((s, p) => s + p.totalPower, 0);
+
+  const byAlliance = {};
+  zonePlayers.forEach(p => {
+    byAlliance[p.alliance] = (byAlliance[p.alliance] || 0) + p.totalPower;
   });
 
-  Object.entries(map).forEach(([wz, alliances]) => {
-    const total = Object.values(alliances).reduce((a, b) => a + b, 0);
-
-    Object.entries(alliances).forEach(([al, power]) => {
-      const percent = total ? ((power / total) * 100).toFixed(1) : 0;
+  Object.entries(byAlliance)
+    .sort((a, b) => b[1] - a[1])
+    .forEach(([alliance, power]) => {
+      const pct = ((power / totalPower) * 100).toFixed(1);
 
       const card = document.createElement("div");
       card.className = "dominance-card";
       card.innerHTML = `
-        <strong>${wz}</strong><br>
-        ${al}<br>
-        ${percent}%
+        <div class="dom-name">${alliance}</div>
+        <div class="dom-bar">
+          <div class="dom-fill" style="width:${pct}%"></div>
+        </div>
+        <div class="dom-pct">${pct}%</div>
       `;
       dominanceGrid.appendChild(card);
     });
-  });
 }
 
-/* ===============================
-   SEARCH
-================================ */
-searchInput.addEventListener("input", e => {
-  searchQuery = e.target.value.toLowerCase();
-  applyFilters();
-});
-
-/* ===============================
-   ADMIN IMPORT (PASTE / EXCEL)
-================================ */
-saveBtn.onclick = async () => {
-  if (!pasteData.value.trim()) {
-    alert("Paste data first");
-    return;
-  }
-
-  const rows = pasteData.value.split("\n");
-
-  for (const row of rows) {
-    const parts = row.split("—").map(x => x.trim());
-    if (parts.length < 4) continue;
-
-    const power = Number(parts[3].replace(/[^\d]/g, ""));
-
-    await addDoc(collection(db, COLLECTION), {
-      name: parts[1] || "Unknown",
-      alliance: parts[0] || "Unknown",
-      warzone: parts[2] || "Unknown",
-      power: power || 0
-    });
-  }
-
-  alert("Data uploaded");
-  pasteData.value = "";
-  loadPlayers();
-};
-
-/* ===============================
-   INIT
-================================ */
-loadPlayers().then(buildFilterCards);
+/* =============================
+   EVENTS
+============================= */
+searchInput.addEventListener("input", applyFilters);
