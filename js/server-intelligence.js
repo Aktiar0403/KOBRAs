@@ -50,13 +50,7 @@ const saveBtn = $("saveBtn");
 /* =============================
    LOAD FROM FIRESTORE
 ============================= */
-import {
-  collection,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-let allPlayers = [];
-let filteredPlayers = [];
 
 async function loadPlayers() {
   console.log("📡 Loading server_players from Firestore...");
@@ -153,8 +147,6 @@ function renderAllianceDominance(players) {
 
 
 
-let activeWarzone = null;
-let activeAlliance = null;
 
 function applyFilters() {
   filteredPlayers = [...allPlayers];
