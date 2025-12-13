@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <title>KOBRA — Server Intelligence</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <link rel="stylesheet" href="/css/style.css"/>
+
+  <!-- Excel parser -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+  <style>
+    :root{
+      --bg:#05060a;
+      --panel:#071018;
+      --accent:#00ffc8;
+      --muted:#93a3a6;
+      --border:rgba(255,255,255,0.06);
+    }
+    body{background:var(--bg);color:#e6eef0;font-family:Inter,system-ui}
+    .page{max-width:1400px;margin:20px auto;padding:16px}
+    h1{color:var(--accent);text-align:center;margin-bottom:10px}
+
+    .panel{
+      background:linear-gradient(180deg,var(--panel),#061019);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:14px;
+      margin-bottom:14px;
+    }
+
+    .hint{
+      font-size:13px;color:var(--muted);line-height:1.5;
+      border-left:3px solid var(--accent);
+      padding-left:10px;
+    }
+
+    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    input,select,textarea{
+      background:#0b1220;color:#fff;border:1px solid var(--border);
+      border-radius:8px;padding:8px 10px;
+    }
+    textarea{width:100%;min-height:110px;resize:vertical}
+
+    .btn{
+      padding:8px 14px;border-radius:10px;
+      background:transparent;border:1px solid var(--border);
+      color:#e6eef0;cursor:pointer
+    }
+    .btn.primary{
+      background:linear-gradient(90deg,#03e6b9,#00bfff);
+      border:none;color:#001217;font-weight:700
+    }
+
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
+    th{color:var(--accent);font-size:13px}
+    tr:hover{background:rgba(0,255,200,0.03)}
+
+    .pill{
+      padding:4px 10px;border-radius:12px;
+      background:rgba(0,255,200,0.08);
+      color:var(--accent);
+      font-size:12px;font-weight:700
+    }
+  </style>
+</head>
+
+<body>
+<div class="page">
+
+  <h1>🌐 KOBRA — Server Intelligence</h1>
+
+  <!-- FORMAT HELP -->
+  <div class="panel hint">
+    <strong>Accepted Data Format</strong><br>
+    Excel / CSV columns (exact order):<br>
+    <code>Rank | Alliance | Name | Warzone | Total Power</code><br><br>
+
+    Paste-text format (one per line):<br>
+    <code>200. [aJeO] Miu Miu — Warzone #712 — 130,734,809</code>
+  </div>
+
+  <!-- IMPORT CONTROLS -->
+  <div class="panel controls">
+    <input type="file" id="fileInput" accept=".xlsx,.csv"/>
+    <button id="importExcel" class="btn primary">Import Excel</button>
+  </div>
+
+  <!-- PASTE IMPORT -->
+  <div class="panel">
+    <textarea id="pasteInput"
+      placeholder="Paste multiple lines here (same format as example)"></textarea>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button id="importPaste" class="btn primary">Import Pasted Data</button>
+      <button id="clearPaste" class="btn">Clear</button>
+    </div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="panel controls">
+    <input id="searchInput" placeholder="Search name / alliance"/>
+    <input id="warzoneFilter" placeholder="Warzone #"/>
+    <select id="sortSelect">
+      <option value="">Sort</option>
+      <option value="rank">Rank ↑</option>
+      <option value="power">Power ↓</option>
+      <option value="warzone">Warzone ↑</option>
+    </select>
+    <button id="saveToDB" class="btn">Save to Firestore</button>
+  </div>
+
+  <!-- TABLE -->
+  <div class="panel">
+    <table>
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Alliance</th>
+          <th>Name</th>
+          <th>Warzone</th>
+          <th>Total Power</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script type="module" src="/js/server-intelligence.js"></script>
+</body>
+</html>
