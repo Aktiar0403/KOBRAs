@@ -8,6 +8,11 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+function formatPowerM(power) {
+  if (!power) return "0M";
+  return Math.round(power / 1_000_000) + "M";
+}
+
 /* =============================
    STATE
 ============================= */
@@ -31,6 +36,8 @@ const dominanceGrid = $("dominanceGrid");
 
 const pasteData = $("pasteData");
 const saveBtn = $("saveBtn");
+
+
 
 /* =============================
    LOAD FROM FIRESTORE
@@ -116,7 +123,7 @@ function renderTable(players) {
       <td>${p.name}</td>
       <td>${p.alliance}</td>
       <td>${p.warzone}</td>
-      <td>${p.totalPower.toLocaleString()}</td>
+      <td>${formatPowerM(p.totalPower)}</td>
     `;
     tableBody.appendChild(tr);
   });
