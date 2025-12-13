@@ -402,6 +402,32 @@ tbody td {
   text-overflow: ellipsis;
 }
 
+/* Column widths — balanced */
+.col-rank {
+  width: 40px;
+  text-align: right;
+  color: #00ffd0;
+  font-weight: 700;
+}
+
+.col-name {
+  max-width: 260px;   /* 👈 KEY FIX */
+  font-weight: 600;
+}
+
+.col-power {
+  width: 80px;
+  text-align: right;
+  color: #00ffd0;
+  font-weight: 800;
+}
+
+.col-meta {
+  width: 120px;
+  text-align: right;
+  color: #ffcc88;
+  font-size: 13px;
+}
 /* Column widths (tight, no gaps) */
 .col-rank {
   width: 42px;
@@ -440,17 +466,23 @@ tbody td {
   opacity: 0.6;
 }
 @media (max-width: 768px) {
-  tbody td {
-    padding: 8px 4px;
-    font-size: 13px;
+  .col-name {
+    max-width: 160px;
   }
 
   .col-meta {
-    width: 120px;
+    width: 100px;
     font-size: 12px;
   }
 
   .col-power {
-    width: 80px;
+    width: 70px;
   }
+}
+
+
+.col-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
