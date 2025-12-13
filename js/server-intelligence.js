@@ -119,17 +119,30 @@ function renderTable(players) {
   players.forEach((p, index) => {
     const tr = document.createElement("tr");
 
+    const powerM = Math.round(p.totalPower / 1_000_000) + "M";
+
     tr.innerHTML = `
       <td class="col-rank">${index + 1}</td>
-      <td class="col-name">${p.name}</td>
-      <td class="col-power">${formatPowerM(p.totalPower)}</td>
-      <td class="col-alliance">${p.alliance}</td>
-      <td class="col-warzone">${p.warzone}</td>
+
+      <td class="col-name">
+        ${p.name}
+      </td>
+
+      <td class="col-power">
+        ${powerM}
+      </td>
+
+      <td class="col-meta">
+        <span class="alliance">${p.alliance}</span>
+        <span class="sep">•</span>
+        <span class="warzone">WZ ${p.warzone}</span>
+      </td>
     `;
 
     tableBody.appendChild(tr);
   });
 }
+
 
 
 /* =============================

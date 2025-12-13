@@ -377,3 +377,80 @@ table {
 tbody tr:nth-child(1) .col-power { color: #ffd700; } /* Gold */
 tbody tr:nth-child(2) .col-power { color: #cfd8dc; } /* Silver */
 tbody tr:nth-child(3) .col-power { color: #ffb74d; } /* Bronze */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Header */
+thead th {
+  padding: 10px 6px;
+  font-size: 13px;
+  color: #7aa2c8;
+  text-align: left;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Rows */
+tbody td {
+  padding: 10px 6px;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Column widths (tight, no gaps) */
+.col-rank {
+  width: 42px;
+  text-align: right;
+  color: #00ffd0;
+  font-weight: 700;
+}
+
+.col-name {
+  width: auto;
+  font-weight: 600;
+}
+
+.col-power {
+  width: 90px;
+  color: #00ffd0;
+  font-weight: 800;
+  text-align: right;
+}
+
+.col-meta {
+  width: 140px;
+  text-align: right;
+  color: #ffcc88;
+  font-size: 13px;
+}
+
+/* Meta styling */
+.col-meta .warzone {
+  color: #8aa0c8;
+  font-size: 12px;
+}
+
+.sep {
+  margin: 0 4px;
+  opacity: 0.6;
+}
+@media (max-width: 768px) {
+  tbody td {
+    padding: 8px 4px;
+    font-size: 13px;
+  }
+
+  .col-meta {
+    width: 120px;
+    font-size: 12px;
+  }
+
+  .col-power {
+    width: 80px;
+  }
+}
