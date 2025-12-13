@@ -10,17 +10,30 @@
 <body class="bg">
 <div class="page">
 
+  <!-- HEADER -->
   <header class="header">
     <h1>SERVER INTELLIGENCE</h1>
     <div class="sub">Alliance & Warzone Power Analytics</div>
   </header>
 
+  <!-- SEARCH -->
+  <section class="search-bar">
+    <input id="searchInput" placeholder="🔎 Search player name" />
+  </section>
+
   <!-- FILTERS -->
   <section class="filters">
-    <input id="searchInput" placeholder="🔎 Search Player Name" />
 
-    <div id="warzoneCards" class="filter-cards"></div>
-    <div id="allianceCards" class="filter-cards"></div>
+    <div class="filter-group">
+      <div class="filter-title">🟦 Warzones</div>
+      <div id="warzoneCards" class="filter-cards"></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-title">🟩 Alliances</div>
+      <div id="allianceCards" class="filter-cards"></div>
+    </div>
+
   </section>
 
   <!-- POWER SEGMENTS -->
@@ -32,11 +45,24 @@
 
   <!-- ALLIANCE DOMINANCE -->
   <section class="dominance">
-    <h2>Alliance Dominance %</h2>
+    <h2>Alliance Dominance (%)</h2>
     <div id="dominanceGrid" class="dominance-grid"></div>
   </section>
 
-  <!-- TABLE -->
+  <!-- ALLIANCE COMPARISON -->
+  <section class="comparison">
+    <h2>Alliance vs Alliance</h2>
+
+    <div class="compare-controls">
+      <select id="compareAllianceA"></select>
+      <select id="compareAllianceB"></select>
+      <button id="compareBtn">Compare</button>
+    </div>
+
+    <div id="comparisonResult" class="comparison-result"></div>
+  </section>
+
+  <!-- DATA TABLE -->
   <section class="table-wrap">
     <table>
       <thead>
@@ -46,19 +72,25 @@
           <th>Alliance</th>
           <th>Warzone</th>
           <th>Power</th>
-          <th>Category</th>
+          <th>Tier</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
   </section>
 
-  <!-- ADMIN IMPORT (LOW PROMINENCE) -->
+  <!-- ADMIN PANEL -->
   <details class="admin-panel">
-    <summary>Admin Data Import</summary>
-    <textarea id="pasteData" placeholder="Paste formatted server data here..."></textarea>
-    <input type="file" id="excelInput" accept=".xlsx,.csv" />
-    <button id="saveBtn">Upload to Database</button>
+    <summary>⚙ Admin Data Import</summary>
+
+    <div class="admin-hint">
+      Format per line:<br>
+      <code>Rank | Alliance | Name | Warzone | TotalPower</code>
+    </div>
+
+    <textarea id="pasteData" placeholder="Paste data here…"></textarea>
+    <input type="file" id="excelInput" />
+    <button id="saveBtn">Upload to Firestore</button>
   </details>
 
 </div>
