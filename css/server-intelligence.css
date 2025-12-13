@@ -304,3 +304,100 @@ tbody td {
   .desktop-only { display: none; }
   .mobile-only  { display: inline; }
 }
+/* =========================
+   ALLIANCE DOMINANCE – KOBRA
+========================= */
+
+.dominance {
+  margin-top: 28px;
+}
+
+.dominance h2 {
+  margin-bottom: 14px;
+  font-size: 18px;
+  letter-spacing: 0.5px;
+}
+
+.dominance-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+/* Card */
+.dominance-card {
+  position: relative;
+  padding: 16px 14px 14px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(0,255,200,0.10), rgba(0,0,0,0)),
+    linear-gradient(145deg, #0d1324, #060a14);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0,255,200,0.06),
+    0 10px 26px rgba(0,0,0,0.45);
+
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.dominance-card:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,255,200,0.15),
+    0 0 22px rgba(0,255,200,0.35),
+    0 18px 40px rgba(0,0,0,0.6);
+}
+
+/* Rank badge */
+.dom-rank {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #00ffc8;
+  opacity: 0.85;
+}
+
+/* Alliance name */
+.dom-name {
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  margin-bottom: 10px;
+  color: #eafffb;
+}
+
+/* Progress bar container */
+.dom-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+/* Progress bar fill */
+.dom-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    #00ffc8,
+    #00bfff
+  );
+  box-shadow: 0 0 12px rgba(0,255,200,0.6);
+  transition: width .4s ease;
+}
+
+/* Percentage text */
+.dom-meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: #9fb7c0;
+  text-align: right;
+}
