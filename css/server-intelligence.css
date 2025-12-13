@@ -639,3 +639,45 @@ tbody td {
     padding: 8px 10px;
   }
 }
+@media (max-width: 640px) {
+
+  /* Reduce column spread */
+  tbody tr {
+    display: grid;
+    grid-template-columns: 34px minmax(0,1fr) 58px;
+    align-items: center;
+    column-gap: 4px;
+  }
+
+  /* Rank */
+  .col-rank {
+    text-align: center;
+  }
+
+  /* Name takes flexible space */
+  .col-name {
+    min-width: 0;
+    padding-right: 4px;
+  }
+
+  /* Power pulled closer */
+  .col-power {
+    width: 58px;
+    min-width: 58px;
+    text-align: right;
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  /* Meta under name, not expanding width */
+  .col-meta {
+    grid-column: 2 / span 2;
+    font-size: 11px;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
+
+  thead {
+    display: none;
+  }
+}
