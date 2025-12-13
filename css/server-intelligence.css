@@ -740,3 +740,9 @@ tbody td {
     display: none;
   }
 }
+@media (max-width: 640px) {
+  th.col-power,
+  td.col-power {
+    display: none;
+  }
+}
