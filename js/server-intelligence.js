@@ -3,127 +3,119 @@ console.log("✅ Server Intelligence JS loaded");
 import { db } from "./firebase-config.js";
 import {
   collection,
-  addDoc,
-  serverTimestamp
+  onSnapshot,
+  query,
+  orderBy
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const tbody = document.getElementById("tableBody");
-let rows = [];
+const tableBody = document.getElementById("tableBody");
+const warzoneFilter = document.getElementById("warzoneFilter");
+const allianceFilter = document.getElementById("allianceFilter");
 
-/* ---------------- RENDER ---------------- */
-function render(data){
-  tbody.innerHTML = "";
-  data.forEach(r=>{
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${r.rank}</td>
-      <td><span class="pill">${r.alliance}</span></td>
-      <td>${r.name}</td>
-      <td>${r.warzone}</td>
-      <td>${r.power.toLocaleString()}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+const whaleEl = document.getElementById("whaleCount");
+const sharkEl = document.getElementById("sharkCount");
+const piranhaEl = document.getElementById("piranhaCount");
+const totalCountEl = document.getElementById("totalCount");
 
-/* ---------------- FILTER ---------------- */
-function applyFilters(){
-  let out = [...rows];
-  const q = searchInput.value.toLowerCase();
-  const wz = warzoneFilter.value;
+let allPlayers = [];
+let activeWarzone = "ALL";
+let activeAlliance = "ALL";
 
-  if(q){
-    out = out.filter(r =>
-      r.name.toLowerCase().includes(q) ||
-      r.alliance.toLowerCase().includes(q)
-    );
-  }
-  if(wz){
-    out = out.filter(r => String(r.warzone) === wz);
-  }
+/* ---------- LOAD FROM FIRESTORE ---------- */
+const ref = collection(db, "server_players");
+const q = query(ref, orderBy("totalPower", "desc"));
 
-  if(sortSelect.value === "rank") out.sort((a,b)=>a.rank-b.rank);
-  if(sortSelect.value === "power") out.sort((a,b)=>b.power-a.power);
-  if(sortSelect.value === "warzone") out.sort((a,b)=>a.warzone-b.warzone);
+onSnapshot(q, snap => {
+  allPlayers = [];
+  snap.forEach(d => allPlayers.push({ id: d.id, ...d.data() }));
+  populateFilters();
+  applyFilters();
+  updateStats();
+});
 
-  render(out);
-}
-
-/* ---------------- EXCEL IMPORT ---------------- */
-importExcel.onclick = () => {
-  const file = fileInput.files[0];
-  if(!file) return alert("Select an Excel/CSV file.");
-
-  const reader = new FileReader();
-  reader.onload = e => {
-    const wb = XLSX.read(e.target.result,{type:"binary"});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet,{defval:""});
-
-    rows = json.map(r=>({
-      rank:Number(r.Rank),
-      alliance:String(r.Alliance).trim(),
-      name:String(r.Name).trim(),
-      warzone:Number(r.Warzone),
-      power:Number(r["Total Power"])
-    })).filter(r=>r.name && r.warzone);
-
-    applyFilters();
-  };
-  reader.readAsBinaryString(file);
-};
-
-/* ---------------- PASTE IMPORT ---------------- */
-importPaste.onclick = () => {
-  const lines = pasteInput.value.split("\n").map(l=>l.trim()).filter(Boolean);
-
-  const parsed = [];
-  for(const line of lines){
-    // 200. [aJeO] Miu Miu — Warzone #712 — 130,734,809
-    const m = line.match(/^(\d+)\.\s+\[([^\]]+)\]\s+(.+?)\s+—\s+Warzone\s+#(\d+)\s+—\s+([\d,]+)/i);
-    if(!m) continue;
-
-    parsed.push({
-      rank:Number(m[1]),
-      alliance:m[2],
-      name:m[3],
-      warzone:Number(m[4]),
-      power:Number(m[5].replace(/,/g,""))
-    });
-  }
-
-  if(!parsed.length) return alert("No valid lines detected.");
-  rows = rows.concat(parsed);
+/* ---------- FILTERING ---------- */
+warzoneFilter.onchange = e => {
+  activeWarzone = e.target.value;
   applyFilters();
 };
 
-clearPaste.onclick = () => pasteInput.value = "";
-
-/* ---------------- SAVE TO FIRESTORE ---------------- */
-saveToDB.onclick = async () => {
-  if(!rows.length) return alert("No data to save.");
-
-  if(!confirm(`Save ${rows.length} records to Firestore?`)) return;
-
-  try{
-    for(const r of rows){
-      await addDoc(collection(db,"server_players"),{
-        rank:r.rank,
-        alliance:r.alliance,
-        name:r.name,
-        warzone:r.warzone,
-        totalPower:r.power,
-        importedAt: serverTimestamp()
-      });
-    }
-    alert("Saved to Firestore.");
-  }catch(e){
-    console.error(e);
-    alert("Save failed. See console.");
-  }
+allianceFilter.onchange = e => {
+  activeAlliance = e.target.value;
+  applyFilters();
 };
 
-/* ---------------- EVENTS ---------------- */
-searchInput.oninput = applyFilters;
-warzoneFilter.oninput = applyFilters;
-sortSelect.onchange = applyFilters;
+function applyFilters() {
+  let data = [...allPlayers];
+
+  if (activeWarzone !== "ALL")
+    data = data.filter(p => p.warzone === activeWarzone);
+
+  if (activeAlliance !== "ALL")
+    data = data.filter(p => p.alliance === activeAlliance);
+
+  renderTable(data);
+}
+
+/* ---------- TABLE ---------- */
+function renderTable(players) {
+  tableBody.innerHTML = "";
+  totalCountEl.textContent = players.length;
+
+  players.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.name}</td>
+      <td>${p.alliance || "-"}</td>
+      <td>${p.warzone || "-"}</td>
+      <td class="power">${formatPower(p.totalPower)}</td>
+    `;
+    tableBody.appendChild(tr);
+  });
+}
+
+/* ---------- STATS ---------- */
+function updateStats() {
+  let whales = 0, sharks = 0, piranhas = 0;
+
+  allPlayers.forEach(p => {
+    if (p.totalPower >= 180_000_000) whales++;
+    else if (p.totalPower >= 160_000_000) sharks++;
+    else if (p.totalPower >= 140_000_000) piranhas++;
+  });
+
+  whaleEl.textContent = whales;
+  sharkEl.textContent = sharks;
+  piranhaEl.textContent = piranhas;
+}
+
+/* ---------- FILTER DROPDOWNS ---------- */
+function populateFilters() {
+  const wz = new Set(), al = new Set();
+
+  allPlayers.forEach(p => {
+    if (p.warzone) wz.add(p.warzone);
+    if (p.alliance) al.add(p.alliance);
+  });
+
+  fillSelect(warzoneFilter, wz);
+  fillSelect(allianceFilter, al);
+}
+
+function fillSelect(select, values) {
+  const current = select.value;
+  select.innerHTML = `<option value="ALL">All</option>`;
+  [...values].sort().forEach(v => {
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = v;
+    select.appendChild(o);
+  });
+  select.value = current;
+}
+
+/* ---------- HELPERS ---------- */
+function formatPower(v) {
+  if (!v) return "-";
+  return (v / 1_000_000).toFixed(1) + "M";
+}

@@ -3,65 +3,140 @@
 <head>
   <meta charset="utf-8"/>
   <title>KOBRA — Server Intelligence</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <link rel="stylesheet" href="/css/style.css"/>
 
-  <!-- Excel parser -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
   <style>
-    :root{
+    :root {
       --bg:#05060a;
       --panel:#071018;
       --accent:#00ffc8;
-      --muted:#93a3a6;
-      --border:rgba(255,255,255,0.06);
+      --muted:#9aa3a6;
+      --border:rgba(255,255,255,0.04);
     }
-    body{background:var(--bg);color:#e6eef0;font-family:Inter,system-ui}
-    .page{max-width:1400px;margin:20px auto;padding:16px}
-    h1{color:var(--accent);text-align:center;margin-bottom:10px}
 
-    .panel{
+    body {
+      background:var(--bg);
+      color:#e6eef0;
+      font-family:Inter,system-ui;
+      margin:0;
+    }
+
+    .page {
+      max-width:1400px;
+      margin:16px auto;
+      padding:16px;
+    }
+
+    h1 {
+      margin:0 0 6px;
+      color:var(--accent);
+    }
+
+    /* FILTER BAR */
+    .filters {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin:16px 0;
+      flex-wrap:wrap;
+    }
+
+    select {
+      background:#0b0f16;
+      color:#e6eef0;
+      border:1px solid var(--border);
+      padding:8px 10px;
+      border-radius:8px;
+    }
+
+    /* POWER CARDS */
+    .stats {
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:12px;
+      margin-bottom:16px;
+    }
+
+    .stat-card {
       background:linear-gradient(180deg,var(--panel),#061019);
       border:1px solid var(--border);
       border-radius:12px;
       padding:14px;
-      margin-bottom:14px;
     }
 
-    .hint{
-      font-size:13px;color:var(--muted);line-height:1.5;
-      border-left:3px solid var(--accent);
-      padding-left:10px;
+    .stat-card h3 {
+      margin:0;
+      font-size:14px;
+      color:var(--muted);
     }
 
-    .controls{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-    input,select,textarea{
-      background:#0b1220;color:#fff;border:1px solid var(--border);
-      border-radius:8px;padding:8px 10px;
-    }
-    textarea{width:100%;min-height:110px;resize:vertical}
-
-    .btn{
-      padding:8px 14px;border-radius:10px;
-      background:transparent;border:1px solid var(--border);
-      color:#e6eef0;cursor:pointer
-    }
-    .btn.primary{
-      background:linear-gradient(90deg,#03e6b9,#00bfff);
-      border:none;color:#001217;font-weight:700
-    }
-
-    table{width:100%;border-collapse:collapse}
-    th,td{padding:10px;border-bottom:1px solid var(--border);text-align:left}
-    th{color:var(--accent);font-size:13px}
-    tr:hover{background:rgba(0,255,200,0.03)}
-
-    .pill{
-      padding:4px 10px;border-radius:12px;
-      background:rgba(0,255,200,0.08);
+    .stat-card .value {
+      font-size:26px;
+      font-weight:800;
+      margin-top:6px;
       color:var(--accent);
-      font-size:12px;font-weight:700
+    }
+
+    /* TABLE */
+    .table-wrap {
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+    }
+
+    thead {
+      background:#0b0f16;
+    }
+
+    th, td {
+      padding:10px 12px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+      font-size:14px;
+    }
+
+    th {
+      color:var(--muted);
+      font-weight:600;
+    }
+
+    tbody tr:hover {
+      background:rgba(0,255,200,0.03);
+    }
+
+    .power {
+      font-weight:700;
+      color:var(--accent);
+    }
+
+    /* DATA TOOLS */
+    .data-tools {
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      margin-top:12px;
+      opacity:0.6;
+    }
+
+    .data-tools button {
+      background:transparent;
+      border:1px solid var(--border);
+      color:#cfe8e2;
+      padding:6px 10px;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:12px;
+    }
+
+    .data-tools button:hover {
+      opacity:1;
     }
   </style>
 </head>
@@ -69,61 +144,60 @@
 <body>
 <div class="page">
 
-  <h1>🌐 KOBRA — Server Intelligence</h1>
+  <h1>Server Intelligence</h1>
+  <div class="muted">Live ranking & power distribution</div>
 
-  <!-- FORMAT HELP -->
-  <div class="panel hint">
-    <strong>Accepted Data Format</strong><br>
-    Excel / CSV columns (exact order):<br>
-    <code>Rank | Alliance | Name | Warzone | Total Power</code><br><br>
+  <!-- FILTERS -->
+  <div class="filters">
+    <select id="warzoneFilter">
+      <option value="ALL">All Warzones</option>
+    </select>
 
-    Paste-text format (one per line):<br>
-    <code>200. [aJeO] Miu Miu — Warzone #712 — 130,734,809</code>
-  </div>
+    <select id="allianceFilter">
+      <option value="ALL">All Alliances</option>
+    </select>
 
-  <!-- IMPORT CONTROLS -->
-  <div class="panel controls">
-    <input type="file" id="fileInput" accept=".xlsx,.csv"/>
-    <button id="importExcel" class="btn primary">Import Excel</button>
-  </div>
-
-  <!-- PASTE IMPORT -->
-  <div class="panel">
-    <textarea id="pasteInput"
-      placeholder="Paste multiple lines here (same format as example)"></textarea>
-    <div style="margin-top:8px;display:flex;gap:8px">
-      <button id="importPaste" class="btn primary">Import Pasted Data</button>
-      <button id="clearPaste" class="btn">Clear</button>
+    <div style="margin-left:auto;color:var(--muted)">
+      Total Players: <strong id="totalCount">0</strong>
     </div>
   </div>
 
-  <!-- FILTERS -->
-  <div class="panel controls">
-    <input id="searchInput" placeholder="Search name / alliance"/>
-    <input id="warzoneFilter" placeholder="Warzone #"/>
-    <select id="sortSelect">
-      <option value="">Sort</option>
-      <option value="rank">Rank ↑</option>
-      <option value="power">Power ↓</option>
-      <option value="warzone">Warzone ↑</option>
-    </select>
-    <button id="saveToDB" class="btn">Save to Firestore</button>
+  <!-- POWER STATS -->
+  <div class="stats">
+    <div class="stat-card">
+      <h3>🐋 Whales (180M+)</h3>
+      <div class="value" id="whaleCount">0</div>
+    </div>
+    <div class="stat-card">
+      <h3>🦈 Sharks (160M+)</h3>
+      <div class="value" id="sharkCount">0</div>
+    </div>
+    <div class="stat-card">
+      <h3>🐟 Piranhas (140M+)</h3>
+      <div class="value" id="piranhaCount">0</div>
+    </div>
   </div>
 
   <!-- TABLE -->
-  <div class="panel">
+  <div class="table-wrap">
     <table>
       <thead>
         <tr>
-          <th>Rank</th>
-          <th>Alliance</th>
+          <th>#</th>
           <th>Name</th>
+          <th>Alliance</th>
           <th>Warzone</th>
           <th>Total Power</th>
         </tr>
       </thead>
       <tbody id="tableBody"></tbody>
     </table>
+  </div>
+
+  <!-- DATA TOOLS -->
+  <div class="data-tools">
+    <button id="pasteBtn">Paste Data</button>
+    <button id="excelBtn">Import Excel</button>
   </div>
 
 </div>
