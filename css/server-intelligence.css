@@ -59,3 +59,14 @@ th,td { padding:10px; border-bottom:1px solid #1e2a38; }
 .filter-search::placeholder {
   color: #777;
 }
+.segment small {
+  display: block;
+  font-size: 11px;
+  opacity: 0.6;
+  margin-top: 4px;
+}
+
+.segment.mega {
+  border-color: #ffdd55;
+  box-shadow: 0 0 18px rgba(255,220,120,0.25);
+}

@@ -85,6 +85,8 @@ function applyFilters() {
   renderTable();
   updateSegments();
   updateAllianceDominance();
+  updatePowerSegments(filteredPlayers);
+
 }
 
 /* =============================
@@ -93,24 +95,24 @@ function applyFilters() {
 function renderTable() {
   tableBody.innerHTML = "";
 
-  filteredPlayers.forEach(p => {
-    const tier =
-      p.totalPower >= 180_000_000 ? "Whale" :
-      p.totalPower >= 160_000_000 ? "Shark" :
-      p.totalPower >= 140_000_000 ? "Piranha" : "—";
+  // Sort by power DESC for ranking
+  const ranked = [...filteredPlayers].sort(
+    (a, b) => b.totalPower - a.totalPower
+  );
 
+  ranked.forEach((p, index) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${p.rank}</td>
+      <td>${index + 1}</td>
       <td>${p.name}</td>
       <td>${p.alliance}</td>
       <td>${p.warzone}</td>
       <td>${p.totalPower.toLocaleString()}</td>
-      <td>${tier}</td>
     `;
     tableBody.appendChild(tr);
   });
 }
+
 
 /* =============================
    WARZONE CARDS (SEARCHABLE)
@@ -209,18 +211,34 @@ function buildCards(container, values, onSelect, searchInput) {
 /* =============================
    SEGMENTS (Whale / Shark / Piranha)
 ============================= */
-function updateSegments() {
-  let whale = 0, shark = 0, piranha = 0;
+function getPowerTier(power) {
+  if (power >= 230_000_000) return "megaWhale";
+  if (power >= 180_000_000) return "whale";
+  if (power >= 160_000_000) return "shark";
+  if (power >= 140_000_000) return "piranha";
+  return "shrimp";
+}
+function updatePowerSegments(players) {
+  let megaWhale = 0;
+  let whale = 0;
+  let shark = 0;
+  let piranha = 0;
+  let shrimp = 0;
 
-  filteredPlayers.forEach(p => {
-    if (p.totalPower >= 180_000_000) whale++;
-    else if (p.totalPower >= 160_000_000) shark++;
-    else if (p.totalPower >= 140_000_000) piranha++;
+  players.forEach(p => {
+    const tier = getPowerTier(p.totalPower);
+    if (tier === "megaWhale") megaWhale++;
+    else if (tier === "whale") whale++;
+    else if (tier === "shark") shark++;
+    else if (tier === "piranha") piranha++;
+    else shrimp++;
   });
 
-  whaleCount.textContent = whale;
-  sharkCount.textContent = shark;
-  piranhaCount.textContent = piranha;
+  document.getElementById("megaWhaleCount").textContent = megaWhale;
+  document.getElementById("whaleCount").textContent = whale;
+  document.getElementById("sharkCount").textContent = shark;
+  document.getElementById("piranhaCount").textContent = piranha;
+  document.getElementById("shrimpCount").textContent = shrimp;
 }
 
 /* =============================
