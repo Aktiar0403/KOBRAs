@@ -3,11 +3,12 @@ console.log("✅ Server Intelligence JS loaded");
 import { db, auth } from "./firebase-config.js";
 import {
   collection,
-  getDocs
+  getDocs,
+  addDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import {
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { onAuthStateChanged } from
+  "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 /* =============================
    CONFIG
@@ -35,46 +36,56 @@ const $ = id => document.getElementById(id);
 const searchInput = $("searchInput");
 const warzoneCards = $("warzoneCards");
 const allianceCards = $("allianceCards");
-const tableBody = $("tableBody");
 
 const whaleCount = $("whaleCount");
 const sharkCount = $("sharkCount");
 const piranhaCount = $("piranhaCount");
 
 const dominanceGrid = $("dominanceGrid");
+const tableBody = $("tableBody");
+
+/* comparison */
+const compareAllianceA = $("compareAllianceA");
+const compareAllianceB = $("compareAllianceB");
+const compareBtn = $("compareBtn");
+const comparisonResult = $("comparisonResult");
+
+/* admin */
+const pasteData = $("pasteData");
+const saveBtn = $("saveBtn");
 
 /* =============================
-   AUTH + LOAD
+   AUTH + INIT
 ============================= */
 onAuthStateChanged(auth, async user => {
   if (!user) {
-    alert("Admin login required");
+    alert("Admin access required");
     window.location.href = "admin-login.html";
     return;
   }
 
   await loadPlayers();
   buildFilterCards();
+  populateComparisonDropdowns();
   applyFilters();
 });
 
 /* =============================
-   LOAD DATA
+   LOAD PLAYERS
 ============================= */
 async function loadPlayers() {
   allPlayers = [];
   const snap = await getDocs(collection(db, COLLECTION));
 
-  snap.forEach(doc => {
-    const d = doc.data();
-
+  snap.forEach(d => {
+    const x = d.data();
     allPlayers.push({
-      id: doc.id,
-      name: d.name || "Unknown",
-      alliance: d.alliance || "—",
-      warzone: String(d.warzone ?? "—"),
-      rank: Number(d.rank ?? 0),
-      totalPower: Number(d.totalPower ?? 0)
+      id: d.id,
+      rank: Number(x.rank ?? 0),
+      name: x.name || "Unknown",
+      alliance: x.alliance || "—",
+      warzone: String(x.warzone ?? "—"),
+      totalPower: Number(x.totalPower ?? 0)
     });
   });
 
@@ -88,13 +99,13 @@ function buildFilterCards() {
   buildCards(
     warzoneCards,
     [...new Set(allPlayers.map(p => p.warzone))],
-    val => activeWarzone = val
+    v => activeWarzone = v
   );
 
   buildCards(
     allianceCards,
     [...new Set(allPlayers.map(p => p.alliance))],
-    val => activeAlliance = val
+    v => activeAlliance = v
   );
 }
 
@@ -136,7 +147,7 @@ function applyFilters() {
   });
 
   renderTable();
-  updatePowerSegments();
+  updateSegments();
   renderDominance();
 }
 
@@ -145,10 +156,8 @@ function applyFilters() {
 ============================= */
 function renderTable() {
   tableBody.innerHTML = "";
-
   filteredPlayers.forEach((p, i) => {
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
       <td>${i + 1}</td>
       <td>${p.name}</td>
@@ -157,72 +166,123 @@ function renderTable() {
       <td>${p.totalPower.toLocaleString()}</td>
       <td>${powerTier(p.totalPower)}</td>
     `;
-
     tableBody.appendChild(tr);
   });
 }
 
 /* =============================
-   POWER SEGMENTS
+   SEGMENTS
 ============================= */
-function updatePowerSegments() {
-  let whales = 0, sharks = 0, piranhas = 0;
-
-  filteredPlayers.forEach(p => {
-    if (p.totalPower >= WHALE_MIN) whales++;
-    else if (p.totalPower >= SHARK_MIN) sharks++;
-    else if (p.totalPower >= PIRANHA_MIN) piranhas++;
+function updateSegments() {
+  let w = 0, s = 0, p = 0;
+  filteredPlayers.forEach(x => {
+    if (x.totalPower >= WHALE_MIN) w++;
+    else if (x.totalPower >= SHARK_MIN) s++;
+    else if (x.totalPower >= PIRANHA_MIN) p++;
   });
-
-  whaleCount.textContent = whales;
-  sharkCount.textContent = sharks;
-  piranhaCount.textContent = piranhas;
+  whaleCount.textContent = w;
+  sharkCount.textContent = s;
+  piranhaCount.textContent = p;
 }
 
-function powerTier(p) {
-  if (p >= WHALE_MIN) return "🐋 Whale";
-  if (p >= SHARK_MIN) return "🦈 Shark";
-  if (p >= PIRANHA_MIN) return "🐟 Piranha";
+function powerTier(v) {
+  if (v >= WHALE_MIN) return "🐋 Whale";
+  if (v >= SHARK_MIN) return "🦈 Shark";
+  if (v >= PIRANHA_MIN) return "🐟 Piranha";
   return "—";
 }
 
 /* =============================
-   ALLIANCE DOMINANCE %
+   DOMINANCE %
 ============================= */
 function renderDominance() {
   dominanceGrid.innerHTML = "";
 
   if (activeWarzone === "ALL") {
     dominanceGrid.innerHTML =
-      "<div class='muted'>Select a Warzone to view dominance</div>";
+      "<div class='muted'>Select a Warzone</div>";
     return;
   }
 
-  const zonePlayers = filteredPlayers;
-  const totalPower = zonePlayers.reduce((s, p) => s + p.totalPower, 0);
-
+  const total = filteredPlayers.reduce((s, p) => s + p.totalPower, 0);
   const byAlliance = {};
-  zonePlayers.forEach(p => {
-    byAlliance[p.alliance] = (byAlliance[p.alliance] || 0) + p.totalPower;
+
+  filteredPlayers.forEach(p => {
+    byAlliance[p.alliance] =
+      (byAlliance[p.alliance] || 0) + p.totalPower;
   });
 
   Object.entries(byAlliance)
     .sort((a, b) => b[1] - a[1])
-    .forEach(([alliance, power]) => {
-      const pct = ((power / totalPower) * 100).toFixed(1);
-
-      const card = document.createElement("div");
-      card.className = "dominance-card";
-      card.innerHTML = `
-        <div class="dom-name">${alliance}</div>
-        <div class="dom-bar">
-          <div class="dom-fill" style="width:${pct}%"></div>
-        </div>
-        <div class="dom-pct">${pct}%</div>
+    .forEach(([a, v]) => {
+      const pct = ((v / total) * 100).toFixed(1);
+      const el = document.createElement("div");
+      el.className = "dominance-card";
+      el.innerHTML = `
+        <div>${a}</div>
+        <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+        <strong>${pct}%</strong>
       `;
-      dominanceGrid.appendChild(card);
+      dominanceGrid.appendChild(el);
     });
 }
+
+/* =============================
+   ALLIANCE COMPARISON
+============================= */
+function populateComparisonDropdowns() {
+  const alliances = [...new Set(allPlayers.map(p => p.alliance))].sort();
+  [compareAllianceA, compareAllianceB].forEach(sel => {
+    sel.innerHTML = alliances.map(a => `<option>${a}</option>`).join("");
+  });
+}
+
+compareBtn.addEventListener("click", () => {
+  const a = compareAllianceA.value;
+  const b = compareAllianceB.value;
+
+  const sum = x =>
+    filteredPlayers
+      .filter(p => p.alliance === x)
+      .reduce((s, p) => s + p.totalPower, 0);
+
+  const pa = sum(a);
+  const pb = sum(b);
+
+  comparisonResult.innerHTML = `
+    <div><strong>${a}</strong>: ${pa.toLocaleString()}</div>
+    <div><strong>${b}</strong>: ${pb.toLocaleString()}</div>
+  `;
+});
+
+/* =============================
+   ADMIN IMPORT (PASTE)
+============================= */
+saveBtn.addEventListener("click", async () => {
+  const lines = pasteData.value.split("\n").map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return alert("No data");
+
+  for (const line of lines) {
+    const [rank, alliance, name, warzone, totalPower] =
+      line.split("|").map(x => x.trim());
+
+    await addDoc(collection(db, COLLECTION), {
+      rank: Number(rank),
+      alliance,
+      name,
+      warzone: Number(warzone),
+      totalPower: Number(totalPower),
+      importedAt: serverTimestamp()
+    });
+  }
+
+  alert("Data imported");
+  pasteData.value = "";
+  await loadPlayers();
+  buildFilterCards();
+  populateComparisonDropdowns();
+  applyFilters();
+});
 
 /* =============================
    EVENTS
