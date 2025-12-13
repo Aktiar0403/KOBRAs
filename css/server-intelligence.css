@@ -681,3 +681,52 @@ tbody td {
     display: none;
   }
 }
+@media (max-width: 640px) {
+
+  tbody tr {
+    display: grid;
+    grid-template-columns: 32px minmax(0,1fr) 60px;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 6px;
+  }
+
+  /* Rank */
+  td.col-rank {
+    grid-column: 1;
+    grid-row: 1;
+    display: block;
+  }
+
+  /* Name */
+  td.col-name {
+    grid-column: 2;
+    grid-row: 1;
+    display: block;
+    min-width: 0;
+  }
+
+  /* 🔥 POWER — THIS WAS MISSING */
+  td.col-power {
+    grid-column: 3;
+    grid-row: 1;
+    display: block;
+    text-align: right;
+    font-weight: 800;
+    color: #00ffd0;
+    white-space: nowrap;
+  }
+
+  /* Meta below name */
+  td.col-meta {
+    grid-column: 2 / span 2;
+    grid-row: 2;
+    display: block;
+    font-size: 11px;
+    opacity: 0.75;
+  }
+
+  thead {
+    display: none;
+  }
+}
