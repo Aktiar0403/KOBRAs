@@ -96,42 +96,67 @@ async function loadPlayers() {
    FILTER CARDS
 ============================= */
 function buildFilterCards() {
+  const warzones = [...new Set(allPlayers.map(p => p.warzone))].sort();
+  const alliances = [...new Set(allPlayers.map(p => p.alliance))].sort();
+
   buildCards(
     warzoneCards,
-    [...new Set(allPlayers.map(p => p.warzone))],
-    v => activeWarzone = v
+    warzones,
+    v => activeWarzone = v,
+    warzoneSearch
   );
 
   buildCards(
     allianceCards,
-    [...new Set(allPlayers.map(p => p.alliance))],
-    v => activeAlliance = v
+    alliances,
+    v => activeAlliance = v,
+    allianceSearch
   );
 }
 
-function buildCards(container, values, onSelect) {
-  container.innerHTML = "";
 
-  const all = document.createElement("div");
-  all.className = "filter-card active";
-  all.textContent = "All";
-  all.onclick = () => {
-    onSelect("ALL");
-    applyFilters();
-  };
-  container.appendChild(all);
+function buildCards(container, values, onSelect, searchInput) {
+  let activeValue = "ALL";
 
-  values.sort().forEach(v => {
-    const c = document.createElement("div");
-    c.className = "filter-card";
-    c.textContent = v;
-    c.onclick = () => {
-      onSelect(v);
+  function render(filteredValues) {
+    container.innerHTML = "";
+
+    const all = document.createElement("div");
+    all.className = "filter-card" + (activeValue === "ALL" ? " active" : "");
+    all.textContent = "All";
+    all.onclick = () => {
+      activeValue = "ALL";
+      onSelect("ALL");
       applyFilters();
+      render(filteredValues);
     };
-    container.appendChild(c);
+    container.appendChild(all);
+
+    filteredValues.forEach(v => {
+      const c = document.createElement("div");
+      c.className = "filter-card" + (activeValue === v ? " active" : "");
+      c.textContent = v;
+      c.onclick = () => {
+        activeValue = v;
+        onSelect(v);
+        applyFilters();
+        render(filteredValues);
+      };
+      container.appendChild(c);
+    });
+  }
+
+  // Initial render
+  render(values);
+
+  // Live search
+  searchInput.addEventListener("input", () => {
+    const q = searchInput.value.toLowerCase();
+    const filtered = values.filter(v => v.toLowerCase().includes(q));
+    render(filtered);
   });
 }
+
 
 /* =============================
    APPLY FILTERS
