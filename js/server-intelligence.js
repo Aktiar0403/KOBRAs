@@ -50,23 +50,42 @@ const saveBtn = $("saveBtn");
 /* =============================
    LOAD FROM FIRESTORE
 ============================= */
+import {
+  collection,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+let allPlayers = [];
+let filteredPlayers = [];
+
 async function loadPlayers() {
-  const snap = await getDocs(collection(db, "server_players"));
+  console.log("📡 Loading server_players from Firestore...");
 
-  allPlayers = snap.docs.map(d => {
-    const p = d.data();
-    return {
-      rank: Number(p.rank || 0),
-      name: p.name || "Unnamed",
-      alliance: p.alliance || "Unknown",
-      warzone: Number(p.warzone || 0),
-      totalPower: Number(p.totalPower || 0)
-    };
-  });
+  try {
+    const snap = await getDocs(collection(db, "server_players"));
 
-  buildWarzoneCards();
-  applyFilters();
+    allPlayers = snap.docs.map(doc => {
+      const d = doc.data();
+
+      return {
+        id: doc.id,
+        rank: Number(d.rank ?? 0),
+        name: d.name || "",
+        alliance: d.alliance || "",
+        warzone: Number(d.warzone),
+        totalPower: Number(d.totalPower ?? 0)
+      };
+    });
+
+    console.log("✅ Loaded players:", allPlayers.length);
+    console.table(allPlayers.slice(0, 5));
+
+    applyFilters(); // IMPORTANT
+  } catch (err) {
+    console.error("❌ Failed to load server_players:", err);
+  }
 }
+
 
 /* =============================
    FILTERING CORE
@@ -134,53 +153,65 @@ function renderAllianceDominance(players) {
 
 
 
+let activeWarzone = null;
+let activeAlliance = null;
+
 function applyFilters() {
-  let filtered = [...allPlayers];
+  filteredPlayers = [...allPlayers];
 
-  if (activeWarzone) {
-    filtered = filtered.filter(p => String(p.warzone) === String(activeWarzone));
-  }
-
-  if (activeAlliance) {
-    filtered = filtered.filter(p => p.alliance === activeAlliance);
-  }
-
+  // Search
   const q = searchInput.value.trim().toLowerCase();
   if (q) {
-    filtered = filtered.filter(p =>
-      p.name?.toLowerCase().includes(q)
+    filteredPlayers = filteredPlayers.filter(p =>
+      p.name.toLowerCase().includes(q)
     );
   }
 
-  renderTable(filtered);
-  updatePowerSegments(filtered);
-  renderAllianceDominance(filtered);
+  // Warzone filter
+  if (activeWarzone !== null) {
+    filteredPlayers = filteredPlayers.filter(
+      p => p.warzone === Number(activeWarzone)
+    );
+  }
+
+  // Alliance filter
+  if (activeAlliance) {
+    filteredPlayers = filteredPlayers.filter(
+      p => p.alliance === activeAlliance
+    );
+  }
+
+  // SORT BY POWER (ranking logic)
+  filteredPlayers.sort((a, b) => b.totalPower - a.totalPower);
+
+  renderTable(filteredPlayers);
+  updatePowerSegments(filteredPlayers);
+  renderAllianceDominance(filteredPlayers);
 }
+
 
 
 /* =============================
    TABLE
 ============================= */
-function renderTable() {
+function renderTable(players) {
   tableBody.innerHTML = "";
 
-  // Sort by power DESC for ranking
-  const ranked = [...filteredPlayers].sort(
-    (a, b) => b.totalPower - a.totalPower
-  );
-
-  ranked.forEach((p, index) => {
+  players.forEach((p, index) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>${index + 1}</td>
       <td>${p.name}</td>
       <td>${p.alliance}</td>
       <td>${p.warzone}</td>
-      <td>${Number(p.totalPower || 0).toLocaleString()}</td>
+      <td>${p.totalPower.toLocaleString()}</td>
     `;
+
     tableBody.appendChild(tr);
   });
 }
+
 
 
 /* =============================
@@ -288,27 +319,25 @@ function getPowerTier(power) {
   return "shrimp";
 }
 function updatePowerSegments(players) {
-  let megaWhale = 0;
-  let whale = 0;
-  let shark = 0;
-  let piranha = 0;
-  let shrimp = 0;
+  let mega = 0, whale = 0, shark = 0, piranha = 0, shrimp = 0;
 
   players.forEach(p => {
-    const tier = getPowerTier(p.totalPower);
-    if (tier === "megaWhale") megaWhale++;
-    else if (tier === "whale") whale++;
-    else if (tier === "shark") shark++;
-    else if (tier === "piranha") piranha++;
+    const pw = p.totalPower;
+
+    if (pw >= 230_000_000) mega++;
+    else if (pw >= 180_000_000) whale++;
+    else if (pw >= 160_000_000) shark++;
+    else if (pw >= 140_000_000) piranha++;
     else shrimp++;
   });
 
-  document.getElementById("megaWhaleCount").textContent = megaWhale;
+  document.getElementById("megaCount").textContent = mega;
   document.getElementById("whaleCount").textContent = whale;
   document.getElementById("sharkCount").textContent = shark;
   document.getElementById("piranhaCount").textContent = piranha;
   document.getElementById("shrimpCount").textContent = shrimp;
 }
+
 
 /* =============================
    ALLIANCE DOMINANCE (TOP 5)
