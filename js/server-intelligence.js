@@ -142,10 +142,11 @@ function renderTable(players) {
       </td>
 
       <td class="col-meta">
-        <span class="alliance">${p.alliance}</span>
-        <span class="sep">•</span>
-        <span class="warzone">WZ ${p.warzone}</span>
-      </td>
+  <span class="alliance">${p.alliance}</span>
+  <span class="sep">•</span>
+  <span class="power">${powerM}</span>
+</td>
+
     `;
 
     tableBody.appendChild(tr);

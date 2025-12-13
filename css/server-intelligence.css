@@ -730,3 +730,8 @@ tbody td {
     display: none;
   }
 }
+.col-meta .power {
+  color: #00ffd0;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
