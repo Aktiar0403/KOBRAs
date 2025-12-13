@@ -299,3 +299,81 @@ tbody tr:last-child td {
     display: none;
   }
 }
+/* ===========================
+   TABLE COLUMN CONTROL
+=========================== */
+
+table {
+  table-layout: fixed; /* 🔑 important */
+}
+
+/* Rank */
+.col-rank {
+  width: 44px;
+  min-width: 44px;
+  text-align: center;
+}
+
+/* Name — flexible but capped */
+.col-name {
+  width: 38%;
+  max-width: 38%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Power — MUST stay visible */
+.col-power {
+  width: 90px;
+  min-width: 90px;
+  text-align: right;
+  font-weight: 800;
+}
+
+/* Alliance — compact */
+.col-alliance {
+  width: 90px;
+  min-width: 90px;
+  text-align: left;
+}
+
+/* Warzone — smallest */
+.col-warzone {
+  width: 70px;
+  min-width: 70px;
+  text-align: right;
+}
+@media (max-width: 640px) {
+
+  table {
+    font-size: 12px;
+  }
+
+  /* Hide WARZONE first */
+  .col-warzone,
+  thead th:last-child {
+    display: none;
+  }
+
+  /* Then hide ALLIANCE if space is tight */
+  .col-alliance,
+  thead th:nth-child(4) {
+    display: none;
+  }
+
+  /* Protect POWER */
+  .col-power {
+    color: #00ffc8;
+    font-size: 13px;
+  }
+
+  /* Name gets more space */
+  .col-name {
+    width: auto;
+    max-width: unset;
+  }
+}
+tbody tr:nth-child(1) .col-power { color: #ffd700; } /* Gold */
+tbody tr:nth-child(2) .col-power { color: #cfd8dc; } /* Silver */
+tbody tr:nth-child(3) .col-power { color: #ffb74d; } /* Bronze */
