@@ -955,3 +955,43 @@ body.bg {
   background: rgba(0,255,200,0.15);
   border-color: #00ffc8;
 }
+.kobra-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  text-decoration: none;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+
+  color: #eafffb;
+  background:
+    linear-gradient(180deg, rgba(0,255,200,0.18), rgba(0,255,200,0.05)),
+    radial-gradient(circle at top left, rgba(0,255,200,0.25), transparent 60%);
+  border: 1px solid rgba(0,255,200,0.35);
+
+  box-shadow:
+    0 0 0 1px rgba(0,255,200,0.15) inset,
+    0 10px 30px rgba(0,255,200,0.15);
+
+  transition: all 0.25s ease;
+  backdrop-filter: blur(6px);
+}
+
+.kobra-btn-icon {
+  font-size: 1.2rem;
+  filter: drop-shadow(0 0 6px rgba(0,255,200,0.8));
+}
+
+.kobra-btn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow:
+    0 0 0 1px rgba(0,255,200,0.45) inset,
+    0 0 18px rgba(0,255,200,0.6),
+    0 18px 40px rgba(0,255,200,0.35);
+}
+
+.kobra-btn:active {
+  transform: scale(0.98);
+}
