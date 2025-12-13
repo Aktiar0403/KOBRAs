@@ -296,3 +296,11 @@ tbody td {
   font-size: 0.78rem;
   opacity: .7;
 }
+/* Visibility helpers */
+.desktop-only { display: table-cell; }
+.mobile-only  { display: none; }
+
+@media (max-width: 640px) {
+  .desktop-only { display: none; }
+  .mobile-only  { display: inline; }
+}

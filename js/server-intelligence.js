@@ -127,7 +127,6 @@ function renderTable(players) {
 
   players.forEach((p, index) => {
     const tr = document.createElement("tr");
-
     const powerM = Math.round(p.totalPower / 1_000_000) + "M";
 
     tr.innerHTML = `
@@ -137,21 +136,23 @@ function renderTable(players) {
         ${p.name}
       </td>
 
-      <td class="col-power">
+      <!-- Desktop power -->
+      <td class="col-power desktop-only">
         ${powerM}
       </td>
 
+      <!-- Meta: alliance + mobile power -->
       <td class="col-meta">
-  <span class="alliance">${p.alliance}</span>
-  <span class="sep">•</span>
-  <span class="power">${powerM}</span>
-</td>
-
+        <span class="alliance">${p.alliance}</span>
+        <span class="sep">•</span>
+        <span class="power mobile-only">${powerM}</span>
+      </td>
     `;
 
     tableBody.appendChild(tr);
   });
 }
+
 
 
 
