@@ -2,76 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Server Intelligence</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <link rel="stylesheet" href="./css/server-intelligence.css" />
+  <title>Server Intelligence • KOBRA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./server-intelligence.css" />
 </head>
+
 <body class="bg">
+<div class="page">
 
-  <div class="page">
+  <header class="header">
+    <h1>SERVER INTELLIGENCE</h1>
+    <div class="sub">Alliance & Warzone Power Analytics</div>
+  </header>
 
-    <h1 class="title">Server Intelligence</h1>
-    <p class="subtitle">Live ranking & power distribution</p>
+  <!-- FILTERS -->
+  <section class="filters">
+    <input id="searchInput" placeholder="🔎 Search Player Name" />
 
-    <!-- STATS CARDS -->
-    <div class="stats-row">
-      <div class="stat-card whale">
-        <span class="label">Whales</span>
-        <span id="whaleCount" class="value">0</span>
-      </div>
-      <div class="stat-card shark">
-        <span class="label">Sharks</span>
-        <span id="sharkCount" class="value">0</span>
-      </div>
-      <div class="stat-card piranha">
-        <span class="label">Piranhas</span>
-        <span id="piranhaCount" class="value">0</span>
-      </div>
-      <div class="stat-card total">
-        <span class="label">Total Players</span>
-        <span id="totalCount" class="value">0</span>
-      </div>
-    </div>
+    <div id="warzoneCards" class="filter-cards"></div>
+    <div id="allianceCards" class="filter-cards"></div>
+  </section>
 
-    <!-- SEARCH -->
-    <input
-      id="nameSearch"
-      class="search-input"
-      placeholder="Search player name..."
-    />
+  <!-- POWER SEGMENTS -->
+  <section class="segments">
+    <div class="segment whale">🐋 Whales <span id="whaleCount">0</span></div>
+    <div class="segment shark">🦈 Sharks <span id="sharkCount">0</span></div>
+    <div class="segment piranha">🐟 Piranhas <span id="piranhaCount">0</span></div>
+  </section>
 
-    <!-- FILTERS -->
-    <div class="filter-row">
-      <div class="filter-card">
-        <label>Warzone</label>
-        <select id="warzoneFilter"></select>
-      </div>
+  <!-- ALLIANCE DOMINANCE -->
+  <section class="dominance">
+    <h2>Alliance Dominance %</h2>
+    <div id="dominanceGrid" class="dominance-grid"></div>
+  </section>
 
-      <div class="filter-card">
-        <label>Alliance</label>
-        <select id="allianceFilter"></select>
-      </div>
-    </div>
+  <!-- TABLE -->
+  <section class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Alliance</th>
+          <th>Warzone</th>
+          <th>Power</th>
+          <th>Category</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </section>
 
-    <!-- DATA TABLE -->
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Name</th>
-            <th>Alliance</th>
-            <th>Warzone</th>
-            <th>Total Power</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-      </table>
-    </div>
+  <!-- ADMIN IMPORT (LOW PROMINENCE) -->
+  <details class="admin-panel">
+    <summary>Admin Data Import</summary>
+    <textarea id="pasteData" placeholder="Paste formatted server data here..."></textarea>
+    <input type="file" id="excelInput" accept=".xlsx,.csv" />
+    <button id="saveBtn">Upload to Database</button>
+  </details>
 
-  </div>
+</div>
 
-  <script type="module" src="./js/server-intelligence.js"></script>
+<script type="module" src="./server-intelligence.js"></script>
 </body>
 </html>

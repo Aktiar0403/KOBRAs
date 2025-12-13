@@ -141,3 +141,107 @@ td.power {
   .stats-row { grid-template-columns: 1fr 1fr; }
   .filter-row { grid-template-columns: 1fr; }
 }
+:root {
+  --bg:#05060a;
+  --panel:#0b1320;
+  --accent:#00ffc8;
+  --muted:#93a3a6;
+}
+
+body.bg {
+  margin:0;
+  background:var(--bg);
+  color:#e6eef0;
+  font-family:Inter,system-ui;
+}
+
+.page {
+  max-width:1500px;
+  margin:auto;
+  padding:18px;
+}
+
+.header h1 {
+  margin:0;
+  color:var(--accent);
+}
+
+.sub { color:var(--muted); margin-bottom:16px; }
+
+.filters input {
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #222;
+  background:#0c1422;
+  color:#fff;
+  margin-bottom:12px;
+}
+
+.filter-cards {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.filter-card {
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid #333;
+  cursor:pointer;
+}
+
+.filter-card.active {
+  background:var(--accent);
+  color:#001;
+}
+
+.segments {
+  display:flex;
+  gap:12px;
+  margin-bottom:16px;
+}
+
+.segment {
+  flex:1;
+  padding:14px;
+  border-radius:12px;
+  background:var(--panel);
+  text-align:center;
+  font-weight:700;
+}
+
+.whale { border-left:4px solid gold; }
+.shark { border-left:4px solid #00bfff; }
+.piranha { border-left:4px solid #ff7b7b; }
+
+.dominance-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:12px;
+  margin-bottom:18px;
+}
+
+.dom-card {
+  background:var(--panel);
+  padding:14px;
+  border-radius:12px;
+}
+
+.table-wrap table {
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td {
+  padding:8px;
+  border-bottom:1px solid #222;
+}
+
+.admin-panel {
+  margin-top:18px;
+  background:#0b1320;
+  padding:12px;
+  border-radius:12px;
+}
