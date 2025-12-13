@@ -304,6 +304,61 @@ saveBtn.onclick = async () => {
   alert("Data uploaded");
   loadPlayers();
 };
+/* =============================
+   ADMIN IMPORT (EXCEL / CSV)
+============================= */
+excelInput.onchange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = async (evt) => {
+    try {
+      const data = new Uint8Array(evt.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+      // Remove header row
+      rows.shift();
+
+      if (!rows.length) {
+        alert("Excel has no data rows");
+        return;
+      }
+
+      let imported = 0;
+
+      for (const row of rows) {
+        if (row.length < 5) continue;
+
+        const [rank, alliance, name, warzone, power] = row;
+
+        await addDoc(collection(db, "server_players"), {
+          rank: Number(rank),
+          alliance: String(alliance || "").trim(),
+          name: String(name || "").trim(),
+          warzone: Number(warzone),
+          totalPower: Number(power),
+          importedAt: serverTimestamp()
+        });
+
+        imported++;
+      }
+
+      alert(`✅ Imported ${imported} players from Excel`);
+      excelInput.value = "";
+      loadPlayers();
+
+    } catch (err) {
+      console.error("Excel import failed:", err);
+      alert("Excel import failed. Check console.");
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+};
 
 /* =============================
    SEARCH
