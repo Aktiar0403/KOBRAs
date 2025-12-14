@@ -12,6 +12,24 @@ function formatPowerM(power) {
   if (!power) return "0M";
   return Math.round(power / 1_000_000) + "M";
 }
+function estimateFirstSquad(totalPower) {
+  const m = totalPower / 1_000_000;
+
+  if (m >= 400) return "108–112M";
+  if (m >= 350) return "95–100M";
+  if (m >= 300) return "85–90M";
+  if (m >= 230) return "70–72M";
+  if (m >= 200) return "66–69M";
+  if (m >= 180) return "62–65M";
+  if (m >= 160) return "56–58M";
+  if (m >= 150) return "52–55M";
+  if (m >= 140) return "50–52M";
+  if (m >= 130) return "48–50M";
+  if (m >= 120) return "46–48M";
+  if (m >= 110) return "44–46M";
+
+  return "40–43M";
+}
 
 /* =============================
    STATE
@@ -128,6 +146,8 @@ function renderTable(players) {
   players.forEach((p, index) => {
     const tr = document.createElement("tr");
     const powerM = Math.round(p.totalPower / 1_000_000) + "M";
+    const firstSquad = estimateFirstSquad(p.totalPower);
+
 
     tr.innerHTML = `
       <td class="col-rank">${index + 1}</td>
@@ -136,17 +156,19 @@ function renderTable(players) {
         ${p.name}
       </td>
 
-      <!-- Desktop power -->
-      <td class="col-power desktop-only">
-        ${powerM}
-      </td>
+     <td class="col-power desktop-only">
+  ${powerM}
+  <div class="sub-power">S1: ${firstSquad}</div>
+</td>
 
-      <!-- Meta: alliance + mobile power -->
-      <td class="col-meta">
-        <span class="alliance">${p.alliance}</span>
-        <span class="sep">•</span>
-        <span class="power mobile-only">${powerM}</span>
-      </td>
+<td class="col-meta">
+  <span class="alliance">${p.alliance}</span>
+  <span class="sep">•</span>
+  <span class="power mobile-only">
+    ${powerM} • S1 ${firstSquad}
+  </span>
+</td>
+
     `;
 
     tableBody.appendChild(tr);
