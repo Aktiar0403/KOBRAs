@@ -29,26 +29,30 @@ async function loadPlayers() {
 function populateSelectors() {
   const values = [...new Set(
     allPlayers.map(p => mode === "alliance" ? p.alliance : p.warzone)
-  )].sort();
+  )].sort((a, b) => String(a).localeCompare(String(b)));
 
   selectA.innerHTML = selectB.innerHTML = "";
+
   values.forEach(v => {
     selectA.innerHTML += `<option>${v}</option>`;
     selectB.innerHTML += `<option>${v}</option>`;
   });
 
-  bindSearch(
-    document.getElementById("searchA"),
-    selectA,
-    values
-  );
+  if (mode === "alliance") {
+    // ✅ Alliance = searchable
+    searchA.style.display = "block";
+    searchB.style.display = "block";
 
-  bindSearch(
-    document.getElementById("searchB"),
-    selectB,
-    values
-  );
+    bindSearch(searchA, selectA, values);
+    bindSearch(searchB, selectB, values);
+
+  } else {
+    // ✅ Warzone = NOT searchable
+    searchA.style.display = "none";
+    searchB.style.display = "none";
+  }
 }
+
 
 function analyze(players) {
   const stats = { mega:0, whale:0, shark:0, piranha:0, shrimp:0, total:0 };
