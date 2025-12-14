@@ -133,6 +133,13 @@
       min-height: 20px;
       transition: 0.3s;
     }
+    #loginError {
+  background: rgba(255, 50, 50, 0.08);
+  border: 1px solid rgba(255, 80, 80, 0.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
 
   </style>
 </head>
@@ -159,27 +166,51 @@
   <script type="module">
     import { loginAdmin } from "./js/auth.js";
 
-    const form = document.getElementById("adminLoginForm");
-    const emailEl = document.getElementById("adminEmail");
-    const passEl = document.getElementById("adminPassword");
-    const errorEl = document.getElementById("loginError");
+const form = document.getElementById("adminLoginForm");
+const emailEl = document.getElementById("adminEmail");
+const passEl = document.getElementById("adminPassword");
+const errorEl = document.getElementById("loginError");
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      errorEl.textContent = "";
+const funnyErrors = [
+  "🐍 Access denied. Venom level insufficient.",
+  "🚫 Unauthorized human detected.",
+  "🔒 This lair is protected. Ask Akki for access.",
+  "⚠️ Cobra doesn’t recognize you. Ask Akki.",
+  "🧪 Wrong credentials. Antivenom not found.",
+  "👀 Akki is watching… and hasn’t approved you.",
+  "🔥 You are not chosen. Ask Akki for access."
+];
 
-      const email = emailEl.value.trim();
-      const pass = passEl.value;
+function getRandomError() {
+  return funnyErrors[Math.floor(Math.random() * funnyErrors.length)];
+}
 
-      const result = await loginAdmin(email, pass);
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorEl.textContent = "";
+  errorEl.style.opacity = 0;
 
-      if (result.success) {
-        window.location.href = "admin.html";
-      } else {
-        errorEl.textContent = result.message.replace("Firebase:", "").trim();
-        errorEl.style.opacity = 1;
-      }
-    });
+  const email = emailEl.value.trim();
+  const pass = passEl.value;
+
+  const result = await loginAdmin(email, pass);
+
+  if (result.success) {
+    window.location.href = "admin.html";
+  } else {
+    errorEl.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:18px;">🐍</span>
+        <span>${getRandomError()}</span>
+      </div>
+      <div style="margin-top:4px;font-size:12px;color:#ff9f9f;">
+        👉 Ask <b>Akki</b> for Access
+      </div>
+    `;
+    errorEl.style.opacity = 1;
+  }
+});
+
   </script>
 
 </body>
