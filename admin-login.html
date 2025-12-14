@@ -164,25 +164,46 @@
 
   <!-- SCRIPTS -->
   <script type="module">
-    import { loginAdmin } from "./js/auth.js";
+   import { loginAdmin } from "./js/auth.js";
 
 const form = document.getElementById("adminLoginForm");
 const emailEl = document.getElementById("adminEmail");
 const passEl = document.getElementById("adminPassword");
 const errorEl = document.getElementById("loginError");
 
-const funnyErrors = [
-  "🐍 Access denied. Venom level insufficient.",
-  "🚫 Unauthorized human detected.",
-  "🔒 This lair is protected. Ask Akki for access.",
-  "⚠️ Cobra doesn’t recognize you. Ask Akki.",
-  "🧪 Wrong credentials. Antivenom not found.",
-  "👀 Akki is watching… and hasn’t approved you.",
-  "🔥 You are not chosen. Ask Akki for access."
-];
+const messages = {
+  wrongPassword: [
+    "🐍 Venom code incorrect.",
+    "🔑 Wrong fang sequence entered.",
+    "⚠️ Password rejected by the Cobra.",
+    "🧪 Antivenom mismatch. Try again."
+  ],
+  notApproved: [
+    "🚫 You are not approved for this lair.",
+    "👀 Cobra sees you… but Akki hasn’t approved.",
+    "🔒 Restricted zone. Ask Akki for access.",
+    "🐍 This nest is Akki-only territory."
+  ],
+  generic: [
+    "⚠️ Access denied by Cobra protocol.",
+    "🔥 Unauthorized attempt detected.",
+    "🐍 The Cobra says no."
+  ]
+};
 
-function getRandomError() {
-  return funnyErrors[Math.floor(Math.random() * funnyErrors.length)];
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function showError(main, sub) {
+  errorEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span style="font-size:18px;">🐍</span>
+      <span>${main}</span>
+    </div>
+    ${sub ? `<div style="margin-top:4px;font-size:12px;color:#ff9f9f;">👉 ${sub}</div>` : ""}
+  `;
+  errorEl.style.opacity = 1;
 }
 
 form.addEventListener("submit", async (e) => {
@@ -197,19 +218,32 @@ form.addEventListener("submit", async (e) => {
 
   if (result.success) {
     window.location.href = "admin.html";
-  } else {
-    errorEl.innerHTML = `
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:18px;">🐍</span>
-        <span>${getRandomError()}</span>
-      </div>
-      <div style="margin-top:4px;font-size:12px;color:#ff9f9f;">
-        👉 Ask <b>Akki</b> for Access
-      </div>
-    `;
-    errorEl.style.opacity = 1;
+    return;
+  }
+
+  const msg = (result.message || "").toLowerCase();
+
+  // 🔍 Detect Firebase error type
+  if (msg.includes("wrong-password") || msg.includes("invalid-credential")) {
+    showError(
+      pick(messages.wrongPassword),
+      "Careful… too many wrong fangs wake the Cobra."
+    );
+  } 
+  else if (msg.includes("user-not-found")) {
+    showError(
+      pick(messages.notApproved),
+      "Ask Akki for access"
+    );
+  } 
+  else {
+    showError(
+      pick(messages.generic),
+      "Ask Akki for access"
+    );
   }
 });
+
 
   </script>
 
