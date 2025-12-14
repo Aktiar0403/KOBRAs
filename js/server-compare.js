@@ -69,6 +69,34 @@ function analyze(players) {
 
   return stats;
 }
+const valueLabelPlugin = {
+  id: "valueLabel",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+
+    ctx.save();
+    chart.data.datasets.forEach((dataset, i) => {
+      const meta = chart.getDatasetMeta(i);
+
+      meta.data.forEach((bar, index) => {
+        const value = dataset.data[index];
+        if (value === 0) return;
+
+        ctx.fillStyle = "#eafffb";
+        ctx.font = "bold 11px Inter, system-ui";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+
+        ctx.fillText(
+          value,
+          bar.x,
+          bar.y - 4
+        );
+      });
+    });
+    ctx.restore();
+  }
+};
 
 function renderChart(labelA, labelB, statsA, statsB) {
 
@@ -79,59 +107,62 @@ function renderChart(labelA, labelB, statsA, statsB) {
   }
 
   compareChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: [
-        "Mega Whales",
-        "Whales",
-        "Sharks",
-        "Piranhas",
-        "Shrimps"
-      ],
-      datasets: [
-        {
-          label: labelA,
-          data: [
-            statsA.mega,
-            statsA.whale,
-            statsA.shark,
-            statsA.piranha,
-            statsA.shrimp
-          ],
-          backgroundColor: "rgba(0,255,200,0.7)"
-        },
-        {
-          label: labelB,
-          data: [
-            statsB.mega,
-            statsB.whale,
-            statsB.shark,
-            statsB.piranha,
-            statsB.shrimp
-          ],
-          backgroundColor: "rgba(0,180,255,0.6)"
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: {
-          labels: { color: "#e6eef0" }
-        }
+  type: "bar",
+  data: {
+    labels: [
+      "Mega Whales",
+      "Whales",
+      "Sharks",
+      "Piranhas",
+      "Shrimps"
+    ],
+    datasets: [
+      {
+        label: labelA,
+        data: [
+          statsA.mega,
+          statsA.whale,
+          statsA.shark,
+          statsA.piranha,
+          statsA.shrimp
+        ],
+        backgroundColor: "rgba(0,255,200,0.75)"
       },
-      scales: {
-        x: {
-          ticks: { color: "#93a3a6" },
-          grid: { color: "rgba(255,255,255,0.05)" }
-        },
-        y: {
-          ticks: { color: "#93a3a6" },
-          grid: { color: "rgba(255,255,255,0.05)" }
-        }
+      {
+        label: labelB,
+        data: [
+          statsB.mega,
+          statsB.whale,
+          statsB.shark,
+          statsB.piranha,
+          statsB.shrimp
+        ],
+        backgroundColor: "rgba(0,180,255,0.65)"
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        labels: { color: "#e6eef0" }
+      }
+    },
+    scales: {
+      x: {
+        ticks: { color: "#93a3a6" },
+        grid: { color: "rgba(255,255,255,0.05)" }
+      },
+      y: {
+        ticks: { color: "#93a3a6", precision: 0 },
+        grid: { color: "rgba(255,255,255,0.05)" },
+        beginAtZero: true
       }
     }
-  });
+  },
+  plugins: [valueLabelPlugin]   // 🔥 THIS LINE
+});
+
 }
 compareBtn.onclick = () => {
   const A = selectA.value;
