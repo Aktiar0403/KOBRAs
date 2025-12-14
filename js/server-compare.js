@@ -2,6 +2,25 @@ import { db } from "./firebase-config.js";
 import { collection, getDocs } from
   "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  function estimateFirstSquad(totalPower) {
+  const m = totalPower / 1_000_000;
+
+  if (m >= 400) return "108–112M";
+  if (m >= 350) return "95–100M";
+  if (m >= 300) return "85–90M";
+  if (m >= 230) return "70–72M";
+  if (m >= 200) return "66–69M";
+  if (m >= 180) return "62–65M";
+  if (m >= 160) return "56–58M";
+  if (m >= 150) return "52–55M";
+  if (m >= 140) return "50–52M";
+  if (m >= 130) return "48–50M";
+  if (m >= 120) return "46–48M";
+  if (m >= 110) return "44–46M";
+
+  return "40–43M";
+}
+
 let compareChart = null;
 let allPlayers = [];
 let mode = "alliance";
@@ -203,7 +222,11 @@ function renderTop10(labelA, listA, labelB, listB) {
       <div class="elite-row ${medalA ? "winner" : ""}">
         <span class="rank">${i + 1}</span>
         <span class="name">${a ? a.name : "—"}</span>
-        <span class="power">${a ? Math.round(aPower / 1e6) + "M" : "—"}</span>
+        <span class="power">
+  ${a ? Math.round(aPower / 1e6) + "M" : "—"}
+  ${a ? `<div class="sub-power">⚔️ S1 ${estimateFirstSquad(aPower)}</div>` : ""}
+</span>
+
         <span class="medal">${medalA}</span>
       </div>
     `;
@@ -212,7 +235,11 @@ function renderTop10(labelA, listA, labelB, listB) {
       <div class="elite-row ${medalB ? "winner" : ""}">
         <span class="rank">${i + 1}</span>
         <span class="name">${b ? b.name : "—"}</span>
-        <span class="power">${b ? Math.round(bPower / 1e6) + "M" : "—"}</span>
+       <span class="power">
+  ${b ? Math.round(bPower / 1e6) + "M" : "—"}
+  ${b ? `<div class="sub-power">⚔️ S1 ${estimateFirstSquad(bPower)}</div>` : ""}
+</span>
+
         <span class="medal">${medalB}</span>
       </div>
     `;
@@ -253,11 +280,13 @@ compareBtn.onclick = () => {
     document.getElementById("analysisTotalPower").textContent =
   `${A}: ${Math.round(totalA / 1e6)}M vs ${B}: ${Math.round(totalB / 1e6)}M`;
 
-    // Top Player
-    document.getElementById("analysisTopPlayer").textContent =
+   document.getElementById("analysisTopPlayer").textContent =
   topA && topB
-    ? `${topA.name} (${Math.round(topA.totalPower / 1e6)}M) vs ${topB.name} (${Math.round(topB.totalPower / 1e6)}M)`
+    ? `${topA.name} (${Math.round(topA.totalPower / 1e6)}M | ⚔️ S1 ${estimateFirstSquad(topA.totalPower)}) 
+       vs 
+       ${topB.name} (${Math.round(topB.totalPower / 1e6)}M | ⚔️ S1 ${estimateFirstSquad(topB.totalPower)})`
     : "—";
+
 
   // ✅ CHART STYLE (THIS REPLACES renderBar)
   renderChart(A, B, a, b);
