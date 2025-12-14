@@ -216,3 +216,18 @@ body.bg {
     font-size: 12px;
   }
 }
+.compare-chart {
+  margin-top: 28px;
+  padding: 18px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #0d1324, #060a14);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.compare-selectors input {
+  padding: 12px;
+  border-radius: 12px;
+  background: #0a0f14;
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #fff;
+  font-size: 13px;
+}

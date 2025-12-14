@@ -31,20 +31,25 @@
 
   <!-- SELECTORS -->
   <section class="compare-selectors">
-    <select id="selectA"></select>
+    <input id="searchA" placeholder="Search Alliance A…" />
+<select id="selectA"></select>
     <div class="vs">⚔️</div>
-    <select id="selectB"></select>
+   <input id="searchB" placeholder="Search Alliance B…" />
+<select id="selectB"></select>
     <button id="compareBtn">Compare</button>
   </section>
 
   <!-- RESULTS -->
-  <section id="compareResults" class="compare-results"></section>
+  <section class="compare-chart">
+  <canvas id="compareChart"></canvas>
+</section>
+
 
   <!-- VERDICT -->
   <section id="verdictCard" class="verdict hidden"></section>
 
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="module" src="/js/server-compare.js"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@ import { db } from "./firebase-config.js";
 import { collection, getDocs } from
   "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-
+let compareChart = null;
 let allPlayers = [];
 let mode = "alliance";
 
@@ -29,13 +29,25 @@ async function loadPlayers() {
 function populateSelectors() {
   const values = [...new Set(
     allPlayers.map(p => mode === "alliance" ? p.alliance : p.warzone)
-  )];
+  )].sort();
 
   selectA.innerHTML = selectB.innerHTML = "";
   values.forEach(v => {
     selectA.innerHTML += `<option>${v}</option>`;
     selectB.innerHTML += `<option>${v}</option>`;
   });
+
+  bindSearch(
+    document.getElementById("searchA"),
+    selectA,
+    values
+  );
+
+  bindSearch(
+    document.getElementById("searchB"),
+    selectB,
+    values
+  );
 }
 
 function analyze(players) {
@@ -54,19 +66,70 @@ function analyze(players) {
   return stats;
 }
 
-function renderBar(title, a, b) {
-  const max = Math.max(a, b) || 1;
-  return `
-    <div class="bar-card">
-      <div class="bar-title">${title}</div>
-      <div class="bar-row">
-        <div>${a}</div>
-        <div class="bar"><span style="width:${(a/max)*100}%"></span></div>
-        <div>${b}</div>
-      </div>
-    </div>
-  `;
+function renderChart(labelA, labelB, statsA, statsB) {
+
+  const ctx = document.getElementById("compareChart").getContext("2d");
+
+  if (compareChart) {
+    compareChart.destroy();
+  }
+
+  compareChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: [
+        "Mega Whales",
+        "Whales",
+        "Sharks",
+        "Piranhas",
+        "Shrimps"
+      ],
+      datasets: [
+        {
+          label: labelA,
+          data: [
+            statsA.mega,
+            statsA.whale,
+            statsA.shark,
+            statsA.piranha,
+            statsA.shrimp
+          ],
+          backgroundColor: "rgba(0,255,200,0.7)"
+        },
+        {
+          label: labelB,
+          data: [
+            statsB.mega,
+            statsB.whale,
+            statsB.shark,
+            statsB.piranha,
+            statsB.shrimp
+          ],
+          backgroundColor: "rgba(0,180,255,0.6)"
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: {
+          labels: { color: "#e6eef0" }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: "#93a3a6" },
+          grid: { color: "rgba(255,255,255,0.05)" }
+        },
+        y: {
+          ticks: { color: "#93a3a6" },
+          grid: { color: "rgba(255,255,255,0.05)" }
+        }
+      }
+    }
+  });
 }
+
 
 compareBtn.onclick = () => {
   const A = selectA.value;
@@ -106,3 +169,15 @@ document.querySelectorAll(".mode-btn").forEach(btn=>{
 });
 
 loadPlayers();
+function bindSearch(inputEl, selectEl, values) {
+  inputEl.oninput = () => {
+    const q = inputEl.value.toLowerCase();
+    selectEl.innerHTML = "";
+
+    values
+      .filter(v => String(v).toLowerCase().includes(q))
+      .forEach(v => {
+        selectEl.innerHTML += `<option>${v}</option>`;
+      });
+  };
+}
