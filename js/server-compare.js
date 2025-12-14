@@ -53,6 +53,11 @@ function populateSelectors() {
   }
 }
 
+function getTop10(players) {
+  return [...players]
+    .sort((a, b) => b.totalPower - a.totalPower)
+    .slice(0, 10);
+}
 
 function analyze(players) {
   const stats = { mega:0, whale:0, shark:0, piranha:0, shrimp:0, total:0 };
