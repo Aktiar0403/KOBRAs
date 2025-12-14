@@ -158,14 +158,16 @@ function renderTable(players) {
 
      <td class="col-power desktop-only">
   ${powerM}
-  <div class="sub-power">S1: ${firstSquad}</div>
+  <div class="sub-power">⚔️ S1: ${firstSquad}</div>
+
 </td>
 
 <td class="col-meta">
   <span class="alliance">${p.alliance}</span>
   <span class="sep">•</span>
   <span class="power mobile-only">
-    ${powerM} • S1 ${firstSquad}
+   ${powerM} • <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
+
   </span>
 </td>
 
