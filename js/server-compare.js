@@ -164,6 +164,56 @@ function renderChart(labelA, labelB, statsA, statsB) {
 });
 
 }
+function renderTop10(labelA, listA, labelB, listB) {
+  document.getElementById("top10Compare").classList.remove("hidden");
+
+  document.getElementById("top10TitleA").textContent = `TOP 10 – ${labelA}`;
+  document.getElementById("top10TitleB").textContent = `TOP 10 – ${labelB}`;
+
+  const listAEl = document.getElementById("top10ListA");
+  const listBEl = document.getElementById("top10ListB");
+
+  listAEl.innerHTML = "";
+  listBEl.innerHTML = "";
+
+  for (let i = 0; i < 10; i++) {
+    const a = listA[i];
+    const b = listB[i];
+
+    const aPower = a?.totalPower || 0;
+    const bPower = b?.totalPower || 0;
+
+    let medalA = "";
+    let medalB = "";
+
+    if (aPower > bPower) {
+      medalA = "🏆";
+    } else if (bPower > aPower) {
+      medalB = "🏆";
+    } else if (aPower && bPower) {
+      medalA = medalB = "🤝";
+    }
+
+    listAEl.innerHTML += `
+      <div class="elite-row ${medalA ? "winner" : ""}">
+        <span class="rank">${i + 1}</span>
+        <span class="name">${a ? a.name : "—"}</span>
+        <span class="power">${a ? Math.round(aPower / 1e6) + "M" : "—"}</span>
+        <span class="medal">${medalA}</span>
+      </div>
+    `;
+
+    listBEl.innerHTML += `
+      <div class="elite-row ${medalB ? "winner" : ""}">
+        <span class="rank">${i + 1}</span>
+        <span class="name">${b ? b.name : "—"}</span>
+        <span class="power">${b ? Math.round(bPower / 1e6) + "M" : "—"}</span>
+        <span class="medal">${medalB}</span>
+      </div>
+    `;
+  }
+}
+
 compareBtn.onclick = () => {
   const A = selectA.value;
   const B = selectB.value;
@@ -177,24 +227,29 @@ compareBtn.onclick = () => {
 
   const a = analyze(aPlayers);
   const b = analyze(bPlayers);
-const totalA = sumPower(aPlayers);
-const totalB = sumPower(bPlayers);
+    const totalA = sumPower(aPlayers);
+    const totalB = sumPower(bPlayers);
 
-const topA = getTopPlayer(aPlayers);
-const topB = getTopPlayer(bPlayers);
+    const topA = getTopPlayer(aPlayers);
+    const topB = getTopPlayer(bPlayers);
 
-document.getElementById("analysisPanel").classList.remove("hidden");
+    const top10A = getTop10(aPlayers);
+    const top10B = getTop10(bPlayers);
 
-// Winner
-document.getElementById("analysisWinner").textContent =
+   renderTop10(A, top10A, B, top10B);
+
+    document.getElementById("analysisPanel").classList.remove("hidden");
+
+    // Winner
+    document.getElementById("analysisWinner").textContent =
   totalA > totalB ? A : B;
 
-// Total Power
-document.getElementById("analysisTotalPower").textContent =
+    // Total Power
+    document.getElementById("analysisTotalPower").textContent =
   `${A}: ${Math.round(totalA / 1e6)}M vs ${B}: ${Math.round(totalB / 1e6)}M`;
 
-// Top Player
-document.getElementById("analysisTopPlayer").textContent =
+    // Top Player
+    document.getElementById("analysisTopPlayer").textContent =
   topA && topB
     ? `${topA.name} (${Math.round(topA.totalPower / 1e6)}M) vs ${topB.name} (${Math.round(topB.totalPower / 1e6)}M)`
     : "—";
