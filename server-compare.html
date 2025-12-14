@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Comparisons • Server Intelligence</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/css/server-compare.css" />
+</head>
+
+<body class="bg">
+<div class="page">
+
+  <header class="header">
+    <h1>COMPARISONS</h1>
+    <div class="sub">Strategic Power Breakdown</div>
+  </header>
+
+  <!-- MODE TOGGLE -->
+  <section class="compare-modes">
+    <button class="mode-btn active" data-mode="alliance">Alliance vs Alliance</button>
+    <button class="mode-btn" data-mode="warzone">Warzone vs Warzone</button>
+  </section>
+
+  <!-- FILTER MODE -->
+  <section class="filter-toggle">
+    <label>
+      <input type="checkbox" id="respectFilters" checked />
+      Respect current filters
+    </label>
+  </section>
+
+  <!-- SELECTORS -->
+  <section class="compare-selectors">
+    <select id="selectA"></select>
+    <div class="vs">⚔️</div>
+    <select id="selectB"></select>
+    <button id="compareBtn">Compare</button>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="compareResults" class="compare-results"></section>
+
+  <!-- VERDICT -->
+  <section id="verdictCard" class="verdict hidden"></section>
+
+</div>
+
+<script type="module" src="/js/server-compare.js"></script>
+</body>
+</html>

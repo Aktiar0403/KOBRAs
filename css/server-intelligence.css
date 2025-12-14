@@ -473,3 +473,9 @@ tbody td {
   letter-spacing: 0.5px;
   color: var(--accent);
 }
+.kobra-card-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin: 18px 0 24px;
+}
