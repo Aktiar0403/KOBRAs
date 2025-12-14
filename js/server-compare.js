@@ -5,21 +5,30 @@ import { collection, getDocs } from
   function estimateFirstSquad(totalPower) {
   const m = totalPower / 1_000_000;
 
-  if (m >= 400) return "108–112M";
-  if (m >= 350) return "95–100M";
-  if (m >= 300) return "85–90M";
-  if (m >= 230) return "70–72M";
-  if (m >= 200) return "66–69M";
-  if (m >= 180) return "62–65M";
-  if (m >= 160) return "56–58M";
-  if (m >= 150) return "52–55M";
-  if (m >= 140) return "50–52M";
-  if (m >= 130) return "48–50M";
-  if (m >= 120) return "46–48M";
-  if (m >= 110) return "44–46M";
+  // Endgame whales – high variance
+  if (m >= 450) return "105–125M";
+  if (m >= 400) return "100–120M";
+  if (m >= 350) return "90–110M";
+  if (m >= 300) return "80–100M";
 
+  // Upper-mid – growing variance
+  if (m >= 260) return "72–85M";
+  if (m >= 230) return "68–78M";
+  if (m >= 200) return "64–72M";
+  if (m >= 180) return "60–68M";
+
+  // Mid game – controlled builds
+  if (m >= 160) return "55–60M";
+  if (m >= 150) return "52–56M";
+  if (m >= 140) return "49–53M";
+  if (m >= 130) return "47–50M";
+  if (m >= 120) return "45–48M";
+  if (m >= 110) return "43–46M";
+
+  // Early
   return "40–43M";
 }
+
 
 let compareChart = null;
 let allPlayers = [];
