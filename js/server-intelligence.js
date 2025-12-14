@@ -111,7 +111,7 @@ function applyFilters() {
 
   renderTable(filteredPlayers);
   updatePowerSegments(filteredPlayers);
-
+updateOverviewStats(filteredPlayers);
   if (activeWarzone !== "ALL") {
     renderAllianceDominance(filteredPlayers);
   } else {
@@ -371,3 +371,13 @@ searchInput.oninput = applyFilters;
    INIT
 ============================= */
 loadPlayers();
+function updateOverviewStats(players) {
+  const totalPlayers = players.length;
+
+  const warzones = new Set(players.map(p => p.warzone));
+  const alliances = new Set(players.map(p => p.alliance));
+
+  document.getElementById("totalPlayers").textContent = totalPlayers;
+  document.getElementById("totalWarzones").textContent = warzones.size;
+  document.getElementById("totalAlliances").textContent = alliances.size;
+}

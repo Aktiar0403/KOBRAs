@@ -421,3 +421,55 @@ tbody td {
   letter-spacing: 0.4px;
   color: rgba(200,255,245,0.65);
 }
+/* =========================
+   SERVER OVERVIEW STATS
+========================= */
+
+.stats-overview {
+  margin: 20px 0 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.stat-card {
+  position: relative;
+  padding: 18px 16px;
+  border-radius: 16px;
+
+  background:
+    linear-gradient(180deg, rgba(0,255,200,0.14), rgba(0,0,0,0)),
+    linear-gradient(145deg, #0d1324, #060a14);
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+  box-shadow:
+    inset 0 0 0 1px rgba(0,255,200,0.08),
+    0 12px 32px rgba(0,0,0,0.55);
+
+  text-align: center;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 0 0 1px rgba(0,255,200,0.18),
+    0 0 22px rgba(0,255,200,0.35),
+    0 18px 40px rgba(0,0,0,0.6);
+}
+
+.stat-label {
+  font-size: 11px;
+  letter-spacing: 1px;
+  font-weight: 700;
+  color: rgba(200,255,245,0.65);
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+}
