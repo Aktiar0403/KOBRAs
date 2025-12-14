@@ -484,3 +484,22 @@ tbody td {
   opacity: 0.7;
   margin-top: 2px;
 }
+/* First Squad (S1) styling */
+.sub-power {
+  font-size: 11px;
+  margin-top: 2px;
+
+  /* DIFFERENT from total power */
+  color: #9aa4b2;        /* soft grey-blue */
+  font-weight: 500;
+}
+
+/* Mobile S1 */
+.power.mobile-only span,
+.power.mobile-only {
+  color: inherit;
+}
+
+.power.mobile-only .sub-power {
+  color: #9aa4b2;
+}
