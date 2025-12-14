@@ -177,6 +177,27 @@ compareBtn.onclick = () => {
 
   const a = analyze(aPlayers);
   const b = analyze(bPlayers);
+const totalA = sumPower(aPlayers);
+const totalB = sumPower(bPlayers);
+
+const topA = getTopPlayer(aPlayers);
+const topB = getTopPlayer(bPlayers);
+
+document.getElementById("analysisPanel").classList.remove("hidden");
+
+// Winner
+document.getElementById("analysisWinner").textContent =
+  totalA > totalB ? A : B;
+
+// Total Power
+document.getElementById("analysisTotalPower").textContent =
+  `${A}: ${Math.round(totalA / 1e6)}M vs ${B}: ${Math.round(totalB / 1e6)}M`;
+
+// Top Player
+document.getElementById("analysisTopPlayer").textContent =
+  topA && topB
+    ? `${topA.name} (${Math.round(topA.totalPower / 1e6)}M) vs ${topB.name} (${Math.round(topB.totalPower / 1e6)}M)`
+    : "—";
 
   // ✅ CHART STYLE (THIS REPLACES renderBar)
   renderChart(A, B, a, b);
@@ -211,4 +232,14 @@ function bindSearch(inputEl, selectEl, values) {
         selectEl.innerHTML += `<option>${v}</option>`;
       });
   };
+}
+function sumPower(players) {
+  return players.reduce((s, p) => s + p.totalPower, 0);
+}
+
+function getTopPlayer(players) {
+  if (!players.length) return null;
+  return players.reduce((max, p) =>
+    p.totalPower > max.totalPower ? p : max
+  );
 }
