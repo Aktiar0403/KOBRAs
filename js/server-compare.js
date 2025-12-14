@@ -133,8 +133,6 @@ function renderChart(labelA, labelB, statsA, statsB) {
     }
   });
 }
-
-
 compareBtn.onclick = () => {
   const A = selectA.value;
   const B = selectB.value;
@@ -149,19 +147,17 @@ compareBtn.onclick = () => {
   const a = analyze(aPlayers);
   const b = analyze(bPlayers);
 
-  results.innerHTML = `
-    ${renderBar("🐋 Mega Whales", a.mega, b.mega)}
-    ${renderBar("🐋 Whales", a.whale, b.whale)}
-    ${renderBar("🦈 Sharks", a.shark, b.shark)}
-    ${renderBar("🐟 Piranhas", a.piranha, b.piranha)}
-  `;
+  // ✅ CHART STYLE (THIS REPLACES renderBar)
+  renderChart(A, B, a, b);
 
+  // ✅ Tactical verdict
   verdictCard.classList.remove("hidden");
   verdictCard.textContent =
     a.mega > b.mega
       ? `${A} shows higher elite concentration due to stronger Mega Whale presence.`
       : `${B} holds a stronger elite edge based on Mega Whale distribution.`;
 };
+
 
 document.querySelectorAll(".mode-btn").forEach(btn=>{
   btn.onclick = ()=>{
