@@ -1,7 +1,7 @@
 import { db } from "./firebase-config.js";
 import { collection, getDocs } from
   "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-<link rel="stylesheet" href="/css/server-compare.css" />
+
 
 let allPlayers = [];
 let mode = "alliance";
