@@ -129,6 +129,25 @@ function renderTop5Elite(players) {
 }
 
 
+function updateLastUpdated(players) {
+  const el = document.getElementById("lastUpdated");
+  if (!el || !players.length) return;
+
+  const latest = players
+    .map(p => p.importedAt?.toDate?.())
+    .filter(Boolean)
+    .sort((a, b) => b - a)[0];
+
+  if (!latest) {
+    el.textContent = "Unknown";
+    return;
+  }
+
+  el.textContent = latest.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
 /* =============================
    LOAD FROM FIRESTORE
 ============================= */
@@ -173,6 +192,7 @@ async function loadPlayers() {
 
     // 🏆 TOP 5 ELITE
     renderTop5Elite(allPlayers);
+    updateLastUpdated(allPlayers);
 
     // 🟢 Stage 4: Ready
     setProgress(100);
@@ -520,6 +540,10 @@ searchInput.oninput = applyFilters;
 /* =============================
    INIT
 ============================= */
+
+
+
+
 loadPlayers();
 function updateOverviewStats(players) {
   const totalPlayers = players.length;
