@@ -892,3 +892,41 @@ tbody td {
   color: #e3b873;
   font-weight: 600;
 }
+/* =============================
+   GLOBAL LEADERBOARD COLORS
+   (Desktop + Mobile SAME)
+============================= */
+
+/* Rank number */
+.rank-num {
+  color: #00ffc8;
+  font-weight: 700;
+}
+
+/* Power number */
+.power,
+.power-num {
+  color: #00ffc8;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* Small M */
+.power-m {
+  font-size: 0.65em;
+  opacity: 0.75;
+  margin-left: 1px;
+}
+
+/* S1 / sub power */
+.sub-power,
+.s1-inline {
+  color: #8fa3a6;
+  font-size: 0.72rem;
+}
+
+/* Alliance tag */
+.alliance {
+  color: #e3b873;
+  font-weight: 600;
+}
