@@ -206,7 +206,7 @@ async function loadPlayers() {
     const snap = await getDocs(collection(db, "server_players"));
 
     // 🟢 Stage 2: Data received
-    //setProgress(40);
+    setProgress(40);
 
     allPlayers = snap.docs.map(doc => {
       const d = doc.data();
@@ -223,7 +223,7 @@ async function loadPlayers() {
     console.log("✅ Loaded players:", allPlayers.length);
 
     // 🟢 Stage 3: Processing & building UI
-    // setProgress(70);
+    setProgress(70);
 
     // 🔥 RESET FILTERS AFTER LOAD
     activeWarzone = "ALL";
