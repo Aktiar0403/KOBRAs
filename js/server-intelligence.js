@@ -48,6 +48,8 @@ let filteredPlayers = [];
 
 let activeWarzone = "ALL";
 let activeAlliance = "ALL";
+let dominanceSelectedAlliance = null;
+
 
 /* =============================
    DOM
@@ -248,10 +250,12 @@ function buildWarzoneCards() {
 
   zones.forEach(z => {
     createFilterCard(z, z, warzoneCards, v => {
-      activeWarzone = Number(v);
+     activeWarzone = Number(v);
       activeAlliance = "ALL";
+      dominanceSelectedAlliance = null;
       buildAllianceCards(v);
-      applyFilters();
+applyFilters();
+
     });
   });
 }
@@ -342,21 +346,44 @@ function renderAllianceDominance(players) {
   });
 
   Object.entries(map)
-    .sort((a,b)=>b[1]-a[1])
-    .slice(0,5)
-    .forEach(([a,p], i) => {
-      const pct = ((p / total) * 100).toFixed(1);
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .forEach(([alliance, power], index) => {
+      const pct = ((power / total) * 100).toFixed(1);
+
       const card = document.createElement("div");
       card.className = "dominance-card";
+      card.dataset.alliance = alliance;
+
+      if (dominanceSelectedAlliance === alliance) {
+        card.classList.add("active");
+      }
+
       card.innerHTML = `
-        <div class="dom-rank">#${i+1}</div>
-        <div class="dom-name">${a}</div>
+        <div class="dom-rank">#${index + 1}</div>
+        <div class="dom-name">${alliance}</div>
         <div class="dom-bar"><span style="width:${pct}%"></span></div>
         <div class="dom-meta">${pct}%</div>
       `;
+
+      // 🖱 CLICK → FILTER TABLE BY THIS ALLIANCE
+      card.onclick = () => {
+        dominanceSelectedAlliance = alliance;
+        activeAlliance = alliance;
+
+        // Highlight active dominance card
+        [...dominanceGrid.children].forEach(c =>
+          c.classList.remove("active")
+        );
+        card.classList.add("active");
+
+        applyFilters();
+      };
+
       dominanceGrid.appendChild(card);
     });
 }
+
 
 /* =============================
    ADMIN IMPORT (PASTE)
