@@ -192,7 +192,7 @@ async function loadPlayers() {
 
     // 🏆 TOP 5 ELITE
     renderTop5Elite(allPlayers);
-    updateLastUpdated(allPlayers);
+    
 
     // 🟢 Stage 4: Ready
     setProgress(100);
@@ -261,39 +261,35 @@ if (activeWarzone !== "ALL") {
 function renderTable(players) {
   tableBody.innerHTML = "";
 
-players.forEach((p, index) => {
-  const tr = document.createElement("tr");
+  players.forEach((p, index) => {
+    const tr = document.createElement("tr");
+    const powerM = Math.round(p.totalPower / 1_000_000) + "M";
+    const firstSquad = estimateFirstSquad(p.totalPower);
 
-  const rank = index + 1;
-  const rankClass = getRankClass(rank);
 
-  const powerValue = Math.round(p.totalPower / 1_000_000);
-  const powerHTML = `${powerValue}<small class="m-unit">M</small>`;
+    tr.innerHTML = `
+      <td class="col-rank">${index + 1}</td>
 
-  const firstSquad = estimateFirstSquad(p.totalPower);
+      <td class="col-name">
+        ${p.name}
+      </td>
 
- tr.innerHTML = `
-  <td class="col-rank ${rankClass}">${rank}</td>
+     <td class="col-power desktop-only">
+  ${powerM}
+  <div class="sub-power">⚔️ S1: ${firstSquad}</div>
 
-  <td class="col-name">
-    ${p.name}
-  </td>
+</td>
 
-  <td class="col-power desktop-only ${rankClass}">
-    ${powerHTML}
-    <div class="sub-power">⚔️ S1: ${firstSquad}</div>
-  </td>
+<td class="col-meta">
+  <span class="alliance">${p.alliance}</span>
+  <span class="sep">•</span>
+  <span class="power mobile-only">
+   ${powerM} • <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
 
-  <td class="col-meta ${rankClass}">
-    <span class="alliance">${p.alliance}</span>
-    <span class="sep">•</span>
-    <span class="power mobile-only">
-      ${powerHTML}
-      <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
-    </span>
-  </td>
-`;
+  </span>
+</td>
 
+    `;
 
     tableBody.appendChild(tr);
   });
