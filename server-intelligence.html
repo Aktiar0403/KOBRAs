@@ -6,6 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/server-intelligence.css" />
 </head>
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { auth } from "/js/firebase-config.js";
+
+  onAuthStateChanged(auth, user => {
+    document.querySelectorAll(".admin-only").forEach(el => {
+      el.style.display = user ? "block" : "none";
+    });
+  });
+</script>
 
 <body class="bg">
 <div class="page">
@@ -35,7 +45,8 @@
 
 <div class="kobra-card-row">
   <!-- Admin Panel Card -->
-  <a href="/admin.html" class="kobra-card-btn">
+ <a href="/admin.html" class="kobra-card-btn admin-only">
+
     <div class="kobra-card-icon">🛡️</div>
     <div class="kobra-card-text">
       <div class="kobra-card-title">ADMIN COMMAND</div>
@@ -150,7 +161,8 @@
   </section>
 
   <!-- ADMIN PANEL -->
-  <details class="admin-panel">
+  <details class="admin-panel admin-only">
+
     <summary>⚙ Admin Data Import</summary>
 
     <div class="admin-hint">
@@ -166,7 +178,19 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script type="module" src="/js/server-intelligence.js"></script>
-<script type="module" src="./js/auth-guard.js"></script>
+<footer class="site-footer">
+  <div class="footer-inner">
+    <span>© 2025 KOBRA</span>
+    <small style="opacity:.7;">Unofficial analytics platform. Not affiliated with game publishers.</small>
+
+    <nav>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms</a>
+      <a href="contact.html">Contact</a>
+    </nav>
+  </div>
+</footer>
+
 
 </body>
 </html>
