@@ -63,6 +63,8 @@ const dominanceGrid = $("dominanceGrid");
 
 const pasteData = $("pasteData");
 const saveBtn = $("saveBtn");
+const dominanceSection = document.getElementById("dominanceSection");
+if (dominanceSection) dominanceSection.style.display = "none";
 
 /* =============================
    TOP 5 ELITE PLAYERS
@@ -174,11 +176,16 @@ function applyFilters() {
   renderTable(filteredPlayers);
   updatePowerSegments(filteredPlayers);
 updateOverviewStats(filteredPlayers);
-  if (activeWarzone !== "ALL") {
-    renderAllianceDominance(filteredPlayers);
-  } else {
-    dominanceGrid.innerHTML = "";
-  }
+  const dominanceSection = document.getElementById("dominanceSection");
+
+if (activeWarzone !== "ALL") {
+  dominanceSection.style.display = "block";
+  renderAllianceDominance(filteredPlayers);
+} else {
+  dominanceSection.style.display = "none";
+  dominanceGrid.innerHTML = "";
+}
+
 }
 
 /* =============================
