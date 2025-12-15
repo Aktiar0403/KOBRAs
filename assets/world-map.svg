@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg
+  viewBox="0 0 1000 500"
+  xmlns="http://www.w3.org/2000/svg"
+  fill="none"
+  stroke="white"
+  stroke-width="1.2"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+
+  <!-- NORTH AMERICA -->
+  <path d="M90 120 L130 90 L190 85 L240 100 L260 130 L230 160 L180 170 L130 150 Z"/>
+
+  <!-- SOUTH AMERICA -->
+  <path d="M220 220 L250 260 L260 320 L240 380 L210 400 L190 360 L200 300 Z"/>
+
+  <!-- EUROPE -->
+  <path d="M420 90 L450 80 L480 85 L500 100 L480 120 L450 115 Z"/>
+
+  <!-- AFRICA -->
+  <path d="M450 140 L500 160 L520 220 L500 300 L460 330 L430 290 L440 220 Z"/>
+
+  <!-- ASIA -->
+  <path d="M520 90 L600 70 L700 80 L780 120 L760 170 L700 160 L650 180 L600 150 Z"/>
+
+  <!-- AUSTRALIA -->
+  <path d="M740 300 L780 310 L810 340 L780 360 L740 340 Z"/>
+
+</svg>
