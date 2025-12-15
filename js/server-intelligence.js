@@ -346,42 +346,45 @@ function renderAllianceDominance(players) {
   });
 
   Object.entries(map)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .forEach(([alliance, power], index) => {
-      const pct = ((power / total) * 100).toFixed(1);
+  .sort((a, b) => b[1] - a[1])
+  .slice(0, 5)
+  .forEach(([alliance, power], index) => {
 
-      const card = document.createElement("div");
-      card.className = "dominance-card";
-      card.dataset.alliance = alliance;
+    const isSelected = dominanceSelectedAlliance === alliance;
+    const pct = ((power / total) * 100).toFixed(1);
 
-      if (dominanceSelectedAlliance === alliance) {
-        card.classList.add("active");
-      }
+    const members = players.filter(p => p.alliance === alliance);
+    const topPlayer = members.sort((a,b)=>b.totalPower-a.totalPower)[0];
 
-      card.innerHTML = `
+    const card = document.createElement("div");
+    card.className = "dominance-card";
+    card.dataset.alliance = alliance;
+
+    card.innerHTML = isSelected
+      ? `
         <div class="dom-rank">#${index + 1}</div>
         <div class="dom-name">${alliance}</div>
-        <div class="dom-bar"><span style="width:${pct}%"></span></div>
+
+        <div class="dom-insight">⚡ ${formatPowerM(power)} Total</div>
+        <div class="dom-insight">👑 ${topPlayer?.name || "—"}</div>
+        <div class="dom-insight">👥 ${members.length} In Top 200</div>
+      `
+      : `
+        <div class="dom-rank">#${index + 1}</div>
+        <div class="dom-name">${alliance}</div>
+        <div class="dom-bar"><span style="width:${Math.min(pct,92)}%"></span></div>
         <div class="dom-meta">${pct}%</div>
       `;
 
-      // 🖱 CLICK → FILTER TABLE BY THIS ALLIANCE
-      card.onclick = () => {
-        dominanceSelectedAlliance = alliance;
-        activeAlliance = alliance;
+    card.onclick = () => {
+      dominanceSelectedAlliance =
+        dominanceSelectedAlliance === alliance ? null : alliance;
+      applyFilters();
+    };
 
-        // Highlight active dominance card
-        [...dominanceGrid.children].forEach(c =>
-          c.classList.remove("active")
-        );
-        card.classList.add("active");
+    dominanceGrid.appendChild(card);
+  });
 
-        applyFilters();
-      };
-
-      dominanceGrid.appendChild(card);
-    });
 }
 
 
