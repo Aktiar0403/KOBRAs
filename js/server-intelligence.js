@@ -1,17 +1,5 @@
-/* =========================================================
-   🛡️ BOOT GUARD — PREVENT DOUBLE EXECUTION (PWA / MODULE)
-========================================================= */
-if (window.__SERVER_INTEL_BOOTED__) {
-  console.warn("⚠️ Server Intelligence already booted — skipping duplicate init");
-  throw new Error("Duplicate server-intelligence.js execution blocked");
-}
-window.__SERVER_INTEL_BOOTED__ = true;
-
 console.log("✅ Server Intelligence JS loaded");
 
-/* =========================================================
-   IMPORTS
-========================================================= */
 import { db } from "./firebase-config.js";
 import {
   collection,
@@ -20,47 +8,16 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-/* =========================================================
-   INTELLIGENCE FEED DATA
-========================================================= */
-const intelNames = [
-  "Mighty","Supersnail","Sleepyrahul","Blake The President","Akki","Ankii",
-  "Ironheart","Dior The Boss","Harbin","Weer","Queen","Drokaris",
-  "Choudhury","Reiko","WinterFairy","CeeMb","Mak Unpro"
-];
-
-const intelActions = [
-  "joining the battlefield",
-  "onboarding heavy weapons",
-  "deploying elite squad",
-  "syncing warzone intelligence",
-  "arming heroes",
-  "establishing command",
-  "entering warzone",
-  "locking targets",
-  "activating power core",
-  "preparing final strike"
-];
-
-/* =========================================================
-   LOADER STATE
-========================================================= */
 const loaderStart = Date.now();
 let fakeProgress = 0;
 let dataReady = false;
 let progressRAF = null;
-let intelInterval = null;
 
 const progressText = document.getElementById("progressText");
 const progressCircle = document.querySelector(".progress-ring .progress");
 
-/* =========================================================
-   LOADER CORE
-========================================================= */
 function setProgress(pct) {
   fakeProgress = pct;
-  if (!progressCircle || !progressText) return; // 🔧 SAFETY
-
   const dash = 163 - (163 * pct) / 100;
   progressCircle.style.strokeDashoffset = dash;
   progressText.textContent = pct + "%";
@@ -72,9 +29,9 @@ function startFakeProgress() {
   function tick() {
     if (dataReady) return;
 
-    let speed = 0.6;
-    if (fakeProgress > 30) speed = 0.4;
-    if (fakeProgress > 60) speed = 0.25;
+    let speed = 0.5;
+    if (fakeProgress > 30) speed = 0.35;
+    if (fakeProgress > 60) speed = 0.2;
     if (fakeProgress >= maxFake) speed = 0;
 
     fakeProgress = Math.min(fakeProgress + speed, maxFake);
@@ -86,6 +43,18 @@ function startFakeProgress() {
   tick();
 }
 
+
+function hideLoader() {
+  const loader = document.getElementById("appLoader");
+  if (!loader) return;
+
+  const elapsed = Date.now() - loaderStart;
+  const delay = Math.max(0, 800 - elapsed);
+
+  setTimeout(() => {
+    loader.classList.add("hide");
+  }, delay);
+}
 function completeProgress() {
   cancelAnimationFrame(progressRAF);
 
@@ -97,6 +66,7 @@ function completeProgress() {
       hideLoader();
       return;
     }
+
     current += 2;
     setProgress(current);
     requestAnimationFrame(finish);
@@ -105,93 +75,138 @@ function completeProgress() {
   finish();
 }
 
-function hideLoader() {
-  const loader = document.getElementById("appLoader");
-  if (!loader) return;
 
-  const elapsed = Date.now() - loaderStart;
-  const delay = Math.max(0, 700 - elapsed);
-
-  setTimeout(() => loader.classList.add("hide"), delay);
-}
-
-/* =========================================================
-   INTEL FEED
-========================================================= */
-function startIntelFeed() {
-  const el = document.getElementById("intelFeed");
-  if (!el) return;
-
-  function updateFeed() {
-    const name = intelNames[Math.floor(Math.random() * intelNames.length)];
-    const action = intelActions[Math.floor(Math.random() * intelActions.length)];
-
-    el.classList.remove("fade");
-    void el.offsetWidth;
-    el.textContent = `${name} ${action}…`;
-    el.classList.add("fade");
-  }
-
-  updateFeed();
-  intelInterval = setInterval(updateFeed, 1800);
-}
-
-/* =========================================================
-   UTILITIES
-========================================================= */
 function formatPowerM(power) {
   if (!power) return "0M";
   return Math.round(power / 1_000_000) + "M";
 }
-
 function estimateFirstSquad(totalPower) {
   const m = totalPower / 1_000_000;
+
+  // Endgame whales – high variance
   if (m >= 450) return "105–125M";
   if (m >= 400) return "100–120M";
   if (m >= 350) return "90–110M";
   if (m >= 300) return "80–100M";
+
+  // Upper-mid – growing variance
   if (m >= 260) return "72–85M";
   if (m >= 230) return "68–78M";
   if (m >= 200) return "64–72M";
   if (m >= 180) return "60–68M";
+
+  // Mid game – controlled builds
   if (m >= 160) return "55–60M";
   if (m >= 150) return "52–56M";
   if (m >= 140) return "49–53M";
   if (m >= 130) return "47–50M";
   if (m >= 120) return "45–48M";
   if (m >= 110) return "43–46M";
+
+  // Early
   return "40–43M";
 }
 
-/* =========================================================
+
+/* =============================
    STATE
-========================================================= */
+============================= */
 let allPlayers = [];
 let filteredPlayers = [];
+
 let activeWarzone = "ALL";
 let activeAlliance = "ALL";
 let dominanceSelectedAlliance = null;
 
-/* =========================================================
+
+/* =============================
    DOM
-========================================================= */
+============================= */
 const $ = id => document.getElementById(id);
+
 const searchInput = $("searchInput");
 const warzoneCards = $("warzoneCards");
 const allianceCards = $("allianceCards");
 const tableBody = $("tableBody");
+
 const dominanceGrid = $("dominanceGrid");
+
 const pasteData = $("pasteData");
 const saveBtn = $("saveBtn");
+const dominanceSection = document.getElementById("dominanceSection");
+if (dominanceSection) dominanceSection.style.display = "none";
 
-/* =========================================================
-   LOAD FROM FIRESTORE  🔥 SINGLE SOURCE OF TRUTH
-========================================================= */
+/* =============================
+   TOP 5 ELITE PLAYERS
+============================= */
+function renderTop5Elite(players) {
+  const grid = document.getElementById("top5Grid");
+  if (!grid) return;
+
+  // Sort by TOTAL POWER (global, not filtered)
+  const top5 = [...players]
+    .sort((a, b) => b.totalPower - a.totalPower)
+    .slice(0, 5);
+
+  grid.innerHTML = "";
+
+  top5.forEach((p, index) => {
+    const card = document.createElement("div");
+    card.className = `glory-card rank-${index + 1}`;
+
+    card.innerHTML = `
+      <div class="rank-badge">#${index + 1}</div>
+
+      <div class="glory-name">${p.name}</div>
+
+      <div class="glory-meta">
+        <span class="alliance">${p.alliance || "—"}</span>
+        <span class="warzone">WZ-${p.warzone}</span>
+      </div>
+
+      <div class="glory-power">⚡ ${formatPowerM(p.totalPower)}</div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
+
+
+function updateLastUpdated(players) {
+  const el = document.getElementById("lastUpdated");
+  if (!el || !players.length) return;
+
+  const latest = players
+    .map(p => p.importedAt?.toDate?.())
+    .filter(Boolean)
+    .sort((a, b) => b - a)[0];
+
+  if (!latest) {
+    el.textContent = "Unknown";
+    return;
+  }
+
+  el.textContent = latest.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+startFakeProgress();
+
+/* =============================
+   LOAD FROM FIRESTORE
+============================= */
 async function loadPlayers() {
   console.log("📡 Loading server_players from Firestore...");
 
   try {
+    // 🟢 Stage 1: Connecting
+    setProgress(10);
+
     const snap = await getDocs(collection(db, "server_players"));
+
+    // 🟢 Stage 2: Data received
+    //setProgress(40);
 
     allPlayers = snap.docs.map(doc => {
       const d = doc.data();
@@ -207,22 +222,34 @@ async function loadPlayers() {
 
     console.log("✅ Loaded players:", allPlayers.length);
 
+    // 🟢 Stage 3: Processing & building UI
+    // setProgress(70);
+
+    // 🔥 RESET FILTERS AFTER LOAD
     activeWarzone = "ALL";
     activeAlliance = "ALL";
 
+    // 🔥 REBUILD FILTER UI
     buildWarzoneCards();
+
+    // 🔥 APPLY FILTERS
     applyFilters();
+
+    // 🏆 TOP 5 ELITE
     renderTop5Elite(allPlayers);
+    
 
-    dataReady = true;
-    clearInterval(intelInterval);
-    completeProgress();
+    // 🟢 Stage 4: Ready
+    setProgress(100);
 
-  } catch (err) {
+    hideLoader(); // ✅ DATA READY
+
+  } 
+  catch (err) {
     console.error("❌ Failed to load server_players:", err);
-    dataReady = true;
-    clearInterval(intelInterval);
-    completeProgress();
+
+    // ⚠️ Always hide loader even on error
+    hideLoader();
   }
 }
 
@@ -576,11 +603,3 @@ function updateOverviewStats(players) {
   document.getElementById("totalWarzones").textContent = warzones.size;
   document.getElementById("totalAlliances").textContent = alliances.size;
 }
-window.addEventListener("DOMContentLoaded", () => {
-  startFakeProgress();
-  startIntelFeed();
-
-  requestAnimationFrame(() => {
-    setTimeout(loadPlayers, 80);
-  });
-});
