@@ -50,10 +50,14 @@ const progressCircle = document.querySelector(".progress-ring .progress");
 
 function setProgress(pct) {
   fakeProgress = pct;
+
+  if (!progressCircle || !progressText) return; // 🔧 SAFETY
+
   const dash = 163 - (163 * pct) / 100;
   progressCircle.style.strokeDashoffset = dash;
   progressText.textContent = pct + "%";
 }
+
 
 function startFakeProgress() {
   const maxFake = 88;
@@ -244,8 +248,14 @@ function updateLastUpdated(players) {
     timeStyle: "short"
   });
 }
-startFakeProgress();
-startIntelFeed();
+window.addEventListener("DOMContentLoaded", () => {
+  startFakeProgress();
+  startIntelFeed();
+
+  requestAnimationFrame(() => {
+    setTimeout(loadPlayers, 60);
+  });
+});
 
 requestAnimationFrame(() => {
   setTimeout(loadPlayers, 60);
@@ -261,9 +271,7 @@ async function loadPlayers() {
 
     const snap = await getDocs(collection(db, "server_players"));
 
-    // 🟢 Stage 2: Data received
-    //setProgress(40);
-
+  
     allPlayers = snap.docs.map(doc => {
       const d = doc.data();
       return {
@@ -278,9 +286,7 @@ async function loadPlayers() {
 
     console.log("✅ Loaded players:", allPlayers.length);
 
-    // 🟢 Stage 3: Processing & building UI
-    // setProgress(70);
-
+  
     // 🔥 RESET FILTERS AFTER LOAD
     activeWarzone = "ALL";
     activeAlliance = "ALL";
@@ -649,7 +655,7 @@ searchInput.oninput = applyFilters;
 
 
 
-loadPlayers();
+//loadPlayers();
 function updateOverviewStats(players) {
   const totalPlayers = players.length;
 
