@@ -644,3 +644,86 @@ tbody td {
   outline: 2px solid #00ffc8;
   box-shadow: 0 0 20px rgba(0,255,200,.6);
 }
+/* =============================
+   GLOBAL INTELLIGENCE LOADER
+============================= */
+.intel-loader {
+  position: fixed;
+  inset: 0;
+  background: #05060a;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-layer {
+  position: relative;
+  width: 280px;
+  height: 160px;
+}
+
+.world-map {
+  width: 100%;
+  opacity: 0.15;
+}
+
+.intel-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  background: #00ffc8;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px #00ffc8;
+  animation: corePulse 1.5s infinite;
+}
+
+.pulse {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: #00ffc8;
+  border-radius: 50%;
+  animation: travel 1.8s infinite;
+}
+
+/* Approx continent positions */
+.p1 { top: 30%; left: 15%; animation-delay: 0s; }
+.p2 { top: 45%; left: 30%; animation-delay: .4s; }
+.p3 { top: 35%; left: 70%; animation-delay: .8s; }
+.p4 { top: 60%; left: 80%; animation-delay: 1.2s; }
+.p5 { top: 55%; left: 45%; animation-delay: 1.6s; }
+
+@keyframes travel {
+  0% { opacity: 0; transform: scale(1); }
+  30% { opacity: 1; }
+  100% {
+    top: 50%;
+    left: 50%;
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+@keyframes corePulse {
+  0%,100% { box-shadow: 0 0 12px #00ffc8; }
+  50% { box-shadow: 0 0 28px #00ffc8; }
+}
+
+.intel-text {
+  margin-top: 18px;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  opacity: 0.85;
+}
+
+/* Hide animation */
+.intel-loader.hide {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .4s ease;
+}

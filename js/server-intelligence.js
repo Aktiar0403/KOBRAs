@@ -8,6 +8,20 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+const loaderStart = Date.now();
+
+function hideLoader() {
+  const loader = document.getElementById("appLoader");
+  if (!loader) return;
+
+  const elapsed = Date.now() - loaderStart;
+  const delay = Math.max(0, 800 - elapsed);
+
+  setTimeout(() => {
+    loader.classList.add("hide");
+  }, delay);
+}
+
 function formatPowerM(power) {
   if (!power) return "0M";
   return Math.round(power / 1_000_000) + "M";
@@ -137,7 +151,7 @@ async function loadPlayers() {
     // 🔥 APPLY FILTERS
     applyFilters();
 renderTop5Elite(allPlayers);
-
+hideLoader(); // ✅ DATA READY
   } catch (err) {
     console.error("❌ Failed to load server_players:", err);
   }
