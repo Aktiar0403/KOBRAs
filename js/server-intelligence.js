@@ -7,9 +7,44 @@ import {
   addDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const intelNames = [
+  "Mighty",
+  "Supersnail",
+  "Sleepyrahul",
+  "Blake The President",
+  "Akki",
+  "Ankii",
+  "Ironheart",
+  "Dior The Boss",
+  "Harbin",
+  "Weer",
+  "Queen",
+  "Drokaris",
+  "Choudhury",
+  "Reiko",
+  "WinterFairy",
+  "CeeMb",
+  "Mak Unpro"
+];
+
+const intelActions = [
+  "joining the battlefield",
+  "onboarding heavy weapons",
+  "deploying elite squad",
+  "syncing warzone intelligence",
+  "arming heroes",
+  "establishing command",
+  "entering warzone",
+  "locking targets",
+  "activating power core",
+  "preparing final strike"
+];
 
 const loaderStart = Date.now();
 let fakeProgress = 0;
+let dataReady = false;
+let progressRAF = null;
+
 const progressText = document.getElementById("progressText");
 const progressCircle = document.querySelector(".progress-ring .progress");
 
@@ -18,6 +53,47 @@ function setProgress(pct) {
   const dash = 163 - (163 * pct) / 100;
   progressCircle.style.strokeDashoffset = dash;
   progressText.textContent = pct + "%";
+}
+
+function startFakeProgress() {
+  const maxFake = 88;
+
+  function tick() {
+    if (dataReady) return;
+
+    let speed = 0.5;
+    if (fakeProgress > 30) speed = 0.35;
+    if (fakeProgress > 60) speed = 0.2;
+    if (fakeProgress >= maxFake) speed = 0;
+
+    fakeProgress = Math.min(fakeProgress + speed, maxFake);
+    setProgress(Math.floor(fakeProgress));
+
+    progressRAF = requestAnimationFrame(tick);
+  }
+
+  tick();
+}
+let intelInterval = null;
+
+function startIntelFeed() {
+  const el = document.getElementById("intelFeed");
+  if (!el) return;
+
+  function updateFeed() {
+    const name =
+      intelNames[Math.floor(Math.random() * intelNames.length)];
+    const action =
+      intelActions[Math.floor(Math.random() * intelActions.length)];
+
+    el.classList.remove("fade");
+    void el.offsetWidth; // restart animation
+    el.textContent = `${name} ${action}…`;
+    el.classList.add("fade");
+  }
+
+  updateFeed();
+  intelInterval = setInterval(updateFeed, 1800);
 }
 
 
@@ -32,6 +108,26 @@ function hideLoader() {
     loader.classList.add("hide");
   }, delay);
 }
+function completeProgress() {
+  cancelAnimationFrame(progressRAF);
+
+  let current = fakeProgress;
+
+  function finish() {
+    if (current >= 100) {
+      setProgress(100);
+      hideLoader();
+      return;
+    }
+
+    current += 2;
+    setProgress(current);
+    requestAnimationFrame(finish);
+  }
+
+  finish();
+}
+
 
 function formatPowerM(power) {
   if (!power) return "0M";
@@ -148,6 +244,12 @@ function updateLastUpdated(players) {
     timeStyle: "short"
   });
 }
+startFakeProgress();
+startIntelFeed();
+
+requestAnimationFrame(() => {
+  setTimeout(loadPlayers, 60);
+});
 /* =============================
    LOAD FROM FIRESTORE
 ============================= */
@@ -155,13 +257,12 @@ async function loadPlayers() {
   console.log("📡 Loading server_players from Firestore...");
 
   try {
-    // 🟢 Stage 1: Connecting
-    setProgress(10);
+    
 
     const snap = await getDocs(collection(db, "server_players"));
 
     // 🟢 Stage 2: Data received
-    setProgress(40);
+    //setProgress(40);
 
     allPlayers = snap.docs.map(doc => {
       const d = doc.data();
@@ -178,7 +279,7 @@ async function loadPlayers() {
     console.log("✅ Loaded players:", allPlayers.length);
 
     // 🟢 Stage 3: Processing & building UI
-    setProgress(70);
+    // setProgress(70);
 
     // 🔥 RESET FILTERS AFTER LOAD
     activeWarzone = "ALL";
@@ -194,17 +295,19 @@ async function loadPlayers() {
     renderTop5Elite(allPlayers);
     
 
-    // 🟢 Stage 4: Ready
-    setProgress(100);
+    
 
-    hideLoader(); // ✅ DATA READY
+   
 
-  } catch (err) {
-    console.error("❌ Failed to load server_players:", err);
+  } 
+  catch (err) {
+  console.error("❌ Failed to load server_players:", err);
 
-    // ⚠️ Always hide loader even on error
-    hideLoader();
-  }
+  dataReady = true;
+  clearInterval(intelInterval);
+  completeProgress(); // 🔧 FIX: graceful exit even on error
+}
+
 }
 
 
