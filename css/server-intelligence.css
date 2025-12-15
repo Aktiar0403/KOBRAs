@@ -699,26 +699,39 @@ tbody td {
 .p5 { top: 55%; left: 45%; animation-delay: 1.6s; }
 
 @keyframes travel {
-  0% { opacity: 0; transform: scale(1); }
-  30% { opacity: 1; }
-  100% {
-    top: 50%;
-    left: 50%;
+  0% {
     opacity: 0;
-    transform: scale(0.3);
+    transform: translate(0, 0) scale(1);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(70px, 40px) scale(0.3);
   }
 }
 
 @keyframes corePulse {
-  0%,100% { box-shadow: 0 0 12px #00ffc8; }
-  50% { box-shadow: 0 0 28px #00ffc8; }
+  0%,100% { box-shadow: 0 0 14px rgba(0,255,200,.7); }
+  50% { box-shadow: 0 0 26px rgba(0,255,200,1); }
 }
+
 
 .intel-text {
   margin-top: 18px;
   font-size: 0.85rem;
   letter-spacing: 1px;
   opacity: 0.85;
+}
+.intel-loader,
+.map-layer,
+.intel-core,
+.pulse,
+.flow-lines,
+.progress-ring {
+  transform: translateZ(0);
+  will-change: transform, opacity;
 }
 
 /* Hide animation */
