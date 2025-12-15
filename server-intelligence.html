@@ -23,6 +23,13 @@
 <div id="appLoader" class="intel-loader">
   <div class="map-layer">
     <img src="/assets/world-map.svg" class="world-map" />
+    <svg class="flow-lines" viewBox="0 0 280 160">
+  <line x1="30" y1="40" x2="140" y2="80" />
+  <line x1="70" y1="90" x2="140" y2="80" />
+  <line x1="220" y1="50" x2="140" y2="80" />
+  <line x1="240" y1="120" x2="140" y2="80" />
+</svg>
+
     <div class="intel-core"></div>
 
     <!-- Pulses from different regions -->
@@ -36,6 +43,14 @@
   <div class="intel-text">
     Gathering intelligence from global servers…
   </div>
+  <div class="progress-ring">
+  <svg width="60" height="60">
+    <circle cx="30" cy="30" r="26" />
+    <circle cx="30" cy="30" r="26" class="progress" />
+  </svg>
+  <div id="progressText" class="progress-text">0%</div>
+</div>
+
 </div>
 
 <!-- MAIN APP CONTENT -->

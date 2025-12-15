@@ -727,3 +727,46 @@ tbody td {
   visibility: hidden;
   transition: opacity .4s ease;
 }
+.flow-lines {
+  position: absolute;
+  inset: 0;
+}
+
+.flow-lines line {
+  stroke: rgba(0,255,200,0.4);
+  stroke-width: 1;
+  stroke-dasharray: 4;
+  animation: flow 1.5s linear infinite;
+}
+
+@keyframes flow {
+  to { stroke-dashoffset: -20; }
+}
+.progress-ring {
+  position: relative;
+  margin-top: 14px;
+}
+
+.progress-ring circle {
+  fill: none;
+  stroke: rgba(255,255,255,0.1);
+  stroke-width: 4;
+}
+
+.progress-ring .progress {
+  stroke: #00ffc8;
+  stroke-dasharray: 163;
+  stroke-dashoffset: 163;
+  transform: rotate(-90deg);
+  transform-origin: center;
+  transition: stroke-dashoffset .3s ease;
+}
+
+.progress-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+}

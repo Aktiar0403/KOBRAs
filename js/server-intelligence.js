@@ -9,6 +9,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const loaderStart = Date.now();
+let fakeProgress = 0;
+const progressText = document.getElementById("progressText");
+const progressCircle = document.querySelector(".progress-ring .progress");
+
+function setProgress(pct) {
+  fakeProgress = pct;
+  const dash = 163 - (163 * pct) / 100;
+  progressCircle.style.strokeDashoffset = dash;
+  progressText.textContent = pct + "%";
+}
+
 
 function hideLoader() {
   const loader = document.getElementById("appLoader");
@@ -125,7 +136,13 @@ async function loadPlayers() {
   console.log("📡 Loading server_players from Firestore...");
 
   try {
+    // 🟢 Stage 1: Connecting
+    setProgress(10);
+
     const snap = await getDocs(collection(db, "server_players"));
+
+    // 🟢 Stage 2: Data received
+    setProgress(40);
 
     allPlayers = snap.docs.map(doc => {
       const d = doc.data();
@@ -141,6 +158,9 @@ async function loadPlayers() {
 
     console.log("✅ Loaded players:", allPlayers.length);
 
+    // 🟢 Stage 3: Processing & building UI
+    setProgress(70);
+
     // 🔥 RESET FILTERS AFTER LOAD
     activeWarzone = "ALL";
     activeAlliance = "ALL";
@@ -150,12 +170,23 @@ async function loadPlayers() {
 
     // 🔥 APPLY FILTERS
     applyFilters();
-renderTop5Elite(allPlayers);
-hideLoader(); // ✅ DATA READY
+
+    // 🏆 TOP 5 ELITE
+    renderTop5Elite(allPlayers);
+
+    // 🟢 Stage 4: Ready
+    setProgress(100);
+
+    hideLoader(); // ✅ DATA READY
+
   } catch (err) {
     console.error("❌ Failed to load server_players:", err);
+
+    // ⚠️ Always hide loader even on error
+    hideLoader();
   }
 }
+
 
 
 /* =============================

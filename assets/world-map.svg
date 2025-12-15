@@ -1,30 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg
-  viewBox="0 0 1000 500"
-  xmlns="http://www.w3.org/2000/svg"
-  fill="none"
-  stroke="white"
-  stroke-width="1.2"
-  stroke-linecap="round"
-  stroke-linejoin="round"
->
+<svg viewBox="0 0 1000 500"
+     xmlns="http://www.w3.org/2000/svg"
+     fill="none"
+     stroke="white"
+     stroke-width="1.4"
+     stroke-linecap="round"
+     stroke-linejoin="round">
 
-  <!-- NORTH AMERICA -->
-  <path d="M90 120 L130 90 L190 85 L240 100 L260 130 L230 160 L180 170 L130 150 Z"/>
+  <!-- North America -->
+  <path d="M70 110 L120 80 L200 70 L260 95 L300 140 L260 170 L210 165 L160 150 L120 135 Z"/>
 
-  <!-- SOUTH AMERICA -->
-  <path d="M220 220 L250 260 L260 320 L240 380 L210 400 L190 360 L200 300 Z"/>
+  <!-- South America -->
+  <path d="M260 230 L300 280 L320 340 L300 400 L260 430 L230 380 L240 300 Z"/>
 
-  <!-- EUROPE -->
-  <path d="M420 90 L450 80 L480 85 L500 100 L480 120 L450 115 Z"/>
+  <!-- Europe -->
+  <path d="M430 90 L470 75 L520 85 L540 110 L500 125 L460 115 Z"/>
 
-  <!-- AFRICA -->
-  <path d="M450 140 L500 160 L520 220 L500 300 L460 330 L430 290 L440 220 Z"/>
+  <!-- Africa -->
+  <path d="M470 145 L530 170 L560 240 L540 330 L480 370 L440 300 L450 210 Z"/>
 
-  <!-- ASIA -->
-  <path d="M520 90 L600 70 L700 80 L780 120 L760 170 L700 160 L650 180 L600 150 Z"/>
+  <!-- Asia -->
+  <path d="M550 90 L650 65 L760 85 L840 135 L820 190 L740 185 L690 205 L630 175 Z"/>
 
-  <!-- AUSTRALIA -->
-  <path d="M740 300 L780 310 L810 340 L780 360 L740 340 Z"/>
+  <!-- Australia -->
+  <path d="M760 310 L820 325 L860 360 L820 390 L760 365 Z"/>
 
 </svg>
