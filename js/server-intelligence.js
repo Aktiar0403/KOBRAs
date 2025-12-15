@@ -261,35 +261,37 @@ if (activeWarzone !== "ALL") {
 function renderTable(players) {
   tableBody.innerHTML = "";
 
-  players.forEach((p, index) => {
-    const tr = document.createElement("tr");
-    const powerM = Math.round(p.totalPower / 1_000_000) + "M";
-    const firstSquad = estimateFirstSquad(p.totalPower);
+ players.forEach((p, index) => {
+  const tr = document.createElement("tr");
+  const powerValue = Math.round(p.totalPower / 1_000_000);
+  const powerHTML = `
+    <span class="power-num">${powerValue}</span><small class="power-m">M</small>
+  `;
+  const firstSquad = estimateFirstSquad(p.totalPower);
 
 
-    tr.innerHTML = `
-      <td class="col-rank">${index + 1}</td>
+   tr.innerHTML = `
+  <td class="col-rank rank-num">${index + 1}</td>
 
-      <td class="col-name">
-        ${p.name}
-      </td>
+  <td class="col-name">
+    ${p.name}
+  </td>
 
-     <td class="col-power desktop-only">
-  ${powerM}
-  <div class="sub-power">⚔️ S1: ${firstSquad}</div>
+  <td class="col-power desktop-only">
+    <span class="power">${powerHTML}</span>
+    <div class="sub-power">⚔️ S1 ${firstSquad}</div>
+  </td>
 
-</td>
+  <td class="col-meta">
+    <span class="alliance">${p.alliance}</span>
+    <span class="sep">•</span>
+    <span class="power mobile-only">
+      ${powerHTML}
+      <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
+    </span>
+  </td>
+`;
 
-<td class="col-meta">
-  <span class="alliance">${p.alliance}</span>
-  <span class="sep">•</span>
-  <span class="power mobile-only">
-   ${powerM} • <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
-
-  </span>
-</td>
-
-    `;
 
     tableBody.appendChild(tr);
   });

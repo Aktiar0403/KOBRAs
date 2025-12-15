@@ -859,3 +859,36 @@ tbody td {
     display: none; /* icon-only on small screens */
   }
 }
+/* Neon rank number */
+.rank-num {
+  color: #00ffc8;
+  font-weight: 700;
+}
+
+/* Power number */
+.power,
+.power-num {
+  color: #00ffc8;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+/* Small M */
+.power-m {
+  font-size: 0.65em;
+  opacity: 0.75;
+  margin-left: 1px;
+}
+
+/* Sub power */
+.sub-power,
+.s1-inline {
+  font-size: 0.72rem;
+  color: #8fa3a6;
+}
+
+/* Alliance */
+.alliance {
+  color: #e3b873;
+  font-weight: 600;
+}
