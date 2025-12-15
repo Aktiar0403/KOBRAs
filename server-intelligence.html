@@ -2,20 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Server Information • KOBRA</title>
+  <title>Server Intelligence • KOBRA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow">
+  <meta name="description" content="Server intelligence, alliance dominance, elite power rankings and strategic comparisons.">
   <link rel="stylesheet" href="/css/server-intelligence.css" />
 </head>
-<script type="module">
-  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-  import { auth } from "/js/firebase-config.js";
-
-  onAuthStateChanged(auth, user => {
-    document.querySelectorAll(".admin-only").forEach(el => {
-      el.style.display = user ? "block" : "none";
-    });
-  });
-</script>
 
 <body class="bg">
 <div class="page">
@@ -25,37 +17,41 @@
     <h1>SERVER INTELLIGENCE</h1>
     <div class="sub">Alliance & Warzone Power Analytics</div>
   </header>
+
   <!-- STATS OVERVIEW -->
-<section class="stats-overview">
-  <div class="stat-card">
-    <div class="stat-label">TOTAL PLAYERS</div>
-    <div class="stat-value" id="totalPlayers">0</div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-label">WARZONES</div>
-    <div class="stat-value" id="totalWarzones">0</div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-label">ALLIANCES</div>
-    <div class="stat-value" id="totalAlliances">0</div>
-  </div>
-</section>
-
-<div class="kobra-card-row">
- 
-
-  <!-- Comparisons Card -->
-  <a href="/server-compare.html" class="kobra-card-btn">
-    <div class="kobra-card-icon">⚔️</div>
-    <div class="kobra-card-text">
-      <div class="kobra-card-title">COMPARISONS</div>
-      <div class="kobra-card-sub">Strategic Power Analysis</div>
+  <section class="stats-overview">
+    <div class="stat-card">
+      <div class="stat-label">TOTAL PLAYERS</div>
+      <div class="stat-value" id="totalPlayers">0</div>
     </div>
-  </a>
-</div>
 
+    <div class="stat-card">
+      <div class="stat-label">WARZONES</div>
+      <div class="stat-value" id="totalWarzones">0</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">ALLIANCES</div>
+      <div class="stat-value" id="totalAlliances">0</div>
+    </div>
+  </section>
+
+  <!-- 🏆 TOP 5 ELITE PLAYERS -->
+  <section class="top5-glory">
+    <h2 class="section-title">🏆 Server Elite — Top 5 Power Holders</h2>
+    <div id="top5Grid" class="top5-grid"></div>
+  </section>
+
+  <!-- QUICK ACTION CARDS -->
+  <div class="kobra-card-row">
+    <a href="/server-compare.html" class="kobra-card-btn">
+      <div class="kobra-card-icon">⚔️</div>
+      <div class="kobra-card-text">
+        <div class="kobra-card-title">COMPARISONS</div>
+        <div class="kobra-card-sub">Strategic Power Analysis</div>
+      </div>
+    </a>
+  </div>
 
   <!-- SEARCH -->
   <section class="search-bar">
@@ -64,57 +60,51 @@
 
   <!-- FILTERS -->
   <section class="filters">
+    <div class="filter-group">
+      <div class="filter-title">🟦 Warzones</div>
+      <input id="warzoneSearch" class="filter-search" placeholder="Search warzone…" />
+      <div id="warzoneCards" class="filter-cards"></div>
+    </div>
 
     <div class="filter-group">
-  <div class="filter-title">🟦 Warzones</div>
-  <input id="warzoneSearch" class="filter-search" placeholder="Search warzone…" />
-  <div id="warzoneCards" class="filter-cards"></div>
-</div>
-
-  <div class="filter-group">
-  <div class="filter-title">🟩 Alliances</div>
-  <input id="allianceSearch" class="filter-search" placeholder="Search alliance…" />
-  <div id="allianceCards" class="filter-cards"></div>
-</div>
-
-
+      <div class="filter-title">🟩 Alliances</div>
+      <input id="allianceSearch" class="filter-search" placeholder="Search alliance…" />
+      <div id="allianceCards" class="filter-cards"></div>
+    </div>
   </section>
 
   <!-- POWER SEGMENTS -->
- <section class="segments">
+  <section class="segments">
+    <div class="segment mega">
+      🐋 Mega Whales
+      <span id="megaWhaleCount">0</span>
+      <small>230M+ Power</small>
+    </div>
 
-  <div class="segment mega">
-    🐋 Mega Whales
-    <span id="megaWhaleCount">0</span>
-    <small>230M+ Power</small>
-  </div>
+    <div class="segment whale">
+      🐋 Whales
+      <span id="whaleCount">0</span>
+      <small>180M–229M</small>
+    </div>
 
-  <div class="segment whale">
-    🐋 Whales
-    <span id="whaleCount">0</span>
-    <small>180M–229M</small>
-  </div>
+    <div class="segment shark">
+      🦈 Sharks
+      <span id="sharkCount">0</span>
+      <small>160M–179M</small>
+    </div>
 
-  <div class="segment shark">
-    🦈 Sharks
-    <span id="sharkCount">0</span>
-    <small>160M–179M</small>
-  </div>
+    <div class="segment piranha">
+      🐟 Piranhas
+      <span id="piranhaCount">0</span>
+      <small>140M–159M</small>
+    </div>
 
-  <div class="segment piranha">
-    🐟 Piranhas
-    <span id="piranhaCount">0</span>
-    <small>140M–159M</small>
-  </div>
-
-  <div class="segment shrimp">
-    🦐 Shrimps
-    <span id="shrimpCount">0</span>
-    <small>Below 140M</small>
-  </div>
-
-</section>
-
+    <div class="segment shrimp">
+      🦐 Shrimps
+      <span id="shrimpCount">0</span>
+      <small>Below 140M</small>
+    </div>
+  </section>
 
   <!-- ALLIANCE DOMINANCE -->
   <section class="dominance">
@@ -125,13 +115,11 @@
   <!-- ALLIANCE COMPARISON -->
   <section class="comparison">
     <h2>Alliance vs Alliance</h2>
-
     <div class="compare-controls">
       <select id="compareAllianceA"></select>
       <select id="compareAllianceB"></select>
       <button id="compareBtn">Compare</button>
     </div>
-
     <div id="comparisonResult" class="comparison-result"></div>
   </section>
 
@@ -139,22 +127,19 @@
   <section class="table-wrap">
     <table>
       <thead>
-  <tr>
-    <th class="col-rank">#</th>
-    <th class="col-name">Name</th>
-    <th class="col-power">Power</th>
-    <th class="col-meta">Alliance</th>
-  </tr>
-</thead>
-
-
+        <tr>
+          <th class="col-rank">#</th>
+          <th class="col-name">Name</th>
+          <th class="col-power">Power</th>
+          <th class="col-meta">Alliance</th>
+        </tr>
+      </thead>
       <tbody id="tableBody"></tbody>
     </table>
   </section>
 
-  <!-- ADMIN PANEL -->
+  <!-- ADMIN PANEL (HIDDEN FOR PUBLIC) -->
   <details class="admin-panel admin-only">
-
     <summary>⚙ Admin Data Import</summary>
 
     <div class="admin-hint">
@@ -168,13 +153,12 @@
   </details>
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script type="module" src="/js/server-intelligence.js"></script>
+
+<!-- FOOTER -->
 <footer class="site-footer">
   <div class="footer-inner">
     <span>© 2025 KOBRA</span>
     <small style="opacity:.7;">Unofficial analytics platform. Not affiliated with game publishers.</small>
-
     <nav>
       <a href="privacy.html">Privacy Policy</a>
       <a href="terms.html">Terms</a>
@@ -183,18 +167,21 @@
   </div>
 </footer>
 
+<!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module" src="/js/server-intelligence.js"></script>
+
+<!-- ADMIN VISIBILITY CONTROL -->
+<script type="module">
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { auth } from "/js/firebase-config.js";
+
+  onAuthStateChanged(auth, user => {
+    document.querySelectorAll(".admin-only").forEach(el => {
+      el.style.display = user ? "block" : "none";
+    });
+  });
+</script>
 
 </body>
 </html>
-<footer class="site-footer">
-  <div class="footer-inner">
-    <span>© 2025 KOBRA</span>
-    <small style="opacity:.7;">Unofficial analytics platform. Not affiliated with game publishers.</small>
-
-    <nav>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="terms.html">Terms</a>
-      <a href="contact.html">Contact</a>
-    </nav>
-  </div>
-</footer>

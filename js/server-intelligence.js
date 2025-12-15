@@ -64,6 +64,40 @@ const dominanceGrid = $("dominanceGrid");
 const pasteData = $("pasteData");
 const saveBtn = $("saveBtn");
 
+/* =============================
+   TOP 5 ELITE PLAYERS
+============================= */
+function renderTop5Elite(players) {
+  const grid = document.getElementById("top5Grid");
+  if (!grid) return;
+
+  // Sort by TOTAL POWER (global, not filtered)
+  const top5 = [...players]
+    .sort((a, b) => b.totalPower - a.totalPower)
+    .slice(0, 5);
+
+  grid.innerHTML = "";
+
+  top5.forEach((p, index) => {
+    const card = document.createElement("div");
+    card.className = `glory-card rank-${index + 1}`;
+
+    card.innerHTML = `
+      <div class="rank-badge">#${index + 1}</div>
+
+      <div class="glory-name">${p.name}</div>
+
+      <div class="glory-meta">
+        <span class="alliance">${p.alliance || "—"}</span>
+        <span class="warzone">WZ-${p.warzone}</span>
+      </div>
+
+      <div class="glory-power">⚡ ${formatPowerM(p.totalPower)}</div>
+    `;
+
+    grid.appendChild(card);
+  });
+}
 
 
 /* =============================
@@ -98,6 +132,7 @@ async function loadPlayers() {
 
     // 🔥 APPLY FILTERS
     applyFilters();
+renderTop5Elite(allPlayers);
 
   } catch (err) {
     console.error("❌ Failed to load server_players:", err);
