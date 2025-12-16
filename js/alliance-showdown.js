@@ -151,7 +151,9 @@ function renderAllianceCards(alliances) {
         <div class="intel-pie">
           <canvas id="pie-${a.alliance}-${a.warzone}"></canvas>
         </div>
-
+      <div class="status ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
+        ${a.isNCA ? "🔴 Non-Competitive" : a.stabilityFactor < 0.8 ? "🟡 Fragile" : "🟢 Competitive"}
+      </div>
         <div class="marquee">
           ${marquee.map(p => `
             <div class="marquee-player">
