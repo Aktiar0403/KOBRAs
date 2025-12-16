@@ -689,3 +689,68 @@ button:disabled {
 .marquee {
   padding-right: 120px; /* room for pie */
 }
+.intel-strip {
+  position: relative;
+  padding: 10px 14px;
+  margin: -14px -14px 14px -14px;
+  background: rgba(0, 0, 0, 0.45); /* darker base */
+  backdrop-filter: blur(8px);
+  z-index: 3; /* 👈 above card glow */
+}
+
+/* Status color overlay */
+.alliance-intel.good .intel-strip::after,
+.alliance-intel.warn .intel-strip::after,
+.alliance-intel.bad .intel-strip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  z-index: -1;
+}
+
+.alliance-intel.good .intel-strip::after {
+  background: #00ffc8;
+}
+.alliance-intel.warn .intel-strip::after {
+  background: #ffc107;
+}
+.alliance-intel.bad .intel-strip::after {
+  background: #ff4d4d;
+}
+
+/* TITLE */
+.intel-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #eafff8;          /* 👈 strong contrast */
+  text-shadow: 0 0 6px rgba(0,255,200,0.35);
+}
+
+/* META */
+.intel-meta {
+  font-size: 0.78rem;
+  color: #c7fff2;          /* 👈 readable */
+  opacity: 0.9;
+  margin-top: 2px;
+}
+.intel-pie {
+  position: absolute;
+  top: 10px;              /* 👈 INSIDE card */
+  right: 12px;
+  width: 88px;
+  height: 88px;
+  z-index: 4;             /* above strip */
+}
+
+.intel-pie canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.pie-label {
+  font-size: 0.7rem;
+  color: #bfffee;
+  opacity: 0.85;
+  margin-top: 2px;
+}
