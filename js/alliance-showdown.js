@@ -6,6 +6,7 @@
    - Prepares alliance list
    - NO matchup rendering yet
 ====================================================== */
+import { buildMatchupMatrix } from "./acis/acis-matchup.js";
 
 import { db } from "./firebase-config.js";
 import {
@@ -29,6 +30,7 @@ let selectedAlliances = new Set();
 const allianceListEl = document.getElementById("allianceList");
 const analyzeBtn = document.getElementById("analyzeBtn");
 const searchInput = document.getElementById("allianceSearch");
+const resultsSection = document.getElementById("results");
 
 /* =============================
    LOAD FIRESTORE DATA
@@ -102,6 +104,30 @@ function toggleAllianceSelection(name, el) {
   analyzeBtn.disabled =
     selectedAlliances.size < 2 || selectedAlliances.size > 8;
 }
+/* =============================
+   ANALYZE SHOWDOWN
+============================= */
+analyzeBtn.addEventListener("click", () => {
+  const selected = allScoredAlliances.filter(a =>
+    selectedAlliances.has(a.alliance)
+  );
+
+  if (selected.length < 2) return;
+
+  console.log("⚔️ Analyzing alliances:", selected.map(a => a.alliance));
+
+  const matchupResults = buildMatchupMatrix(selected);
+
+  console.table(matchupResults);
+
+  // Store globally for rendering step
+  window.__ACIS_RESULTS__ = {
+    alliances: selected,
+    matchups: matchupResults
+  };
+
+  resultsSection.classList.remove("hidden");
+});
 
 /* =============================
    SEARCH FILTER
