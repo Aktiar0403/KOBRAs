@@ -59,11 +59,13 @@ warzoneSelect.addEventListener("change", () => {
 
   filteredListEl.innerHTML = "";
 
-  const wz = Number(warzoneSelect.value);
+  const wz = parseInt(warzoneSelect.value, 10);
+
   if (!wz) return;
 
   const filtered = allScoredAlliances
-    .filter(a => a.warzone === wz)
+   .filter(a => Number(a.warzone) === wz)
+
     .sort((a, b) => b.acsAbsolute - a.acsAbsolute)
     .slice(0, 20); // 🔒 HARD LIMIT
 
