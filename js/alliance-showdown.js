@@ -148,17 +148,7 @@ function toggleAlliance(a, el) {
 }
 
 
-/* =============================
-   ANALYZE
-============================= */
-analyzeBtn.addEventListener("click", () => {
-  const alliances = [...SELECTED.values()];
-  if (alliances.length < 2) return;
 
-  resultsEl.classList.remove("hidden");
-  renderAllianceCards(alliances);
-  
-});
 
 function renderMatchupCards(alliances) {
   const el = document.getElementById("matchups");
@@ -205,7 +195,17 @@ function renderMatchupCards(alliances) {
     el.appendChild(card);
   });
 }
+/* =============================
+   ANALYZE
+============================= */
+analyzeBtn.addEventListener("click", () => {
+  const alliances = [...SELECTED.values()];
+  if (alliances.length < 2) return;
 
+  resultsEl.classList.remove("hidden");
+  renderAllianceCards(alliances);
+  renderMatchupCards(alliances);
+});
 /* =============================
    ALLIANCE CARDS
 ============================= */
