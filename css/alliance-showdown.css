@@ -633,3 +633,59 @@ button:disabled {
 .intel-bars {
   height: 160px;
 }
+/* HEADER STRIP */
+.intel-strip {
+  position: relative;
+  padding: 8px 12px;
+  margin: -14px -14px 12px -14px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Status coloring via parent */
+.alliance-intel.good .intel-strip {
+  box-shadow: inset 0 -40px 40px rgba(0,255,200,0.25);
+}
+.alliance-intel.warn .intel-strip {
+  box-shadow: inset 0 -40px 40px rgba(255,193,7,0.25);
+}
+.alliance-intel.bad .intel-strip {
+  box-shadow: inset 0 -40px 40px rgba(255,77,77,0.28);
+}
+
+.intel-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.intel-meta {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+/* PIE */
+.intel-pie {
+  position: absolute;
+  top: -18px;          /* 👈 pushes it ABOVE strip */
+  right: 10px;
+  width: 92px;
+  text-align: center;
+  z-index: 3;
+}
+
+.intel-pie canvas {
+  width: 92px !important;
+  height: 92px !important;
+}
+
+.pie-label {
+  font-size: 0.7rem;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+/* MARQUEE FLOW */
+.marquee {
+  padding-right: 120px; /* room for pie */
+}
