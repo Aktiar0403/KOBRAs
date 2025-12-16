@@ -27,9 +27,11 @@ let selectedAlliances = new Set();
 /* =============================
    DOM REFERENCES
 ============================= */
-const allianceListEl = document.getElementById("allianceList");
+const warzoneSelect = document.getElementById("warzoneSelect");
+const filteredListEl = document.getElementById("filteredAlliances");
+
 const analyzeBtn = document.getElementById("analyzeBtn");
-const searchInput = document.getElementById("allianceSearch");
+
 const resultsSection = document.getElementById("results");
 
 /* =============================
@@ -39,6 +41,42 @@ async function loadServerPlayers() {
   const snap = await getDocs(collection(db, "server_players"));
   return snap.docs.map(doc => doc.data());
 }
+function populateWarzones() {
+  const warzones = [
+    ...new Set(allScoredAlliances.map(a => a.warzone))
+  ].sort((a, b) => a - b);
+
+  warzones.forEach(wz => {
+    const opt = document.createElement("option");
+    opt.value = wz;
+    opt.textContent = `Warzone ${wz}`;
+    warzoneSelect.appendChild(opt);
+  });
+}
+warzoneSelect.addEventListener("change", () => {
+  selectedAlliances.clear();
+  analyzeBtn.disabled = true;
+
+  filteredListEl.innerHTML = "";
+
+  const wz = Number(warzoneSelect.value);
+  if (!wz) return;
+
+  const filtered = allScoredAlliances
+    .filter(a => a.warzone === wz)
+    .sort((a, b) => b.acsAbsolute - a.acsAbsolute)
+    .slice(0, 20); // 🔒 HARD LIMIT
+
+  filtered.forEach(a => {
+    const item = document.createElement("div");
+    item.className = "alliance-item";
+    item.textContent = a.alliance;
+
+    item.onclick = () => toggleAllianceSelection(a.alliance, item);
+
+    filteredListEl.appendChild(item);
+  });
+});
 
 /* =============================
    INITIALIZE PAGE
@@ -69,6 +107,8 @@ async function init() {
   } catch (err) {
     console.error("Alliance Showdown init failed:", err);
   }
+  populateWarzones();
+
 }
 
 /* =============================

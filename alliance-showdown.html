@@ -29,20 +29,30 @@
     <h2>Select Alliances (2–8)</h2>
 
     <div class="selector-controls">
-      <input
-        type="text"
-        id="allianceSearch"
-        placeholder="Search alliance name..."
-      />
+      <section id="alliance-selector" class="panel">
+  <h2>Select Warzone</h2>
+
+  <div class="selector-controls">
+    <select id="warzoneSelect">
+      <option value="">-- Select Warzone --</option>
+    </select>
+
+    <button id="analyzeBtn" disabled>
+      Analyze Showdown
+    </button>
+  </div>
+
+  <div id="filteredAlliances" class="alliance-list">
+    <!-- reduced alliance list -->
+  </div>
+</section>
 
       <button id="analyzeBtn" disabled>
         Analyze Showdown
       </button>
     </div>
 
-    <div id="allianceList" class="alliance-list">
-      <!-- dynamically populated -->
-    </div>
+   
   </section>
 
   <!-- =============================
