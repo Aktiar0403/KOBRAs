@@ -1,12 +1,11 @@
 /* ======================================================
-   ALLIANCE SHOWDOWN — STEP 5.2
+   ALLIANCE SHOWDOWN — UI CONTROLLER
    ------------------------------------------------------
-   - Loads Firestore data
-   - Runs ACIS pipeline
-   - Prepares alliance list
-   - NO matchup rendering yet
+   - Warzone-scoped alliance picker
+   - Cross-warzone selection allowed
+   - Uses ACIS engine as black box
+   - NO intelligence logic here
 ====================================================== */
-import { buildMatchupMatrix } from "./acis/acis-matchup.js";
 
 import { db } from "./firebase-config.js";
 import {
@@ -17,22 +16,26 @@ import {
 import { prepareAllianceData } from "./acis/acis-data.js";
 import { processAlliance } from "./acis/acis-engine.js";
 import { scoreAlliance } from "./acis/acis-scorer.js";
+import { buildMatchupMatrix } from "./acis/acis-matchup.js";
 
 /* =============================
-   GLOBAL STATE (PAGE ONLY)
+   GLOBAL STATE (UI ONLY)
 ============================= */
 let allScoredAlliances = [];
-let selectedAlliances = new Set();
+
+/**
+ * Map<allianceName, warzone>
+ * Allows same alliance tag in different warzones safely
+ */
+let selectedAlliances = new Map();
 
 /* =============================
    DOM REFERENCES
 ============================= */
-const warzoneSelect = document.getElementById("warzoneSelect");
-const filteredListEl = document.getElementById("filteredAlliances");
-
-const analyzeBtn = document.getElementById("analyzeBtn");
-
-const resultsSection = document.getElementById("results");
+const warzoneSelect   = document.getElementById("warzoneSelect");
+const filteredListEl  = document.getElementById("filteredAlliances");
+const analyzeBtn      = document.getElementById("analyzeBtn");
+const resultsSection  = document.getElementById("results");
 
 /* =============================
    LOAD FIRESTORE DATA
@@ -41,44 +44,6 @@ async function loadServerPlayers() {
   const snap = await getDocs(collection(db, "server_players"));
   return snap.docs.map(doc => doc.data());
 }
-function populateWarzones() {
-  const warzones = [
-    ...new Set(allScoredAlliances.map(a => a.warzone))
-  ].sort((a, b) => a - b);
-
-  warzones.forEach(wz => {
-    const opt = document.createElement("option");
-    opt.value = wz;
-    opt.textContent = `Warzone ${wz}`;
-    warzoneSelect.appendChild(opt);
-  });
-}
-warzoneSelect.addEventListener("change", () => {
-  selectedAlliances.clear();
-  analyzeBtn.disabled = true;
-
-  filteredListEl.innerHTML = "";
-
-  const wz = parseInt(warzoneSelect.value, 10);
-
-  if (!wz) return;
-
-  const filtered = allScoredAlliances
-   .filter(a => Number(a.warzone) === wz)
-
-    .sort((a, b) => b.acsAbsolute - a.acsAbsolute)
-    .slice(0, 20); // 🔒 HARD LIMIT
-
-  filtered.forEach(a => {
-    const item = document.createElement("div");
-    item.className = "alliance-item";
-    item.textContent = a.alliance;
-
-    item.onclick = () => toggleAllianceSelection(a.alliance, item);
-
-    filteredListEl.appendChild(item);
-  });
-});
 
 /* =============================
    INITIALIZE PAGE
@@ -88,23 +53,19 @@ async function init() {
     console.log("🔍 Loading server players...");
 
     const players = await loadServerPlayers();
-
     if (!players.length) {
       console.warn("No player data found");
       return;
     }
 
-    // STEP 2 — Prepare alliance data
+    // ACIS PIPELINE
     const prepared = prepareAllianceData(players);
-
-    // STEP 3 — Process & score alliances
-    allScoredAlliances = prepared.map(alliance =>
-      scoreAlliance(processAlliance(alliance))
+    allScoredAlliances = prepared.map(a =>
+      scoreAlliance(processAlliance(a))
     );
 
     console.log("✅ Alliances ready:", allScoredAlliances.length);
 
-    // ✅ NEW FLOW: populate only warzones
     populateWarzones();
 
   } catch (err) {
@@ -112,56 +73,113 @@ async function init() {
   }
 }
 
+/* =============================
+   POPULATE WARZONE DROPDOWN
+============================= */
+function populateWarzones() {
+  warzoneSelect.innerHTML =
+    `<option value="">-- Select Warzone --</option>`;
 
+  const warzones = [
+    ...new Set(allScoredAlliances.map(a => Number(a.warzone)))
+  ]
+    .filter(wz => !isNaN(wz))
+    .sort((a, b) => a - b);
+
+  warzones.forEach(wz => {
+    const opt = document.createElement("option");
+    opt.value = wz;
+    opt.textContent = `Warzone ${wz}`;
+    warzoneSelect.appendChild(opt);
+  });
+}
 
 /* =============================
-   TOGGLE SELECTION
+   WARZONE CHANGE → SHOW ALLIANCES
 ============================= */
-function toggleAllianceSelection(name, el) {
-  if (selectedAlliances.has(name)) {
-    selectedAlliances.delete(name);
+warzoneSelect.addEventListener("change", () => {
+  filteredListEl.innerHTML = "";
+
+  const wz = parseInt(warzoneSelect.value, 10);
+  if (!wz) return;
+
+  const filtered = allScoredAlliances
+    .filter(a => Number(a.warzone) === wz)
+    .sort((a, b) => b.acsAbsolute - a.acsAbsolute)
+    .slice(0, 20); // 🔒 HARD LIMIT
+
+  filtered.forEach(a => {
+    const item = document.createElement("div");
+    item.className = "alliance-item";
+    item.textContent = `${a.alliance}`;
+
+    if (
+      selectedAlliances.has(a.alliance) &&
+      selectedAlliances.get(a.alliance) === a.warzone
+    ) {
+      item.classList.add("selected");
+    }
+
+    item.onclick = () => toggleAllianceSelection(a, item);
+    filteredListEl.appendChild(item);
+  });
+});
+
+/* =============================
+   TOGGLE ALLIANCE SELECTION
+============================= */
+function toggleAllianceSelection(allianceObj, el) {
+  const key = allianceObj.alliance;
+  const wz  = allianceObj.warzone;
+
+  if (
+    selectedAlliances.has(key) &&
+    selectedAlliances.get(key) === wz
+  ) {
+    selectedAlliances.delete(key);
     el.classList.remove("selected");
   } else {
     if (selectedAlliances.size >= 8) return;
-    selectedAlliances.add(name);
+
+    selectedAlliances.set(key, wz);
     el.classList.add("selected");
   }
 
-  analyzeBtn.disabled =
-    selectedAlliances.size < 2 || selectedAlliances.size > 8;
+  analyzeBtn.disabled = selectedAlliances.size < 2;
 }
+
 /* =============================
    ANALYZE SHOWDOWN
 ============================= */
 analyzeBtn.addEventListener("click", () => {
   const selected = allScoredAlliances.filter(a =>
-    selectedAlliances.has(a.alliance)
+    selectedAlliances.has(a.alliance) &&
+    selectedAlliances.get(a.alliance) === a.warzone
   );
 
   if (selected.length < 2) return;
 
-  console.log("⚔️ Analyzing alliances:", selected.map(a => a.alliance));
+  console.log(
+    "⚔️ Analyzing alliances:",
+    selected.map(a => `${a.alliance} (${a.warzone})`)
+  );
 
-  const matchupResults = buildMatchupMatrix(selected);
+  const matchups = buildMatchupMatrix(selected);
 
-  console.table(matchupResults);
-
-  // Store globally for rendering step
   window.__ACIS_RESULTS__ = {
-  alliances: selected,
-  matchups: matchupResults
-};
+    alliances: selected,
+    matchups
+  };
 
-resultsSection.classList.remove("hidden");
-renderResults();
-
+  resultsSection.classList.remove("hidden");
+  renderResults();
 });
+
 /* =============================
    RENDER RESULTS
 ============================= */
 function renderResults() {
   const { alliances, matchups } = window.__ACIS_RESULTS__;
-
   renderAllianceBlocks(alliances);
   renderMatchupMatrix(matchups);
 }
@@ -174,21 +192,24 @@ function renderAllianceBlocks(alliances) {
   container.innerHTML = "";
 
   alliances.forEach(a => {
-    const block = document.createElement("div");
-    block.className = "alliance-block";
+    const statusClass = a.isNCA
+      ? "bad"
+      : a.stabilityFactor < 0.8
+        ? "warn"
+        : "good";
 
-    const status = a.isNCA
+    const statusText = a.isNCA
       ? "🔴 Non-Competitive"
       : a.stabilityFactor < 0.8
         ? "🟡 Fragile"
         : "🟢 Competitive";
 
-    block.innerHTML = `
-      <h3>${a.alliance}</h3>
-      <div class="status ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
-    ${status}
-        </div>
+    const block = document.createElement("div");
+    block.className = "alliance-block";
 
+    block.innerHTML = `
+      <h3>${a.alliance} <small>(WZ ${a.warzone})</small></h3>
+      <div class="status ${statusClass}">${statusText}</div>
 
       <div class="stats">
         <div><strong>Active Power:</strong> ${formatPower(a.activePower)}</div>
@@ -228,7 +249,7 @@ function renderMatchupMatrix(matchups) {
 }
 
 /* =============================
-   UTIL HELPERS (UI ONLY)
+   UI HELPERS
 ============================= */
 function renderTierCounts(tiers) {
   return Object.entries(tiers)
@@ -241,10 +262,6 @@ function formatPower(val) {
   if (!val) return "0";
   return (val / 1e6).toFixed(1) + "M";
 }
-
-/* =============================
-   SEARCH FILTER
-============================= */
 
 /* =============================
    START
