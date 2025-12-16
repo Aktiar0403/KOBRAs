@@ -284,3 +284,151 @@ button:disabled {
 .stress-test-result {
   transition: all 0.25s ease;
 }
+body.kobra-dark {
+  background: radial-gradient(circle at top, #05060a, #000);
+  color: #e6eef0;
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.kobra-header {
+  text-align: center;
+  padding: 18px;
+}
+
+.kobra-header h1 {
+  letter-spacing: 1.2px;
+  color: #00ffc8;
+}
+
+.panel {
+  max-width: 1100px;
+  margin: 14px auto;
+  padding: 14px;
+}
+
+.hint {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+select, button {
+  background: #071018;
+  border: 1px solid rgba(0,255,200,0.3);
+  color: #e6eef0;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.alliance-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
+  gap: 8px;
+}
+
+.alliance-row {
+  padding: 8px;
+  text-align: center;
+  border: 1px solid rgba(0,255,200,0.15);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.alliance-row.selected {
+  background: rgba(0,255,200,0.12);
+  box-shadow: 0 0 12px rgba(0,255,200,0.4);
+}
+
+.hidden { display: none; }
+
+/* Alliance Cards */
+
+#allianceCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+  gap: 14px;
+}
+
+.alliance-card {
+  background: linear-gradient(145deg, #050b12, #020408);
+  border: 1px solid rgba(0,255,200,0.25);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 0 18px rgba(0,255,200,0.15);
+}
+
+.status {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  margin-bottom: 6px;
+}
+
+.status.good { background: rgba(0,255,150,0.2); }
+.status.warn { background: rgba(255,200,0,0.2); }
+.status.bad  { background: rgba(255,80,80,0.2); }
+
+.metrics {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+}
+
+.metric span {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.metric strong {
+  font-size: 1.1rem;
+  color: #00ffc8;
+}
+
+.marquee h4 {
+  font-size: 0.75rem;
+  margin: 6px 0;
+}
+
+.marquee-player {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+}
+
+/* Matchups */
+
+.matchup-card {
+  background: #050b12;
+  border-left: 4px solid #00ffc8;
+  border-radius: 12px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.matchup-outcome.collapse { color: #ff5c5c; }
+.matchup-outcome.dominant { color: #ff9f43; }
+.matchup-outcome.advantage { color: #3ddc84; }
+
+.collapse-panel {
+  background: rgba(255,0,0,0.08);
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.stress-test-btn {
+  background: rgba(255,0,0,0.2);
+  border: 1px solid #ff5c5c;
+  color: #ffdede;
+  font-size: 0.7rem;
+  margin-top: 6px;
+}
