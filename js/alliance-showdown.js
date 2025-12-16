@@ -17,6 +17,48 @@ import { prepareAllianceData } from "./acis/acis-data.js";
 import { processAlliance } from "./acis/acis-engine.js";
 import { scoreAlliance } from "./acis/acis-scorer.js";
 import { buildMatchupMatrix } from "./acis/acis-matchup.js";
+const FACTOR_TOOLTIPS = {
+  COMBAT_GAP: `
+Higher overall fighting strength after applying:
+• Active vs bench weighting
+• Composition quality
+• Stability penalties
+A large gap usually results in dominance or collapse.
+`,
+
+  MEGA_WHALE: `
+Mega Whales are top-tier players with extreme power.
+They disproportionately influence frontline battles
+and swing outcomes even against larger squads.
+`,
+
+  WHALE: `
+Whales form the backbone of an alliance.
+More whales usually means stronger sustained combat
+and better resistance to early losses.
+`,
+
+  STABILITY: `
+Stability reflects squad completeness and balance.
+Low stability indicates:
+• Missing active players
+• Overdependence on few players
+• Assumed (Plankton) fillers
+Unstable squads collapse faster.
+`,
+
+  POWER_DISTRIBUTION: `
+Better power distribution means strength is spread
+across many players instead of concentrated in a few.
+This reduces collapse risk if top players fall.
+`,
+
+  NON_COMPETITIVE: `
+Non-Competitive Alliances lack sufficient
+real active players or rely heavily on assumed power.
+They are structurally unable to sustain combat.
+`
+};
 
 /* =============================
    GLOBAL STATE (UI ONLY)
@@ -339,7 +381,13 @@ function renderMatchupMatrix(matchups) {
       </div>
 
       <ul class="factors">
-        ${analysis.factors.map(f => `<li>${f.text}</li>`).join("")}
+        ${analysis.factors.map(f => `
+  <li class="factor"
+      data-tooltip="${FACTOR_TOOLTIPS[f.type]?.trim()}">
+    ${f.text}
+  </li>
+`).join("")}
+
       </ul>
 
       <div class="metrics">
