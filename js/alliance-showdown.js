@@ -367,18 +367,18 @@ function renderMatchupMatrix(matchups) {
     const card = document.createElement("div");
     card.className = "matchup-card";
 
-    card.innerHTML = `
-      <div class="verdict">
-        <div class="winner">🏆 ${analysis.winner}</div>
+   card.innerHTML = `
+  <div class="verdict">
+    <div class="winner">🏆 ${analysis.winner}</div>
         <div class="loser">
           💥 ${analysis.loser}
           ${analysis.outcome.includes("Collapse") ? "(Collapse Likely)" : ""}
         </div>
-      </div>
+  </div>
 
-      <div class="strength">
-        Outcome Strength: <strong>${analysis.outcome}</strong>
-      </div>
+  <div class="strength">
+    Outcome Strength: <strong>${analysis.outcome}</strong>
+  </div>
 
       <ul class="factors">
         ${analysis.factors.map(f => `
@@ -392,8 +392,9 @@ function renderMatchupMatrix(matchups) {
 
       <div class="metrics">
         Combat Ratio: ${analysis.ratio.toFixed(2)}×
-      </div>
-    `;
+  </div>
+`;
+
 
     container.appendChild(card);
   });
