@@ -26,6 +26,35 @@ const warzoneSelect   = document.getElementById("warzoneSelect");
 const allianceListEl = document.getElementById("allianceList");
 const analyzeBtn     = document.getElementById("analyzeBtn");
 const resultsEl      = document.getElementById("results");
+// Chart.js plugin to draw values above bars
+const BarValuePlugin = {
+  id: "barValuePlugin",
+  afterDatasetsDraw(chart) {
+    const { ctx } = chart;
+    ctx.save();
+
+    chart.data.datasets.forEach((dataset, i) => {
+      const meta = chart.getDatasetMeta(i);
+      meta.data.forEach((bar, index) => {
+        const value = dataset.rawValues?.[index];
+        if (value == null) return;
+
+        ctx.fillStyle = "#eafff8"; // neon white
+        ctx.font = "11px Inter, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+
+        ctx.fillText(
+          value,
+          bar.x,
+          bar.y - 6
+        );
+      });
+    });
+
+    ctx.restore();
+  }
+};
 
 /* =============================
    LOAD DATA
@@ -213,25 +242,63 @@ function renderAllianceBars(a) {
     data: {
       labels: ["Total", "Frontline", "Depth", "Stability"],
       datasets: [{
-        data: [
-          normalizeTotalPower(a.totalAlliancePower),
-          normalizeFSP(a.averageFirstSquadPower),
-          normalizeDepth(a.benchPower / (a.activePower || 1)),
-          normalizeStability(a.stabilityFactor)
-        ],
-        backgroundColor: [
-          "#0b285aff",
-          "#ff9f43",
-          "#4dabf7",
-          "#3ddc84"
-        ]
-      }]
+  data: [
+    normalizeTotalPower(a.totalAlliancePower),
+     normalizeFSP(a.averageFirstSquadPower),
+    normalizeDepth(a.benchPower / (a.activePower || 1)),
+    normalizeStability(a.stabilityFactor)
+  ],
+
+  // 👇 THESE ARE THE LABELS SHOWN ABOVE BARS
+  rawValues: [
+    formatBig(a.totalAlliancePower),
+      formatPower(a.averageFirstSquadPower),
+    Math.round((a.benchPower / a.activePower) * 100) + "%",
+    Math.round(a.stabilityFactor * 100) + "%"
+  ],
+
+  backgroundColor: [
+    "#1e90ff",   // Total
+   
+    "#bb7467ff",   // Frontline
+    "#2eca74ff",   // Depth
+    "#13a787ff"    // Stability
+  ]
+}]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: { y: { min: 0, max: 100, ticks: { display: false } } }
+options: {
+  responsive: true,
+  maintainAspectRatio: false,
+
+  layout: {
+    padding: {
+      top: 18   // 👈 space for numbers above bars
     }
-  });
+  },
+
+  plugins: {
+    legend: { display: false },
+    tooltip: { enabled: false } // numbers already visible
+  },
+
+  scales: {
+    x: {
+      ticks: {
+        color: "#bdfdf0",
+        font: { size: 11 }
+      },
+      grid: { display: false }
+    },
+    y: {
+      min: 0,
+      max: 100,
+      ticks: { display: false },
+      grid: { display: false }
+    }
+  }
+},
+plugins: [BarValuePlugin]   // 👈 REQUIRED
+});
 }
 
 function renderAlliancePie(a) {
