@@ -126,6 +126,13 @@ function toggleAlliance(a, el) {
 
   analyzeBtn.disabled = SELECTED.size < 2;
 }
+function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
+
+function pct(v) {
+  return Math.round(v * 100);
+}
 
 /* =============================
    ANALYZE
@@ -186,12 +193,20 @@ function renderAllianceCards(alliances) {
             <span>${formatPower(p.firstSquadPower)}</span>
           </div>
         `).join("")}
+        <div class="math-box">
+  <canvas id="power-${a.alliance}-${a.warzone}"></canvas>
+  <canvas id="stability-${a.alliance}-${a.warzone}"></canvas>
+  <canvas id="composition-${a.alliance}-${a.warzone}"></canvas>
+  <canvas id="frontline-${a.alliance}-${a.warzone}"></canvas>
+</div>
+
       </div>
     `;
 
     el.appendChild(card);
   });
 }
+
 
 /* =============================
    MATCHUPS
@@ -273,126 +288,135 @@ function renderMatchupCards(alliances) {
     el.appendChild(card);
   });
 }
-function renderCharts(alliances) {
-  const container = document.getElementById("charts");
-  container.innerHTML = "";
+function renderPowerChart(a) {
+  const ctx = document
+    .getElementById(`power-${a.alliance}-${a.warzone}`)
+    .getContext("2d");
 
-  alliances.forEach(a => {
-    const card = document.createElement("div");
-    card.className = "chart-card";
-
-    card.innerHTML = `
-      <h3>${a.alliance} — Metrics</h3>
-      <canvas id="combat-${a.alliance}"></canvas>
-      <canvas id="fsp-${a.alliance}"></canvas>
-      <canvas id="stability-${a.alliance}"></canvas>
-    `;
-
-    container.appendChild(card);
-
-    // Combat Score
-    new Chart(
-      document.getElementById(`combat-${a.alliance}`),
-      {
-        type: "bar",
-        data: {
-          labels: ["Combat Score"],
-          datasets: [{
-            label: a.alliance,
-            data: [a.acsAbsolute],
-            backgroundColor: "#00ffc8"
-          }]
-        }
-      }
-    );
-
-    // First Squad Power
-    new Chart(
-      document.getElementById(`fsp-${a.alliance}`),
-      {
-        type: "bar",
-        data: {
-          labels: ["Avg First Squad Power"],
-          datasets: [{
-            label: a.alliance,
-            data: [a.averageFirstSquadPower / 1e6],
-            backgroundColor: "#ff9f43"
-          }]
-        }
-      }
-    );
-
-    // Stability
-    new Chart(
-      document.getElementById(`stability-${a.alliance}`),
-      {
-        type: "bar",
-        data: {
-          labels: ["Stability"],
-          datasets: [{
-            label: a.alliance,
-            data: [a.stabilityFactor],
-            backgroundColor:
-              a.stabilityFactor < 0.8 ? "#ff5c5c" : "#3ddc84"
-          }]
-        },
-        options: {
-          scales: {
-            y: { min: 0, max: 1 }
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Combat", "Frontline"],
+      datasets: [{
+        data: [
+          a.acsAbsolute / 1e6,
+          a.averageFirstSquadPower / 1e6
+        ],
+        backgroundColor: ["#00ffc8", "#ff9f43"]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback: v => v + "M"
           }
         }
       }
-    );
+    }
   });
 }
-function renderMatchupCharts(matchups, alliances) {
-  const container = document.getElementById("charts");
+function renderStabilityChart(a) {
+  const ctx = document
+    .getElementById(`stability-${a.alliance}-${a.warzone}`)
+    .getContext("2d");
 
-  matchups.forEach(m => {
-    const A = alliances.find(a => a.alliance === m.a);
-    const B = alliances.find(a => a.alliance === m.b);
-    if (!A || !B) return;
-
-    const wrap = document.createElement("div");
-    wrap.className = "chart-card";
-
-    wrap.innerHTML = `
-      <h3>${A.alliance} vs ${B.alliance}</h3>
-      <canvas id="cmp-${A.alliance}-${B.alliance}"></canvas>
-    `;
-
-    container.appendChild(wrap);
-
-    new Chart(
-      document.getElementById(`cmp-${A.alliance}-${B.alliance}`),
-      {
-        type: "bar",
-        data: {
-          labels: ["Combat Score", "First Squad Power"],
-          datasets: [
-            {
-              label: A.alliance,
-              data: [
-                A.acsAbsolute,
-                A.averageFirstSquadPower / 1e6
-              ],
-              backgroundColor: "#00ffc8"
-            },
-            {
-              label: B.alliance,
-              data: [
-                B.acsAbsolute,
-                B.averageFirstSquadPower / 1e6
-              ],
-              backgroundColor: "#ff5c5c"
-            }
-          ]
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Stability", "Depth"],
+      datasets: [{
+        data: [
+          pct(a.stabilityFactor),
+          pct(a.benchPower / (a.activePower || 1))
+        ],
+        backgroundColor: ["#3ddc84", "#4dabf7"]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: { enabled: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: {
+            callback: v => v + "%"
+          }
         }
       }
-    );
+    }
   });
 }
 
+function renderCompositionChart(a) {
+  const ctx = document
+    .getElementById(`composition-${a.alliance}-${a.warzone}`)
+    .getContext("2d");
+
+  const tiers = a.tierCounts;
+
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(tiers),
+      datasets: [{
+        data: Object.values(tiers),
+        backgroundColor: [
+          "#ff595e", "#ffca3a", "#8ac926",
+          "#1982c4", "#6a4c93", "#adb5bd"
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: "bottom" }
+      }
+    }
+  });
+}
+function renderFrontlineChart(a) {
+  const ctx = document
+    .getElementById(`frontline-${a.alliance}-${a.warzone}`)
+    .getContext("2d");
+
+  const top = [...a.activePlayers]
+    .filter(p => !p.assumed)
+    .sort((x, y) => y.firstSquadPower - x.firstSquadPower)
+    .slice(0, 10);
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: top.map((_, i) => `#${i + 1}`),
+      datasets: [{
+        data: top.map(p => p.firstSquadPower / 1e6),
+        borderColor: "#ff5c5c",
+        tension: 0.35
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        y: {
+          beginAtZero: false,
+          ticks: {
+            callback: v => v + "M"
+          }
+        }
+      }
+    }
+  });
+}
 
 /* =============================
    LOGIC HELPERS

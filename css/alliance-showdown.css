@@ -443,3 +443,14 @@ button:disabled {
   padding: 14px;
   margin-bottom: 16px;
 }
+.math-box {
+  margin-top: 12px;
+  display: grid;
+  grid-template-rows: 120px 120px 140px 140px;
+  gap: 10px;
+}
+
+.math-box canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
