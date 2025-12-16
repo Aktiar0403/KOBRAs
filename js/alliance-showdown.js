@@ -266,6 +266,16 @@ function computeTotalAlliancePower(a) {
     .filter(p => !p.assumed)
     .reduce((s, p) => s + p.totalPower, 0);
 }
+function formatBig(v) {
+  if (!v) return "0";
+
+  if (v >= 1e12) return (v / 1e12).toFixed(2) + "T";
+  if (v >= 1e9)  return (v / 1e9).toFixed(2) + "B";
+  if (v >= 1e6)  return (v / 1e6).toFixed(1) + "M";
+
+  return Math.round(v).toString();
+}
+
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const normalizeTotalPower = v => clamp(v / 2e10 * 100, 5, 100);
