@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>KOBRA — Alliance Showdown</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Core Styles -->
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/alliance-showdown.css" />
+
+</head>
+<body>
+
+  <!-- =============================
+       PAGE HEADER
+  ============================== -->
+  <header class="page-header">
+    <h1>Alliance Showdown</h1>
+    <p class="subtitle">
+      Tactical alliance combat intelligence based on real server data
+    </p>
+  </header>
+
+  <!-- =============================
+       ALLIANCE SELECTOR
+  ============================== -->
+  <section id="alliance-selector" class="panel">
+    <h2>Select Alliances (2–8)</h2>
+
+    <div class="selector-controls">
+      <input
+        type="text"
+        id="allianceSearch"
+        placeholder="Search alliance name..."
+      />
+
+      <button id="analyzeBtn" disabled>
+        Analyze Showdown
+      </button>
+    </div>
+
+    <div id="allianceList" class="alliance-list">
+      <!-- dynamically populated -->
+    </div>
+  </section>
+
+  <!-- =============================
+       RESULTS AREA
+  ============================== -->
+  <section id="results" class="results hidden">
+
+    <!-- Alliance Blocks -->
+    <div id="allianceBlocks" class="alliance-blocks">
+      <!-- populated by JS -->
+    </div>
+
+    <!-- Matchup Matrix -->
+    <div id="matchupMatrix" class="matchup-matrix">
+      <!-- populated by JS -->
+    </div>
+
+  </section>
+
+  <!-- =============================
+       SCRIPT ENTRY
+  ============================== -->
+  <script type="module" src="./js/alliance-showdown.js"></script>
+
+</body>
+</html>
