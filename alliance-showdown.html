@@ -5,76 +5,76 @@
   <title>KOBRA — Alliance Showdown</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Core Styles -->
+  <!-- Base theme -->
   <link rel="stylesheet" href="./css/style.css" />
-  <link rel="stylesheet" href="./css/alliance-showdown.css" />
 
+  <!-- Showdown specific -->
+  <link rel="stylesheet" href="./css/alliance-showdown.css" />
 </head>
+
 <body>
 
-  <!-- =============================
+  <!-- =========================
        PAGE HEADER
-  ============================== -->
+  ========================== -->
   <header class="page-header">
-    <h1>Alliance Showdown</h1>
+    <h1>⚔️ Alliance Showdown</h1>
     <p class="subtitle">
-      Tactical alliance combat intelligence based on real server data
+      Compare alliances using real combat strength,
+      not just total power.
     </p>
   </header>
 
-  <!-- =============================
-       ALLIANCE SELECTOR
-  ============================== -->
-  <section id="alliance-selector" class="panel">
-    <h2>Select Alliances (2–8)</h2>
-
-    <div class="selector-controls">
-      <section id="alliance-selector" class="panel">
-  <h2>Select Warzone</h2>
-
-  <div class="selector-controls">
+  <!-- =========================
+       WARZONE SELECTION
+  ========================== -->
+  <section class="panel">
+    <label for="warzoneSelect">Select Warzone</label>
     <select id="warzoneSelect">
-      <option value="">-- Select Warzone --</option>
+      <option value="">Loading...</option>
     </select>
+  </section>
 
+  <!-- =========================
+       ALLIANCE LIST
+  ========================== -->
+  <section class="panel">
+    <h2>Alliances (Top 20 by Combat Score)</h2>
+    <p class="hint">
+      Select up to 8 alliances. You may switch warzones and add more.
+    </p>
+
+    <div id="allianceList" class="alliance-list">
+      <!-- populated by JS -->
+    </div>
+  </section>
+
+  <!-- =========================
+       ANALYZE BUTTON
+  ========================== -->
+  <section class="panel center">
     <button id="analyzeBtn" disabled>
       Analyze Showdown
     </button>
-  </div>
-
-  <div id="filteredAlliances" class="alliance-list">
-    <!-- reduced alliance list -->
-  </div>
-</section>
-
-      <button id="analyzeBtn" disabled>
-        Analyze Showdown
-      </button>
-    </div>
-
-   
   </section>
 
-  <!-- =============================
-       RESULTS AREA
-  ============================== -->
-  <section id="results" class="results hidden">
+  <!-- =========================
+       RESULTS
+  ========================== -->
+  <section id="results" class="panel hidden">
+    <h2>Selected Alliances</h2>
 
-    <!-- Alliance Blocks -->
-    <div id="allianceBlocks" class="alliance-blocks">
-      <!-- populated by JS -->
-    </div>
+    <!-- Phase 1 -->
+    <div id="allianceCards"></div>
 
-    <!-- Matchup Matrix -->
-    <div id="matchupMatrix" class="matchup-matrix">
-      <!-- populated by JS -->
-    </div>
+    <h2>Matchups</h2>
+<div id="matchups"></div>
 
   </section>
 
-  <!-- =============================
-       SCRIPT ENTRY
-  ============================== -->
+  <!-- =========================
+       SCRIPT
+  ========================== -->
   <script type="module" src="./js/alliance-showdown.js"></script>
 
 </body>

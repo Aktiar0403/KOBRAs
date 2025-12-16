@@ -1,10 +1,11 @@
 /* ======================================================
-   ACIS v1.1 — CORE ENGINE (PART 1)
+   ACIS v1.2 — CORE ENGINE (PART 1)
    ------------------------------------------------------
    - Classifies players
    - Applies dual weighting
    - Injects Plankton
    - Computes effective power
+   - Computes First Squad Power (FSP)
    - NO matchup logic
 ====================================================== */
 
@@ -15,6 +16,19 @@ import {
   ACTIVE_SQUAD_SIZE,
   ASSUMPTION_FACTOR
 } from "./acis-config.js";
+
+/* =============================
+   FIRST SQUAD POWER (FSP)
+   Empirical, non-linear estimate
+============================= */
+function estimateFirstSquadPower(totalPower) {
+  const tp = Number(totalPower || 0);
+
+  if (tp <= 150e6) return tp * 0.37;
+  if (tp <= 220e6) return tp * 0.34;
+  if (tp <= 320e6) return tp * 0.30;
+  return tp * 0.27;
+}
 
 /* =============================
    CLASSIFY PLAYER BY POWER
@@ -67,7 +81,8 @@ function createPlankton(warzoneFloorPower) {
     name: "Assumed",
     totalPower: rawPower,
     class: "PLANKTON",
-    effectivePower: rawPower * CLASS_BASE_WEIGHTS.PLANKTON
+    effectivePower: rawPower * CLASS_BASE_WEIGHTS.PLANKTON,
+    firstSquadPower: rawPower * 0.33 // conservative filler
   };
 }
 
@@ -100,19 +115,23 @@ export function processAlliance(allianceData) {
 
   let activePower = 0;
   let benchPower = 0;
+  let activeFirstSquadPower = 0;
 
   /* -------- ACTIVE REAL PLAYERS -------- */
   activeReal.forEach(p => {
     const cls = classifyPower(p.totalPower);
     const eff = computeEffectivePower(p, cls);
+    const fsp = estimateFirstSquadPower(p.totalPower);
 
     tierCounts[cls]++;
     activePower += eff;
+    activeFirstSquadPower += fsp;
 
     activePlayers.push({
       ...p,
       class: cls,
       effectivePower: eff,
+      firstSquadPower: fsp,
       assumed: false
     });
   });
@@ -123,6 +142,7 @@ export function processAlliance(allianceData) {
 
     tierCounts.PLANKTON++;
     activePower += plankton.effectivePower;
+    activeFirstSquadPower += plankton.firstSquadPower;
 
     activePlayers.push({
       ...plankton,
@@ -143,6 +163,7 @@ export function processAlliance(allianceData) {
         ...p,
         class: cls,
         effectivePower: eff,
+        firstSquadPower: estimateFirstSquadPower(p.totalPower),
         assumed: false
       });
     });
@@ -157,6 +178,13 @@ export function processAlliance(allianceData) {
 
     activePower,
     benchPower,
+
+    /* 🔑 NEW — FSP METRICS */
+    activeFirstSquadPower,
+    averageFirstSquadPower:
+      activePlayers.length
+        ? activeFirstSquadPower / activePlayers.length
+        : 0,
 
     tierCounts
   };

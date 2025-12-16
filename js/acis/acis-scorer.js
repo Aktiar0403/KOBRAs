@@ -127,6 +127,8 @@ export function scoreAlliance(processed) {
   // 🔑 REQUIRED FOR UI
   activePlayers: processed.activePlayers,
   benchPlayers: processed.benchPlayers,
+activeFirstSquadPower: processed.activeFirstSquadPower,
+averageFirstSquadPower: processed.averageFirstSquadPower,
 
   activePower: processed.activePower,
   benchPower: processed.benchPower,
