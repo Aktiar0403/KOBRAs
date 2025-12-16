@@ -482,3 +482,70 @@ button:disabled {
   width: 100% !important;
   height: 100% !important;
 }
+/* Core card */
+.alliance-intel {
+  position: relative;
+  padding: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 10px;
+  box-shadow: 0 0 18px rgba(0, 255, 200, 0.08);
+}
+
+/* Status-based backgrounds */
+.alliance-intel.good {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 255, 200, 0.18),
+    rgba(0, 255, 200, 0.05)
+  );
+  border: 1px solid rgba(0, 255, 200, 0.35);
+}
+
+.alliance-intel.warn {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 193, 7, 0.18),
+    rgba(255, 193, 7, 0.05)
+  );
+  border: 1px solid rgba(255, 193, 7, 0.35);
+}
+
+.alliance-intel.bad {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 77, 77, 0.20),
+    rgba(255, 77, 77, 0.06)
+  );
+  border: 1px solid rgba(255, 77, 77, 0.35);
+}
+
+/* Header bar */
+.intel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  margin: -12px -12px 10px -12px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Status text */
+.intel-status {
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.3px;
+}
+
+/* Alliance title */
+.intel-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+
+.intel-title small {
+  font-weight: 400;
+  opacity: 0.8;
+}

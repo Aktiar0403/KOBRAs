@@ -145,30 +145,46 @@ function renderAllianceCards(alliances) {
     card.className = "alliance-card";
 
     card.innerHTML = `
-      <h3>${a.alliance} <small>(WZ ${a.warzone})</small></h3>
+  <div class="alliance-intel ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
 
-      <div class="alliance-intel">
-        <div class="intel-pie">
-          <div class="status ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
-        ${a.isNCA ? "🔴 Non-Competitive" : a.stabilityFactor < 0.8 ? "🟡 Fragile" : "🟢 Competitive"}
-      </div>
-          <canvas id="pie-${a.alliance}-${a.warzone}"></canvas>
-        </div>
-    
-        <div class="marquee">
-          ${marquee.map(p => `
-            <div class="marquee-player">
-              <span>${p.name}</span>
-              <span>${formatPower(p.firstSquadPower)}</span>
-            </div>
-          `).join("")}
-        </div>
+    <!-- STATUS HEADER -->
+    <div class="intel-header">
+      <span class="intel-status">
+        ${a.isNCA
+          ? "🔴 Non-Competitive"
+          : a.stabilityFactor < 0.8
+            ? "🟡 Fragile"
+            : "🟢 Competitive"}
+      </span>
 
-        <div class="intel-bars">
-          <canvas id="bars-${a.alliance}-${a.warzone}"></canvas>
+      <span class="intel-title">
+        ${a.alliance} <small>(WZ ${a.warzone})</small>
+      </span>
+    </div>
+
+    <!-- PIE CHART (TOP RIGHT) -->
+    <div class="intel-pie">
+      <canvas id="pie-${a.alliance}-${a.warzone}"></canvas>
+    </div>
+
+    <!-- MARQUEE PLAYERS -->
+    <div class="marquee">
+      ${marquee.map(p => `
+        <div class="marquee-player">
+          <span>${p.name}</span>
+          <span>${formatPower(p.firstSquadPower)}</span>
         </div>
-      </div>
-    `;
+      `).join("")}
+    </div>
+
+    <!-- COMBINED BAR CHART -->
+    <div class="intel-bars">
+      <canvas id="bars-${a.alliance}-${a.warzone}"></canvas>
+    </div>
+
+  </div>
+`;
+
 
     el.appendChild(card);
 
