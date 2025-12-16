@@ -238,66 +238,119 @@ function renderAllianceBlocks(alliances) {
     container.appendChild(block);
   });
 }
-function explainMatchup(m, alliances) {
+function analyzeMatchup(m, alliances) {
   const A = alliances.find(x => x.alliance === m.a);
   const B = alliances.find(x => x.alliance === m.b);
 
-  const reasons = [];
+  const factors = [];
 
-  // Combat strength gap
+  // 1️⃣ Combat score gap
+  const pct = ((m.ratio - 1) * 100).toFixed(0);
   if (m.ratio >= 1.5) {
-    reasons.push(`${m.a} has significantly higher combat strength`);
+    factors.push({
+      text: `+${pct}% higher combat score`,
+      weight: 5
+    });
   } else if (m.ratio >= 1.2) {
-    reasons.push(`${m.a} holds a moderate combat advantage`);
+    factors.push({
+      text: `+${pct}% combat score advantage`,
+      weight: 4
+    });
   }
 
-  // Tier dominance
+  // 2️⃣ Tier advantage
   if ((A.tierCounts.MEGA_WHALE || 0) > (B.tierCounts.MEGA_WHALE || 0)) {
-    reasons.push(`${m.a} fields more mega whales`);
+    factors.push({
+      text: "More Mega Whales",
+      weight: 4
+    });
   } else if ((A.tierCounts.WHALE || 0) > (B.tierCounts.WHALE || 0)) {
-    reasons.push(`${m.a} has stronger whale presence`);
+    factors.push({
+      text: "Stronger Whale presence",
+      weight: 3
+    });
   }
 
-  // Stability penalties
+  // 3️⃣ Stability & collapse risk
   if (B.isNCA) {
-    reasons.push(`${m.b} is structurally non-competitive`);
-  } else if (B.stabilityFactor < 0.8) {
-    reasons.push(`${m.b} suffers from squad instability`);
+    factors.push({
+      text: `${B.alliance} is structurally non-competitive`,
+      weight: 5
+    });
+  } else if (B.stabilityFactor < 0.75) {
+    factors.push({
+      text: `${B.alliance} has unstable squad composition`,
+      weight: 4
+    });
   }
 
-  // Power distribution
+  // 4️⃣ Power concentration
   if (A.stabilityFactor > B.stabilityFactor + 0.15) {
-    reasons.push(`${m.a} has better power distribution`);
+    factors.push({
+      text: "Better power distribution",
+      weight: 3
+    });
   }
 
-  return reasons.length
-    ? reasons.join(", ")
-    : "Both alliances are evenly matched across key factors";
+  // Sort by importance
+  factors.sort((a, b) => b.weight - a.weight);
+
+  return {
+    winner: m.outcome.includes("A")
+      ? m.a
+      : m.ratio >= 1
+        ? m.a
+        : m.b,
+    loser: m.ratio >= 1 ? m.b : m.a,
+    outcome: m.outcome,
+    ratio: m.ratio,
+    factors: factors.slice(0, 4)
+  };
 }
+
 
 /* =============================
    RENDER MATCHUP MATRIX
 ============================= */
 function renderMatchupMatrix(matchups) {
   const container = document.getElementById("matchupMatrix");
-  container.innerHTML = "<h2>Matchups</h2>";
+  container.innerHTML = "<h2>Showdown Results</h2>";
 
   matchups.forEach(m => {
-    const row = document.createElement("div");
-    row.className = "matchup-row";
-const explanation = explainMatchup(m, window.__ACIS_RESULTS__.alliances);
+    const analysis = analyzeMatchup(
+      m,
+      window.__ACIS_RESULTS__.alliances
+    );
 
-   row.innerHTML = `
-  <span>${m.a}</span>
-  <span>vs</span>
-  <span>${m.b}</span>
-  <strong>${m.outcome}</strong>
-  <div class="explain">${explanation}</div>
-`;
+    const card = document.createElement("div");
+    card.className = "matchup-card";
 
-    container.appendChild(row);
+    card.innerHTML = `
+      <div class="verdict">
+        <div class="winner">🏆 ${analysis.winner}</div>
+        <div class="loser">
+          💥 ${analysis.loser}
+          ${analysis.outcome.includes("Collapse") ? "(Collapse Likely)" : ""}
+        </div>
+      </div>
+
+      <div class="strength">
+        Outcome Strength: <strong>${analysis.outcome}</strong>
+      </div>
+
+      <ul class="factors">
+        ${analysis.factors.map(f => `<li>${f.text}</li>`).join("")}
+      </ul>
+
+      <div class="metrics">
+        Combat Ratio: ${analysis.ratio.toFixed(2)}×
+      </div>
+    `;
+
+    container.appendChild(card);
   });
 }
+
 
 /* =============================
    UI HELPERS

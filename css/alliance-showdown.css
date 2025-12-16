@@ -238,3 +238,42 @@ body {
   color: var(--muted);
   margin-top: 4px;
 }
+.matchup-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.verdict {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.verdict .winner {
+  color: var(--green);
+}
+
+.verdict .loser {
+  color: var(--red);
+}
+
+.strength {
+  margin: 6px 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.factors {
+  margin: 6px 0;
+  padding-left: 18px;
+  font-size: 0.8rem;
+}
+
+.metrics {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
