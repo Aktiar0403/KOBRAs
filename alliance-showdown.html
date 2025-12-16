@@ -5,77 +5,45 @@
   <title>KOBRA — Alliance Showdown</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Base theme -->
+  <!-- KOBRA Base -->
   <link rel="stylesheet" href="./css/style.css" />
 
-  <!-- Showdown specific -->
+  <!-- Showdown Neon -->
   <link rel="stylesheet" href="./css/alliance-showdown.css" />
 </head>
 
-<body>
+<body class="kobra-dark">
 
-  <!-- =========================
-       PAGE HEADER
-  ========================== -->
-  <header class="page-header">
-    <h1>⚔️ Alliance Showdown</h1>
-    <p class="subtitle">
-      Compare alliances using real combat strength,
-      not just total power.
-    </p>
-  </header>
+<header class="kobra-header">
+  <h1>⚔️ ALLIANCE SHOWDOWN</h1>
+  <p>Real combat intelligence · Collapse prediction · Stress test</p>
+</header>
 
-  <!-- =========================
-       WARZONE SELECTION
-  ========================== -->
-  <section class="panel">
-    <label for="warzoneSelect">Select Warzone</label>
-    <select id="warzoneSelect">
-      <option value="">Loading...</option>
-    </select>
-  </section>
+<section class="panel">
+  <label>Warzone</label>
+  <select id="warzoneSelect">
+    <option value="">Loading…</option>
+  </select>
+</section>
 
-  <!-- =========================
-       ALLIANCE LIST
-  ========================== -->
-  <section class="panel">
-    <h2>Alliances (Top 20 by Combat Score)</h2>
-    <p class="hint">
-      Select up to 8 alliances. You may switch warzones and add more.
-    </p>
+<section class="panel">
+  <h2>Top Alliances</h2>
+  <p class="hint">Select up to 8 alliances · Cross-warzone allowed</p>
+  <div id="allianceList" class="alliance-list"></div>
+</section>
 
-    <div id="allianceList" class="alliance-list">
-      <!-- populated by JS -->
-    </div>
-  </section>
+<section class="panel center">
+  <button id="analyzeBtn" disabled>⚔️ Analyze Showdown</button>
+</section>
 
-  <!-- =========================
-       ANALYZE BUTTON
-  ========================== -->
-  <section class="panel center">
-    <button id="analyzeBtn" disabled>
-      Analyze Showdown
-    </button>
-  </section>
+<section id="results" class="panel hidden">
+  <h2>Alliance Intelligence</h2>
+  <div id="allianceCards"></div>
 
-  <!-- =========================
-       RESULTS
-  ========================== -->
-  <section id="results" class="panel hidden">
-    <h2>Selected Alliances</h2>
+  <h2>Matchup Results</h2>
+  <div id="matchups"></div>
+</section>
 
-    <!-- Phase 1 -->
-    <div id="allianceCards"></div>
-
-    <h2>Matchups</h2>
-<div id="matchups"></div>
-
-  </section>
-
-  <!-- =========================
-       SCRIPT
-  ========================== -->
-  <script type="module" src="./js/alliance-showdown.js"></script>
-
+<script type="module" src="./js/alliance-showdown.js"></script>
 </body>
 </html>
