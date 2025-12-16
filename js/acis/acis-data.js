@@ -1,11 +1,11 @@
 /* ======================================================
-   ACIS v1.1 — DATA PREPARATION LAYER
+   ACIS v1.1 — DATA PREPARATION LAYER (RECTIFIED)
    ------------------------------------------------------
-   - Groups players by alliance
-   - Sorts by power
-   - Computes Warzone Floor Power (WFP)
-   - Extracts Active / Bench (REAL players only)
-   - NO combat logic
+   ✔ Supports MULTIPLE warzones in one dataset
+   ✔ Determines warzone PER ALLIANCE (dominant)
+   ✔ Computes Warzone Floor Power (WFP) correctly
+   ✔ Extracts Active / Bench (REAL players only)
+   ✔ NO combat logic
 ====================================================== */
 
 import {
@@ -47,38 +47,66 @@ function computeWarzoneFloor(players) {
 }
 
 /* =============================
-   PREPARE ALLIANCE DATA
+   DETERMINE DOMINANT WARZONE
+   (Most frequent among players)
+============================= */
+function determineAllianceWarzone(alliancePlayers) {
+  const counts = {};
+
+  alliancePlayers.forEach(p => {
+    if (p.warzone == null) return;
+    counts[p.warzone] = (counts[p.warzone] || 0) + 1;
+  });
+
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+}
+
+/* =============================
+   PREPARE ALL ALLIANCES
 ============================= */
 export function prepareAllianceData(players) {
   if (!Array.isArray(players)) {
-    throw new Error("prepareAllianceData expects array");
+    throw new Error("prepareAllianceData expects an array");
   }
 
-  // Assume all players belong to same warzone
-  const warzone = players[0]?.warzone ?? null;
-
-  // 1️⃣ Compute Warzone Floor Power
-  const warzoneFloorPower = computeWarzoneFloor(players);
-
-  // 2️⃣ Group players by alliance
+  // Group by alliance
   const allianceMap = groupByAlliance(players);
-
-  // 3️⃣ Build structured alliance objects
   const alliances = [];
 
   allianceMap.forEach((alliancePlayers, allianceName) => {
-    // Sort by power DESC
-    const sorted = [...alliancePlayers]
-      .sort((a, b) => (b.totalPower || 0) - (a.totalPower || 0));
 
+    /* ---------- WARZONE (PER ALLIANCE) ---------- */
+    const warzone = determineAllianceWarzone(alliancePlayers);
+
+    /* ---------- WARZONE FLOOR POWER ---------- */
+    const warzonePlayers = players.filter(
+      p => p.warzone === warzone
+    );
+    const warzoneFloorPower =
+      computeWarzoneFloor(warzonePlayers);
+
+    /* ---------- SORT PLAYERS BY POWER ---------- */
+    const sorted = [...alliancePlayers].sort(
+      (a, b) => (b.totalPower || 0) - (a.totalPower || 0)
+    );
+
+    /* ---------- SLICE TOP 30 ---------- */
     const top = sorted.slice(0, MAX_ANALYZED_PLAYERS);
 
+    /* ---------- ACTIVE (REAL ONLY) ---------- */
     const activeReal = top.slice(0, ACTIVE_SQUAD_SIZE);
+
+    /* ---------- BENCH (ONLY IF ACTIVE FULL) ---------- */
     const benchReal =
       activeReal.length === ACTIVE_SQUAD_SIZE
-        ? top.slice(ACTIVE_SQUAD_SIZE, ACTIVE_SQUAD_SIZE + BENCH_SIZE)
+        ? top.slice(
+            ACTIVE_SQUAD_SIZE,
+            ACTIVE_SQUAD_SIZE + BENCH_SIZE
+          )
         : [];
 
+    /* ---------- MISSING ACTIVE COUNT ---------- */
     const missingActiveCount =
       ACTIVE_SQUAD_SIZE - activeReal.length;
 
