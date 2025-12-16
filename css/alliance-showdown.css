@@ -192,3 +192,95 @@ button:disabled {
   border-radius: 6px;
   font-size: 0.75rem;
 }
+.alliance-card {
+  position: relative;
+}
+
+.alliance-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    rgba(0,255,200,0.08),
+    transparent 40%
+  );
+  pointer-events: none;
+}
+
+.metrics strong {
+  font-size: 1.05rem;
+  letter-spacing: 0.3px;
+}
+
+.metric span {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+.status {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.status.good {
+  background: rgba(0,255,150,0.15);
+  color: #3ddc84;
+}
+
+.status.warn {
+  background: rgba(255,200,0,0.15);
+  color: #ffcc00;
+}
+
+.status.bad {
+  background: rgba(255,80,80,0.15);
+  color: #ff5c5c;
+}
+.matchup-card {
+  border-left: 4px solid rgba(255,255,255,0.08);
+}
+
+.matchup-outcome.collapse {
+  border-left: 4px solid #ff5c5c;
+  padding-left: 6px;
+}
+
+.matchup-outcome.dominant {
+  border-left: 4px solid #ff9f43;
+  padding-left: 6px;
+}
+
+.matchup-outcome.advantage {
+  border-left: 4px solid #3ddc84;
+  padding-left: 6px;
+}
+.collapse-panel p {
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.collapse-panel ul li {
+  position: relative;
+}
+
+.collapse-panel ul li::before {
+  content: "•";
+  position: absolute;
+  left: -10px;
+  color: #ff5c5c;
+}
+.stress-test-btn:hover {
+  background: rgba(255,0,0,0.25);
+  border-color: #ff5c5c;
+  transform: scale(1.02);
+}
+.collapse-panel,
+.stress-test-result {
+  transition: all 0.25s ease;
+}
