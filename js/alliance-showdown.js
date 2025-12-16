@@ -122,12 +122,96 @@ analyzeBtn.addEventListener("click", () => {
 
   // Store globally for rendering step
   window.__ACIS_RESULTS__ = {
-    alliances: selected,
-    matchups: matchupResults
-  };
+  alliances: selected,
+  matchups: matchupResults
+};
 
-  resultsSection.classList.remove("hidden");
+resultsSection.classList.remove("hidden");
+renderResults();
+
 });
+/* =============================
+   RENDER RESULTS
+============================= */
+function renderResults() {
+  const { alliances, matchups } = window.__ACIS_RESULTS__;
+
+  renderAllianceBlocks(alliances);
+  renderMatchupMatrix(matchups);
+}
+
+/* =============================
+   RENDER ALLIANCE BLOCKS
+============================= */
+function renderAllianceBlocks(alliances) {
+  const container = document.getElementById("allianceBlocks");
+  container.innerHTML = "";
+
+  alliances.forEach(a => {
+    const block = document.createElement("div");
+    block.className = "alliance-block";
+
+    const status = a.isNCA
+      ? "🔴 Non-Competitive"
+      : a.stabilityFactor < 0.8
+        ? "🟡 Fragile"
+        : "🟢 Competitive";
+
+    block.innerHTML = `
+      <h3>${a.alliance}</h3>
+      <div class="status">${status}</div>
+
+      <div class="stats">
+        <div><strong>Active Power:</strong> ${formatPower(a.activePower)}</div>
+        <div><strong>Bench Power:</strong> ${formatPower(a.benchPower)}</div>
+        <div><strong>Combat Score:</strong> ${Math.round(a.acsAbsolute)}</div>
+      </div>
+
+      <div class="tiers">
+        ${renderTierCounts(a.tierCounts)}
+      </div>
+    `;
+
+    container.appendChild(block);
+  });
+}
+
+/* =============================
+   RENDER MATCHUP MATRIX
+============================= */
+function renderMatchupMatrix(matchups) {
+  const container = document.getElementById("matchupMatrix");
+  container.innerHTML = "<h2>Matchups</h2>";
+
+  matchups.forEach(m => {
+    const row = document.createElement("div");
+    row.className = "matchup-row";
+
+    row.innerHTML = `
+      <span>${m.a}</span>
+      <span>vs</span>
+      <span>${m.b}</span>
+      <strong>${m.outcome}</strong>
+    `;
+
+    container.appendChild(row);
+  });
+}
+
+/* =============================
+   UTIL HELPERS (UI ONLY)
+============================= */
+function renderTierCounts(tiers) {
+  return Object.entries(tiers)
+    .filter(([, v]) => v > 0)
+    .map(([k, v]) => `<span>${k}: ${v}</span>`)
+    .join("");
+}
+
+function formatPower(val) {
+  if (!val) return "0";
+  return (val / 1e6).toFixed(1) + "M";
+}
 
 /* =============================
    SEARCH FILTER
