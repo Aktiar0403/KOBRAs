@@ -159,7 +159,10 @@ function renderAllianceBlocks(alliances) {
 
     block.innerHTML = `
       <h3>${a.alliance}</h3>
-      <div class="status">${status}</div>
+      <div class="status ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
+    ${status}
+        </div>
+
 
       <div class="stats">
         <div><strong>Active Power:</strong> ${formatPower(a.activePower)}</div>
