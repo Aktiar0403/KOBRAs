@@ -454,3 +454,31 @@ button:disabled {
   width: 100% !important;
   height: 100% !important;
 }
+.alliance-intel {
+  position: relative;
+  margin-top: 10px;
+}
+
+.intel-pie {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 90px;
+  height: 90px;
+  z-index: 2;
+}
+
+.marquee {
+  padding-right: 100px; /* space for pie */
+}
+
+.intel-bars {
+  margin-top: 12px;
+  height: 160px;
+}
+
+.intel-bars canvas,
+.intel-pie canvas {
+  width: 100% !important;
+  height: 100% !important;
+}

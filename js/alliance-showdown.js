@@ -108,6 +108,12 @@ warzoneSelect.addEventListener("change", () => {
       allianceListEl.appendChild(row);
     });
 });
+function computeTotalAlliancePower(alliance) {
+  return alliance.activePlayers
+    .filter(p => !p.assumed)
+    .reduce((sum, p) => sum + p.totalPower, 0);
+}
+a.totalAlliancePower = computeTotalAlliancePower(a);
 
 /* =============================
    TOGGLE SELECTION
@@ -147,8 +153,8 @@ analyzeBtn.addEventListener("click", () => {
   renderMatchupCards(alliances);
 
   const matchups = buildMatchupMatrix(alliances);
-  renderCharts(alliances);
-  renderMatchupCharts(matchups, alliances);
+  //renderCharts(alliances);
+  //renderMatchupCharts(matchups, alliances);
 });
 
 /* =============================
@@ -174,33 +180,30 @@ function renderAllianceCards(alliances) {
         ${a.isNCA ? "🔴 Non-Competitive" : a.stabilityFactor < 0.8 ? "🟡 Fragile" : "🟢 Competitive"}
       </div>
 
-      <div class="metrics">
-        <div class="metric" data-tooltip="Real combat strength after balance & stability">
-          <span>Combat Score</span>
-          <strong>${Math.round(a.acsAbsolute)}</strong>
-        </div>
-        <div class="metric" data-tooltip="Estimated frontline squad strength">
-          <span>First Squad Power</span>
-          <strong>${formatPower(a.averageFirstSquadPower)}</strong>
-        </div>
-      </div>
+      <div class="alliance-intel">
 
-      <div class="marquee">
-        <h4>Frontline Squads</h4>
-        ${marquee.map(p => `
-          <div class="marquee-player">
-            <span>${p.name}</span>
-            <span>${formatPower(p.firstSquadPower)}</span>
-          </div>
-        `).join("")}
-        <div class="math-box">
-  <canvas id="power-${a.alliance}-${a.warzone}"></canvas>
-  <canvas id="stability-${a.alliance}-${a.warzone}"></canvas>
-  <canvas id="composition-${a.alliance}-${a.warzone}"></canvas>
-  <canvas id="frontline-${a.alliance}-${a.warzone}"></canvas>
-              </div>
+  <!-- PIE CHART (TOP RIGHT) -->
+  <div class="intel-pie">
+    <canvas id="pie-${a.alliance}-${a.warzone}"></canvas>
+  </div>
 
+  <!-- MARQUEE PLAYERS (FLOW AROUND PIE) -->
+  <div class="marquee">
+    ${marqueePlayers.map(p => `
+      <div class="marquee-player">
+        <span>${p.name}</span>
+        <span>${formatPower(p.firstSquadPower)}</span>
       </div>
+    `).join("")}
+  </div>
+
+  <!-- COMBINED BAR CHART -->
+  <div class="intel-bars">
+    <canvas id="bars-${a.alliance}-${a.warzone}"></canvas>
+  </div>
+
+</div>
+
     `;
 setTimeout(() => {
   renderPowerChart(a);
@@ -294,135 +297,8 @@ function renderMatchupCards(alliances) {
     el.appendChild(card);
   });
 }
-function renderPowerChart(a) {
-  const ctx = document
-    .getElementById(`power-${a.alliance}-${a.warzone}`)
-    .getContext("2d");
 
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Combat", "Frontline"],
-      datasets: [{
-        data: [
-          a.acsAbsolute / 1e6,
-          a.averageFirstSquadPower / 1e6
-        ],
-        backgroundColor: ["#00ffc8", "#ff9f43"]
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: {
-            callback: v => v + "M"
-          }
-        }
-      }
-    }
-  });
-}
-function renderStabilityChart(a) {
-  const ctx = document
-    .getElementById(`stability-${a.alliance}-${a.warzone}`)
-    .getContext("2d");
 
-  new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Stability", "Depth"],
-      datasets: [{
-        data: [
-          pct(a.stabilityFactor),
-          pct(a.benchPower / (a.activePower || 1))
-        ],
-        backgroundColor: ["#3ddc84", "#4dabf7"]
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false },
-        tooltip: { enabled: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          ticks: {
-            callback: v => v + "%"
-          }
-        }
-      }
-    }
-  });
-}
-
-function renderCompositionChart(a) {
-  const ctx = document
-    .getElementById(`composition-${a.alliance}-${a.warzone}`)
-    .getContext("2d");
-
-  const tiers = a.tierCounts;
-
-  new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: Object.keys(tiers),
-      datasets: [{
-        data: Object.values(tiers),
-        backgroundColor: [
-          "#ff595e", "#ffca3a", "#8ac926",
-          "#1982c4", "#6a4c93", "#adb5bd"
-        ]
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { position: "bottom" }
-      }
-    }
-  });
-}
-function renderFrontlineChart(a) {
-  const ctx = document
-    .getElementById(`frontline-${a.alliance}-${a.warzone}`)
-    .getContext("2d");
-
-  const top = [...a.activePlayers]
-    .filter(p => !p.assumed)
-    .sort((x, y) => y.firstSquadPower - x.firstSquadPower)
-    .slice(0, 10);
-
-  new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: top.map((_, i) => `#${i + 1}`),
-      datasets: [{
-        data: top.map(p => p.firstSquadPower / 1e6),
-        borderColor: "#ff5c5c",
-        tension: 0.35
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: {
-          beginAtZero: false,
-          ticks: {
-            callback: v => v + "M"
-          }
-        }
-      }
-    }
-  });
-}
 
 /* =============================
    LOGIC HELPERS
@@ -486,6 +362,94 @@ function findCollapseTriggerPlayer(a) {
 
   return worst;
 }
+function renderAllianceBars(a) {
+  const ctx = document
+    .getElementById(`bars-${a.alliance}-${a.warzone}`)
+    .getContext("2d");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["Total", "Combat", "Frontline", "Depth", "Stability"],
+      datasets: [{
+        data: [
+           normalizeTotalPower(a.totalAlliancePower),
+          normalizeCombat(a.acsAbsolute),
+          normalizeFSP(a.averageFirstSquadPower),
+          normalizeDepth(a.benchPower / (a.activePower || 1)),
+          normalizeStability(a.stabilityFactor)
+        ],
+        backgroundColor: [
+          "#00ffc8",
+          "#ff9f43",
+          "#4dabf7",
+          "#3ddc84"
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const i = ctx.dataIndex;
+      if (i === 0) return `Total Power: ${formatBig(a.totalAlliancePower)} (raw size)`;
+      if (i === 1) return `Combat Score: ${formatBig(a.acsAbsolute)} (effective)`;
+      if (i === 2) return `Frontline: ${formatPower(a.averageFirstSquadPower)}`;
+      if (i === 3) return `Depth: ${Math.round((a.benchPower / a.activePower) * 100)}%`;
+      if (i === 4) return `Stability: ${Math.round(a.stabilityFactor * 100)}%`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          ticks: { display: false }
+        }
+      }
+    }
+  });
+}
+function renderAlliancePie(a) {
+  const ctx = document
+    .getElementById(`pie-${a.alliance}-${a.warzone}`)
+    .getContext("2d");
+
+  const tiers = a.tierCounts;
+
+  new Chart(ctx, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(tiers),
+      datasets: [{
+        data: Object.values(tiers),
+        backgroundColor: [
+          "#ff595e", "#ffca3a", "#8ac926",
+          "#1982c4", "#6a4c93", "#adb5bd"
+        ]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx =>
+              `${ctx.label}: ${ctx.raw}`
+          }
+        }
+      },
+      cutout: "55%"
+    }
+  });
+}
+setTimeout(() => {
+  renderAllianceBars(a);
+  renderAlliancePie(a);
+}, 0);
 
 /* =============================
    INTERACTIONS
