@@ -557,25 +557,7 @@ button:disabled {
   margin-bottom: 16px;
 }
 
-/* STATUS STRIP */
-.intel-strip {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 34px;
-  width: 100%;
-  opacity: 0.25;
-}
 
-.alliance-intel.good .intel-strip {
-  background: #00ffc8;
-}
-.alliance-intel.warn .intel-strip {
-  background: #ffc107;
-}
-.alliance-intel.bad .intel-strip {
-  background: #ff4d4d;
-}
 
 /* TITLE */
 .intel-title {
@@ -633,26 +615,8 @@ button:disabled {
 .intel-bars {
   height: 160px;
 }
-/* HEADER STRIP */
-.intel-strip {
-  position: relative;
-  padding: 8px 12px;
-  margin: -14px -14px 12px -14px;
-  background: rgba(0,0,0,0.35);
-  backdrop-filter: blur(6px);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
 
-/* Status coloring via parent */
-.alliance-intel.good .intel-strip {
-  box-shadow: inset 0 -40px 40px rgba(0,255,200,0.25);
-}
-.alliance-intel.warn .intel-strip {
-  box-shadow: inset 0 -40px 40px rgba(255,193,7,0.25);
-}
-.alliance-intel.bad .intel-strip {
-  box-shadow: inset 0 -40px 40px rgba(255,77,77,0.28);
-}
+
 
 .intel-title {
   font-size: 1rem;
@@ -689,35 +653,6 @@ button:disabled {
 .marquee {
   padding-right: 120px; /* room for pie */
 }
-.intel-strip {
-  position: relative;
-  padding: 10px 14px;
-  margin: -14px -14px 14px -14px;
-  background: rgba(0, 0, 0, 0.363); /* darker base */
-  backdrop-filter: blur(8px);
-  z-index: 3; /* 👈 above card glow */
-}
-
-/* Status color overlay */
-.alliance-intel.good .intel-strip::after,
-.alliance-intel.warn .intel-strip::after,
-.alliance-intel.bad .intel-strip::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.25;
-  z-index: -1;
-}
-
-.alliance-intel.good .intel-strip::after {
-  background: #00ffc86c;
-}
-.alliance-intel.warn .intel-strip::after {
-  background: #ffc1075b;
-}
-.alliance-intel.bad .intel-strip::after {
-  background: #ff4d4d56;
-}
 
 /* TITLE */
 .intel-title {
@@ -753,4 +688,71 @@ button:disabled {
   color: #bfffee;
   opacity: 0.85;
   margin-top: 2px;
+}
+/* HEADER STRIP — HARD CONTRAST */
+.intel-strip {
+  position: relative;
+  padding: 10px 14px;
+  margin: -14px -14px 12px -14px;
+
+  background: rgba(6, 12, 18, 0.92); /* 👈 DARK, NOT GREEN */
+  backdrop-filter: blur(8px);
+
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  z-index: 5;
+}
+
+/* STATUS ACCENT LINE (TOP) */
+.intel-strip::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+}
+
+/* Accent color ONLY */
+.alliance-intel.good .intel-strip::before {
+  background: #00ffc8;
+}
+.alliance-intel.warn .intel-strip::before {
+  background: #ffc107;
+}
+.alliance-intel.bad .intel-strip::before {
+  background: #ff4d4d;
+}
+.intel-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;                /* 👈 PURE WHITE */
+  letter-spacing: 0.3px;
+}
+
+.intel-title .wz {
+  color: #9af3e1;                 /* 👈 CYAN META */
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.intel-meta {
+  font-size: 0.78rem;
+  color: #bdfdf0;                 /* 👈 CLEAR */
+  font-weight: 600;
+  margin-top: 2px;
+}
+.intel-pie {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 88px;
+  height: 88px;
+
+  z-index: 6; /* above header, but not hiding text */
+  pointer-events: auto;
+}
+.intel-title,
+.intel-meta {
+  position: relative;
+  z-index: 7; /* 👈 always above pie */
 }
