@@ -203,3 +203,38 @@ body {
 .status.good { color: var(--green); }
 .status.warn { color: var(--yellow); }
 .status.bad  { color: var(--red); }
+.marquee {
+  margin-top: 10px;
+  border-top: 1px dashed var(--border);
+  padding-top: 8px;
+}
+
+.marquee h4 {
+  margin: 0 0 6px 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.marquee-player {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  padding: 2px 0;
+}
+
+.marquee-player .name {
+  max-width: 70%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.marquee-player .power {
+  color: var(--green);
+}
+.explain {
+  grid-column: 1 / -1;
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}

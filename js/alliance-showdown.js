@@ -206,7 +206,10 @@ function renderAllianceBlocks(alliances) {
 
     const block = document.createElement("div");
     block.className = "alliance-block";
-
+    const marqueePlayers = [...a.activePlayers]
+  .filter(p => !p.assumed)
+  .sort((x, y) => y.effectivePower - x.effectivePower)
+  .slice(0, 5);
     block.innerHTML = `
       <h3>${a.alliance} <small>(WZ ${a.warzone})</small></h3>
       <div class="status ${statusClass}">${statusText}</div>
@@ -216,6 +219,16 @@ function renderAllianceBlocks(alliances) {
         <div><strong>Bench Power:</strong> ${formatPower(a.benchPower)}</div>
         <div><strong>Combat Score:</strong> ${Math.round(a.acsAbsolute)}</div>
       </div>
+      <div class="marquee">
+  <h4>Marquee Players</h4>
+  ${marqueePlayers.map(p => `
+    <div class="marquee-player">
+      <span class="name">${p.name}</span>
+      <span class="power">${formatPower(p.totalPower)}</span>
+    </div>
+  `).join("")}
+</div>
+
 
       <div class="tiers">
         ${renderTierCounts(a.tierCounts)}
@@ -224,6 +237,42 @@ function renderAllianceBlocks(alliances) {
 
     container.appendChild(block);
   });
+}
+function explainMatchup(m, alliances) {
+  const A = alliances.find(x => x.alliance === m.a);
+  const B = alliances.find(x => x.alliance === m.b);
+
+  const reasons = [];
+
+  // Combat strength gap
+  if (m.ratio >= 1.5) {
+    reasons.push(`${m.a} has significantly higher combat strength`);
+  } else if (m.ratio >= 1.2) {
+    reasons.push(`${m.a} holds a moderate combat advantage`);
+  }
+
+  // Tier dominance
+  if ((A.tierCounts.MEGA_WHALE || 0) > (B.tierCounts.MEGA_WHALE || 0)) {
+    reasons.push(`${m.a} fields more mega whales`);
+  } else if ((A.tierCounts.WHALE || 0) > (B.tierCounts.WHALE || 0)) {
+    reasons.push(`${m.a} has stronger whale presence`);
+  }
+
+  // Stability penalties
+  if (B.isNCA) {
+    reasons.push(`${m.b} is structurally non-competitive`);
+  } else if (B.stabilityFactor < 0.8) {
+    reasons.push(`${m.b} suffers from squad instability`);
+  }
+
+  // Power distribution
+  if (A.stabilityFactor > B.stabilityFactor + 0.15) {
+    reasons.push(`${m.a} has better power distribution`);
+  }
+
+  return reasons.length
+    ? reasons.join(", ")
+    : "Both alliances are evenly matched across key factors";
 }
 
 /* =============================
@@ -236,13 +285,15 @@ function renderMatchupMatrix(matchups) {
   matchups.forEach(m => {
     const row = document.createElement("div");
     row.className = "matchup-row";
+const explanation = explainMatchup(m, window.__ACIS_RESULTS__.alliances);
 
-    row.innerHTML = `
-      <span>${m.a}</span>
-      <span>vs</span>
-      <span>${m.b}</span>
-      <strong>${m.outcome}</strong>
-    `;
+   row.innerHTML = `
+  <span>${m.a}</span>
+  <span>vs</span>
+  <span>${m.b}</span>
+  <strong>${m.outcome}</strong>
+  <div class="explain">${explanation}</div>
+`;
 
     container.appendChild(row);
   });
