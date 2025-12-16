@@ -147,29 +147,27 @@ function renderAllianceCards(alliances) {
     card.innerHTML = `
   <div class="alliance-intel ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
 
-    <!-- TOP STATUS STRIP -->
-    <div class="intel-strip"></div>
-
-    <!-- TITLE -->
-    <div class="intel-title">
-      ${a.alliance} <span class="wz">(WZ-${a.warzone})</span>
-    </div>
-
-    <!-- META STATUS -->
-    <div class="intel-meta">
-      ${a.isNCA
-        ? "Non-Competitive"
-        : a.stabilityFactor < 0.8
-          ? "Fragile"
-          : "Competitive"}
+    <!-- HEADER STRIP -->
+    <div class="intel-strip">
+      <div class="intel-title">
+        ${a.alliance} <span class="wz">(WZ-${a.warzone})</span>
+      </div>
+      <div class="intel-meta">
+        ${a.isNCA
+          ? "Non-Competitive"
+          : a.stabilityFactor < 0.8
+            ? "Fragile"
+            : "Competitive"}
+      </div>
     </div>
 
     <!-- PIE -->
     <div class="intel-pie">
       <canvas id="pie-${a.alliance}-${a.warzone}"></canvas>
+      <div class="pie-label">Composition</div>
     </div>
 
-    <!-- COMBAT POWER -->
+    <!-- COMBAT -->
     <div class="combat-number">
       Combat Power: <strong>${formatBig(a.acsAbsolute)}</strong>
     </div>
@@ -213,18 +211,16 @@ function renderAllianceBars(a) {
   new Chart(ctx, {
     type: "bar",
     data: {
-      labels: ["Total", "Combat", "Frontline", "Depth", "Stability"],
+      labels: ["Total", "Frontline", "Depth", "Stability"],
       datasets: [{
         data: [
           normalizeTotalPower(a.totalAlliancePower),
-          normalizeCombat(a.acsAbsolute),
           normalizeFSP(a.averageFirstSquadPower),
           normalizeDepth(a.benchPower / (a.activePower || 1)),
           normalizeStability(a.stabilityFactor)
         ],
         backgroundColor: [
-          "#9ca3af",
-          "#00ffc8",
+          "#0b285aff",
           "#ff9f43",
           "#4dabf7",
           "#3ddc84"
@@ -279,7 +275,6 @@ function formatBig(v) {
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 const normalizeTotalPower = v => clamp(v / 2e10 * 100, 5, 100);
-const normalizeCombat = v => clamp(v / 2e6 * 100, 5, 100);
 const normalizeFSP = v => clamp(v / 1.2e8 * 100, 5, 100);
 const normalizeDepth = v => clamp(v * 100, 5, 100);
 const normalizeStability = v => clamp(v * 100, 5, 100);
