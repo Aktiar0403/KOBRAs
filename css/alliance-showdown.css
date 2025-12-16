@@ -549,3 +549,87 @@ button:disabled {
   font-weight: 400;
   opacity: 0.8;
 }
+.alliance-intel {
+  position: relative;
+  padding: 14px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+/* STATUS STRIP */
+.intel-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 34px;
+  width: 100%;
+  opacity: 0.25;
+}
+
+.alliance-intel.good .intel-strip {
+  background: #00ffc8;
+}
+.alliance-intel.warn .intel-strip {
+  background: #ffc107;
+}
+.alliance-intel.bad .intel-strip {
+  background: #ff4d4d;
+}
+
+/* TITLE */
+.intel-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
+}
+
+.intel-title .wz {
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* META */
+.intel-meta {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-bottom: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+/* PIE */
+.intel-pie {
+  position: absolute;
+  top: 42px;
+  right: 10px;
+  width: 90px;
+  height: 90px;
+  z-index: 2;
+}
+
+/* COMBAT */
+.combat-number {
+  font-size: 0.95rem;
+  margin: 6px 0;
+  position: relative;
+  z-index: 1;
+}
+
+/* MARQUEE */
+.marquee {
+  padding-right: 110px;
+  margin-bottom: 8px;
+}
+
+.marquee-player {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+/* BARS */
+.intel-bars {
+  height: 160px;
+}

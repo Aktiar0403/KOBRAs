@@ -147,37 +147,44 @@ function renderAllianceCards(alliances) {
     card.innerHTML = `
   <div class="alliance-intel ${a.isNCA ? "bad" : a.stabilityFactor < 0.8 ? "warn" : "good"}">
 
-    <!-- STATUS HEADER -->
-    <div class="intel-header">
-      <span class="intel-status">
-        ${a.isNCA
-          ? "🔴 Non-Competitive"
-          : a.stabilityFactor < 0.8
-            ? "🟡 Fragile"
-            : "🟢 Competitive"}
-      </span>
+    <!-- TOP STATUS STRIP -->
+    <div class="intel-strip"></div>
 
-      <span class="intel-title">
-        ${a.alliance} <small>(WZ ${a.warzone})</small>
-      </span>
+    <!-- TITLE -->
+    <div class="intel-title">
+      ${a.alliance} <span class="wz">(WZ-${a.warzone})</span>
     </div>
 
-    <!-- PIE CHART (TOP RIGHT) -->
+    <!-- META STATUS -->
+    <div class="intel-meta">
+      ${a.isNCA
+        ? "Non-Competitive"
+        : a.stabilityFactor < 0.8
+          ? "Fragile"
+          : "Competitive"}
+    </div>
+
+    <!-- PIE -->
     <div class="intel-pie">
       <canvas id="pie-${a.alliance}-${a.warzone}"></canvas>
     </div>
 
-    <!-- MARQUEE PLAYERS -->
+    <!-- COMBAT POWER -->
+    <div class="combat-number">
+      Combat Power: <strong>${formatBig(a.acsAbsolute)}</strong>
+    </div>
+
+    <!-- MARQUEE -->
     <div class="marquee">
-      ${marquee.map(p => `
+      ${marquee.map((p, i) => `
         <div class="marquee-player">
-          <span>${p.name}</span>
+          <span>${i + 1}. ${p.name}</span>
           <span>${formatPower(p.firstSquadPower)}</span>
         </div>
       `).join("")}
     </div>
 
-    <!-- COMBINED BAR CHART -->
+    <!-- BARS -->
     <div class="intel-bars">
       <canvas id="bars-${a.alliance}-${a.warzone}"></canvas>
     </div>
