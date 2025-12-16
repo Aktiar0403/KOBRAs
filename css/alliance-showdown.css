@@ -432,3 +432,14 @@ button:disabled {
   font-size: 0.7rem;
   margin-top: 6px;
 }
+#charts {
+  margin-top: 20px;
+}
+
+.chart-card {
+  background: #050b12;
+  border: 1px solid rgba(0,255,200,0.25);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 16px;
+}

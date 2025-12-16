@@ -135,8 +135,13 @@ analyzeBtn.addEventListener("click", () => {
   if (alliances.length < 2) return;
 
   resultsEl.classList.remove("hidden");
+
   renderAllianceCards(alliances);
   renderMatchupCards(alliances);
+
+  const matchups = buildMatchupMatrix(alliances);
+  renderCharts(alliances);
+  renderMatchupCharts(matchups, alliances);
 });
 
 /* =============================
@@ -268,6 +273,126 @@ function renderMatchupCards(alliances) {
     el.appendChild(card);
   });
 }
+function renderCharts(alliances) {
+  const container = document.getElementById("charts");
+  container.innerHTML = "";
+
+  alliances.forEach(a => {
+    const card = document.createElement("div");
+    card.className = "chart-card";
+
+    card.innerHTML = `
+      <h3>${a.alliance} — Metrics</h3>
+      <canvas id="combat-${a.alliance}"></canvas>
+      <canvas id="fsp-${a.alliance}"></canvas>
+      <canvas id="stability-${a.alliance}"></canvas>
+    `;
+
+    container.appendChild(card);
+
+    // Combat Score
+    new Chart(
+      document.getElementById(`combat-${a.alliance}`),
+      {
+        type: "bar",
+        data: {
+          labels: ["Combat Score"],
+          datasets: [{
+            label: a.alliance,
+            data: [a.acsAbsolute],
+            backgroundColor: "#00ffc8"
+          }]
+        }
+      }
+    );
+
+    // First Squad Power
+    new Chart(
+      document.getElementById(`fsp-${a.alliance}`),
+      {
+        type: "bar",
+        data: {
+          labels: ["Avg First Squad Power"],
+          datasets: [{
+            label: a.alliance,
+            data: [a.averageFirstSquadPower / 1e6],
+            backgroundColor: "#ff9f43"
+          }]
+        }
+      }
+    );
+
+    // Stability
+    new Chart(
+      document.getElementById(`stability-${a.alliance}`),
+      {
+        type: "bar",
+        data: {
+          labels: ["Stability"],
+          datasets: [{
+            label: a.alliance,
+            data: [a.stabilityFactor],
+            backgroundColor:
+              a.stabilityFactor < 0.8 ? "#ff5c5c" : "#3ddc84"
+          }]
+        },
+        options: {
+          scales: {
+            y: { min: 0, max: 1 }
+          }
+        }
+      }
+    );
+  });
+}
+function renderMatchupCharts(matchups, alliances) {
+  const container = document.getElementById("charts");
+
+  matchups.forEach(m => {
+    const A = alliances.find(a => a.alliance === m.a);
+    const B = alliances.find(a => a.alliance === m.b);
+    if (!A || !B) return;
+
+    const wrap = document.createElement("div");
+    wrap.className = "chart-card";
+
+    wrap.innerHTML = `
+      <h3>${A.alliance} vs ${B.alliance}</h3>
+      <canvas id="cmp-${A.alliance}-${B.alliance}"></canvas>
+    `;
+
+    container.appendChild(wrap);
+
+    new Chart(
+      document.getElementById(`cmp-${A.alliance}-${B.alliance}`),
+      {
+        type: "bar",
+        data: {
+          labels: ["Combat Score", "First Squad Power"],
+          datasets: [
+            {
+              label: A.alliance,
+              data: [
+                A.acsAbsolute,
+                A.averageFirstSquadPower / 1e6
+              ],
+              backgroundColor: "#00ffc8"
+            },
+            {
+              label: B.alliance,
+              data: [
+                B.acsAbsolute,
+                B.averageFirstSquadPower / 1e6
+              ],
+              backgroundColor: "#ff5c5c"
+            }
+          ]
+        }
+      }
+    );
+  });
+}
+
 
 /* =============================
    LOGIC HELPERS
