@@ -121,18 +121,21 @@ export function scoreAlliance(processed) {
   }
 
   return {
-    alliance: processed.alliance,
-    warzone: processed.warzone,
+  alliance: processed.alliance,
+  warzone: processed.warzone,
 
-    activePower: processed.activePower,
-    benchPower: processed.benchPower,
+  // 🔑 carry forward for UI
+  activePlayers: processed.activePlayers,
+  benchPlayers: processed.benchPlayers,
 
-    cqs,
-    stabilityFactor,
-    isNCA,
+  activePower: processed.activePower,
+  benchPower: processed.benchPower,
 
-    acsAbsolute,
+  cqs,
+  stabilityFactor,
+  isNCA,
 
-    tierCounts: processed.tierCounts
-  };
-}
+  acsAbsolute,
+
+  tierCounts: processed.tierCounts
+};
