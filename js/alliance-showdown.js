@@ -102,31 +102,15 @@ async function init() {
 
     console.log("✅ Alliances ready:", allScoredAlliances.length);
 
-    populateAllianceSelector();
+    // ✅ NEW FLOW: populate only warzones
+    populateWarzones();
 
   } catch (err) {
     console.error("Alliance Showdown init failed:", err);
   }
-  populateWarzones();
-
 }
 
-/* =============================
-   POPULATE ALLIANCE SELECTOR
-============================= */
-function populateAllianceSelector() {
-  allianceListEl.innerHTML = "";
 
-  allScoredAlliances.forEach(a => {
-    const item = document.createElement("div");
-    item.className = "alliance-item";
-    item.textContent = a.alliance;
-
-    item.onclick = () => toggleAllianceSelection(a.alliance, item);
-
-    allianceListEl.appendChild(item);
-  });
-}
 
 /* =============================
    TOGGLE SELECTION
@@ -259,16 +243,6 @@ function formatPower(val) {
 /* =============================
    SEARCH FILTER
 ============================= */
-searchInput.addEventListener("input", () => {
-  const q = searchInput.value.toLowerCase();
-
-  [...allianceListEl.children].forEach(item => {
-    item.style.display =
-      item.textContent.toLowerCase().includes(q)
-        ? "block"
-        : "none";
-  });
-});
 
 /* =============================
    START
