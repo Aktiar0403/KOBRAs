@@ -693,7 +693,7 @@ button:disabled {
   position: relative;
   padding: 10px 14px;
   margin: -14px -14px 14px -14px;
-  background: rgba(0, 0, 0, 0.45); /* darker base */
+  background: rgba(0, 0, 0, 0.363); /* darker base */
   backdrop-filter: blur(8px);
   z-index: 3; /* 👈 above card glow */
 }
@@ -710,13 +710,13 @@ button:disabled {
 }
 
 .alliance-intel.good .intel-strip::after {
-  background: #00ffc8;
+  background: #00ffc86c;
 }
 .alliance-intel.warn .intel-strip::after {
-  background: #ffc107;
+  background: #ffc1075b;
 }
 .alliance-intel.bad .intel-strip::after {
-  background: #ff4d4d;
+  background: #ff4d4d56;
 }
 
 /* TITLE */
@@ -740,7 +740,7 @@ button:disabled {
   right: 12px;
   width: 88px;
   height: 88px;
-  z-index: 4;             /* above strip */
+  z-index: 6;             /* above strip */
 }
 
 .intel-pie canvas {
