@@ -26,6 +26,7 @@ const warzoneSelect   = document.getElementById("warzoneSelect");
 const allianceListEl = document.getElementById("allianceList");
 const analyzeBtn     = document.getElementById("analyzeBtn");
 const resultsEl      = document.getElementById("results");
+
 // Chart.js plugin to draw values above bars
 const BarValuePlugin = {
   id: "barValuePlugin",
@@ -146,6 +147,7 @@ function toggleAlliance(a, el) {
   analyzeBtn.disabled = SELECTED.size < 2;
 }
 
+
 /* =============================
    ANALYZE
 ============================= */
@@ -155,7 +157,54 @@ analyzeBtn.addEventListener("click", () => {
 
   resultsEl.classList.remove("hidden");
   renderAllianceCards(alliances);
+  
 });
+
+function renderMatchupCards(alliances) {
+  const el = document.getElementById("matchups");
+  if (!el) {
+    console.error("❌ #matchups container not found");
+    return;
+  }
+
+  el.innerHTML = "<h2>Showdown Results</h2>";
+
+  const matchups = buildMatchupMatrix(alliances);
+  if (!matchups.length) {
+    el.innerHTML += "<p>No valid matchups generated.</p>";
+    return;
+  }
+
+  matchups.forEach(m => {
+    const A = alliances.find(x => x.alliance === m.a);
+    const B = alliances.find(x => x.alliance === m.b);
+    if (!A || !B) return;
+
+    const winner = m.ratio >= 1 ? A : B;
+    const loser  = winner === A ? B : A;
+
+    const card = document.createElement("div");
+    card.className = "matchup-card";
+
+    card.innerHTML = `
+      <div class="matchup-verdict">
+        🏆 ${winner.alliance}
+        <span class="vs">vs</span>
+        💥 ${loser.alliance}
+      </div>
+
+      <div class="matchup-metric">
+        Combat Ratio: <strong>${m.ratio.toFixed(2)}×</strong>
+      </div>
+
+      <div class="matchup-outcome">
+        ${m.outcome}
+      </div>
+    `;
+
+    el.appendChild(card);
+  });
+}
 
 /* =============================
    ALLIANCE CARDS
