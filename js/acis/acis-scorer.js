@@ -124,7 +124,7 @@ export function scoreAlliance(processed) {
   alliance: processed.alliance,
   warzone: processed.warzone,
 
-  // 🔑 carry forward for UI
+  // 🔑 REQUIRED FOR UI
   activePlayers: processed.activePlayers,
   benchPlayers: processed.benchPlayers,
 
@@ -139,3 +139,4 @@ export function scoreAlliance(processed) {
 
   tierCounts: processed.tierCounts
 };
+}
