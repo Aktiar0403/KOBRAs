@@ -198,10 +198,16 @@ function renderAllianceCards(alliances) {
   <canvas id="stability-${a.alliance}-${a.warzone}"></canvas>
   <canvas id="composition-${a.alliance}-${a.warzone}"></canvas>
   <canvas id="frontline-${a.alliance}-${a.warzone}"></canvas>
-</div>
+              </div>
 
       </div>
     `;
+setTimeout(() => {
+  renderPowerChart(a);
+  renderStabilityChart(a);
+  renderCompositionChart(a);
+  renderFrontlineChart(a);
+}, 0);
 
     el.appendChild(card);
   });
