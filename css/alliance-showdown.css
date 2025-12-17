@@ -885,6 +885,8 @@ body.kobra-dark {
   margin: 14px 0;
   padding: 14px;
 }
-panel.center {
-  text-align: center;
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
