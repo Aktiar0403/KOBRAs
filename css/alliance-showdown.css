@@ -880,3 +880,8 @@ body.kobra-dark {
   box-shadow: none;
   border: 1px solid rgba(255,255,255,0.06);
 }
+.panel {
+  width: 100%;
+  margin: 14px 0;
+  padding: 14px;
+}
