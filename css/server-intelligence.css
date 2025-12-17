@@ -1171,3 +1171,13 @@ body.kobra-dark {
   fill:#72a4f2;
   filter:drop-shadow(0 0 6px rgba(114,164,242,.6));
 }
+.discord-header svg{
+  width:18px;
+  height:18px;
+  fill:#72a4f2;
+  filter:drop-shadow(0 0 4px rgba(114,164,242,.5));
+}
+.discord-header svg{
+  width:14px;
+  height:14px;
+}
