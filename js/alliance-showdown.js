@@ -266,8 +266,8 @@ function renderAllianceCards(alliances) {
     </div>
 
   </div>
-`;
-
+`
+;
 
     el.appendChild(card);
 
