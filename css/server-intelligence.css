@@ -1098,7 +1098,7 @@ body.kobra-dark {
 ========================= */
 
 .kobra-card-row.dual {
-  display: grid;
+  display: 100%;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
