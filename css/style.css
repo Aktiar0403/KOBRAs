@@ -1053,3 +1053,23 @@ main {
   margin: 0 auto;
   padding: 80px 20px;
 }
+/* =========================
+   DESKTOP SAFETY OVERRIDE
+========================= */
+
+html, body {
+  width: 100%;
+  min-width: 100%;
+}
+
+/* Ensure header never collapses on desktop */
+@media (min-width: 768px) {
+  .site-header {
+    flex-direction: row !important;
+    align-items: center;
+  }
+
+  .nav {
+    flex-wrap: nowrap;
+  }
+}
