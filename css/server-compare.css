@@ -544,3 +544,7 @@ body.kobra-dark {
   box-shadow: none;
   border: 1px solid rgba(255,255,255,0.06);
 }
+.compare-modes {
+  width: 100%;
+  max-width: none;
+}
