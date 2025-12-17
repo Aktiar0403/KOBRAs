@@ -76,8 +76,9 @@ function populateSelectors() {
 
   } else {
     // ✅ Warzone = NOT searchable
-    searchA.style.display = "none";
-    searchB.style.display = "none";
+    searchA.classList.add("slot-hidden");
+searchB.classList.add("slot-hidden");
+
   }
 }
 

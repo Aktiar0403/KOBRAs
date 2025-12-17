@@ -574,3 +574,7 @@ body.kobra-dark {
     text-align: center;
   }
 }
+.slot-hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
