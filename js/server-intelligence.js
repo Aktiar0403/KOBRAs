@@ -555,15 +555,25 @@ excelInput.onchange = async (e) => {
 
         const [rank, alliance, name, warzone, power] = row;
 
-        await addDoc(collection(db, "server_players"), {
-          rank: Number(rank),
-          alliance: String(alliance || "").trim(),
-          name: String(name || "").trim(),
-          warzone: Number(warzone),
-          totalPower: Number(power),
-          importedAt: serverTimestamp()
-        });
+        const uploadId = `upload-${Date.now()}`;
 
+await addDoc(collection(db, "server_players"), {
+  rank,
+  alliance,
+  name,
+  warzone,
+  totalPower,
+
+  // Phase 1 metadata
+  basePower: totalPower,
+  powerSource: "confirmed",
+  lastConfirmedAt: serverTimestamp(),
+  snapshotStatus: "present",
+  growthModel: "tiered-percent-v1",
+  uploadId,
+
+  importedAt: serverTimestamp()
+});
         imported++;
       }
 
