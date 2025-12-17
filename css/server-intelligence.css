@@ -1093,3 +1093,19 @@ body.kobra-dark {
   box-shadow: none;
   border: 1px solid rgba(255,255,255,0.06);
 }
+/* =========================
+   DUAL CTA ROW
+========================= */
+
+.kobra-card-row.dual {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+/* Mobile fallback */
+@media (max-width: 900px) {
+  .kobra-card-row.dual {
+    grid-template-columns: 1fr;
+  }
+}
