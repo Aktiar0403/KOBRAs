@@ -1113,71 +1113,27 @@ body.kobra-dark {
 .kobra-card-row .kobra-card-btn {
   width: 100%;
   height: 100%;
-}
-.discord-request-card{
-  max-width:420px;
-  background:#0b1220;
-  border:1px solid rgba(114,164,242,.25);
-  border-radius:16px;
-  padding:18px;
-  box-shadow:0 0 20px rgba(114,164,242,.15);
-}
 
-.discord-header{
+.discord-icon-btn{
+  width:36px;
+  height:36px;
   display:flex;
   align-items:center;
-  gap:10px;
-  font-weight:700;
-  color:#72a4f2;
-  margin-bottom:10px;
+  justify-content:center;
+  border-radius:50%;
+  background:rgba(114,164,242,.12);
+  border:1px solid rgba(114,164,242,.35);
+  transition:.2s ease;
 }
 
-.discord-header img{
-  width:26px;
-  height:26px;
-}
-
-.discord-text{
-  font-size:14px;
-  line-height:1.6;
-  color:#cdd6f4;
-  margin-bottom:14px;
-}
-
-.discord-btn{
-  display:block;
-  text-align:center;
-  padding:12px;
-  border-radius:12px;
-  background:linear-gradient(135deg,#5865F2,#72a4f2);
-  color:#fff;
-  font-weight:700;
-  text-decoration:none;
-  margin-bottom:10px;
-}
-
-.discord-btn:hover{
-  box-shadow:0 0 18px rgba(114,164,242,.6);
-}
-
-.discord-note{
-  font-size:12px;
-  opacity:.7;
-  text-align:center;
-}
-.discord-header svg{
-  width:26px;
-  height:26px;
+.discord-icon-btn svg{
+  width:16px;
+  height:16px;
   fill:#72a4f2;
-  filter:drop-shadow(0 0 6px rgba(114,164,242,.6));
 }
-.discord-header svg{
-  width:18px;
-  height:18px;
-  fill:#72a4f2;
-  filter:drop-shadow(0 0 4px rgba(114,164,242,.5));
-}
-.discord-header svg{
-  width:14px;
-  height:14px;
+
+.discord-icon-btn:hover{
+  background:rgba(114,164,242,.22);
+  box-shadow:0 0 10px rgba(114,164,242,.6);
+  transform:translateY(-1px);
 }
