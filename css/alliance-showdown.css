@@ -885,3 +885,6 @@ body.kobra-dark {
   margin: 14px 0;
   padding: 14px;
 }
+panel.center {
+  text-align: center;
+}
