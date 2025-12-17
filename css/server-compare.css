@@ -561,3 +561,16 @@ body.kobra-dark {
   align-items: center;
   width: 100%;
 }
+@media (max-width: 768px) {
+  .compare-selectors {
+    grid-template-columns: 1fr;
+  }
+
+  .compare-selectors > * {
+    width: 100%;
+  }
+
+  .vs {
+    text-align: center;
+  }
+}
