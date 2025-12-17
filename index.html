@@ -1,98 +1,89 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>KOBRAS — Redirecting...</title>
+
+  <title>LWServers — Last War Survival Server Intelligence</title>
+  <meta name="description" content="Independent server intelligence for Last War Survival. Compare warzones, alliances, top players, and power dominance." />
+  <meta name="robots" content="index, follow">
+
   <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#00ffc8">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LWServers">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
 
-<meta name="theme-color" content="#00ffc8">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="KOBRA">
-
-<link rel="apple-touch-icon" href="/assets/icons/icon-192.png">
-
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      height: 100vh;
-      background: url("https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1920&auto=format")
-        no-repeat center center/cover;
-      background-color: rgba(0, 0, 0, 0.55);
-      background-blend-mode: darken;
-      overflow: hidden;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-family: "Inter", sans-serif;
-      color: #00ffae;
-    }
-
-    /* COBRA EYES EFFECT (kept for style) */
-    .cobra-eyes {
-      position: absolute;
-      top: 20%;
-      display: flex;
-      justify-content: center;
-      gap: 120px;
-      opacity: 0.35;
-      animation: eyesGlow 3s infinite alternate;
-      z-index: 0;
-    }
-
-    .cobra-eyes div {
-      width: 60px;
-      height: 60px;
-      background: radial-gradient(circle,
-          rgba(0, 255, 120, 1),
-          rgba(0, 150, 70, 0.4),
-          transparent);
-      border-radius: 50%;
-      box-shadow: 0 0 25px rgba(0, 255, 120, 0.8);
-    }
-
-    @keyframes eyesGlow {
-      0% { transform: scale(1); opacity: 0.3; }
-      100% { transform: scale(1.15); opacity: 0.6; }
-    }
-
-    .redirect-text {
-      z-index: 5;
-      font-size: 22px;
-      letter-spacing: 2px;
-      text-shadow: 0 0 20px rgba(0, 255, 174, 0.8);
-    }
-  </style>
+  <link rel="stylesheet" href="/css/style.css">
 </head>
 
-<body>
+<body class="bg">
 
- 
+<!-- =====================
+     HEADER / NAV
+===================== -->
+<header class="site-header">
+  <div class="logo">
+    <a href="/">LWServers</a>
+  </div>
+  <nav class="nav">
+    <a href="/server-intelligence.html">Server Intelligence</a>
+    <a href="/server-compare.html">Compare</a>
+    <a href="/alliance-showdown.html" style="color:#00ffc8">
+  Alliance Showdown (Experimental)
+</a>
 
-  <div class="redirect-text">Entering KOBRA Territory...</div>
+  </nav>
+</header>
 
-  <script>
-    // Instantly redirect players to the public dashboard
-    window.location.href = "player.html";
-  </script>
+<!-- =====================
+     HERO
+===================== -->
+<main class="home">
 
+  <h1>Last War Survival<br>Server Intelligence</h1>
 
-</body>
+  <p class="subtitle">
+    Independent, read-only analytics for warzones, alliances, and top players.
+  </p>
 
-</html>
+  <p class="desc">
+    Analyze server power, alliance dominance, and elite players across warzones —
+    fast, clean, and community-driven.
+  </p>
+
+  <div class="home-actions">
+    <a href="/server-intelligence.html" class="btn primary">
+      Server Intelligence
+    </a>
+    <a href="/server-compare.html" class="btn ghost">
+      Compare Servers
+    </a>
+  </div>
+
+  <p class="micro">
+    Fan-made • No login required • No edits • For analysis only
+  </p>
+
+</main>
+
+<!-- =====================
+     FOOTER
+===================== -->
 <footer class="site-footer">
   <div class="footer-inner">
-    <span>© 2025 KOBRA</span>
-    <small style="opacity:.7;">Unofficial analytics platform. Not affiliated with game publishers.</small>
-
+    <span>© 2025 LWServers</span>
+    <small style="opacity:.75;">
+      Independent fan-made analytics. Not affiliated with or endorsed by the game developers.
+    </small>
     <nav>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="terms.html">Terms</a>
-      <a href="contact.html">Contact</a>
+      <a href="/privacy.html">Privacy</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/contact.html">Contact</a>
     </nav>
   </div>
 </footer>
+
+</body>
+</html>
