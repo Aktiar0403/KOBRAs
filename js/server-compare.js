@@ -66,21 +66,20 @@ function populateSelectors() {
     selectB.innerHTML += `<option>${v}</option>`;
   });
 
-  if (mode === "alliance") {
-    // ✅ Alliance = searchable
-    searchA.style.display = "block";
-    searchB.style.display = "block";
+ if (mode === "alliance") {
+  // Alliance = searchable
+  searchA.classList.remove("slot-hidden");
+  searchB.classList.remove("slot-hidden");
 
-    bindSearch(searchA, selectA, values);
-    bindSearch(searchB, selectB, values);
+  bindSearch(searchA, selectA, values);
+  bindSearch(searchB, selectB, values);
 
-  } else {
-    // ✅ Warzone = NOT searchable
-    searchA.classList.add("slot-hidden");
-searchB.classList.add("slot-hidden");
-
-  }
+} else {
+  // Warzone = NOT searchable (but keep layout)
+  searchA.classList.add("slot-hidden");
+  searchB.classList.add("slot-hidden");
 }
+
 
 function getTop10(players) {
   return [...players]
