@@ -376,7 +376,12 @@ function bindSearch(inputEl, selectEl, values) {
       });
   };
 }
-
+function sumPower(players) {
+  return players.reduce(
+    (sum, p) => sum + getEffectivePowerValue(p),
+    0
+  );
+}
 
 function getTopPlayer(players) {
   if (!players.length) return null;
