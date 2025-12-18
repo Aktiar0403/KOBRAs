@@ -663,6 +663,7 @@ async function deleteByUploadId(uploadId) {
   alert(`🗑️ Deleted ${count} players from upload ${uploadId}`);
   loadPlayers(); // refresh UI
 }
+window.deleteByUploadId = deleteByUploadId;
 
 /* =============================
    SEARCH
