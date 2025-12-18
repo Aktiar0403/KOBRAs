@@ -7,6 +7,7 @@ import {
   addDoc,
   query,
   where,
+  deleteDoc,
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -628,6 +629,40 @@ for (const row of rows) {
 
   reader.readAsArrayBuffer(file);
 };
+async function deleteByUploadId(uploadId) {
+  if (!uploadId) return;
+
+  const confirmText = prompt(
+    `⚠️ This will permanently delete all players from upload:\n\n${uploadId}\n\nType: DELETE ${uploadId}`
+  );
+
+  if (confirmText !== `DELETE ${uploadId}`) {
+    alert("❌ Deletion cancelled");
+    return;
+  }
+
+  const q = query(
+    collection(db, "server_players"),
+    where("uploadId", "==", uploadId)
+  );
+
+  const snap = await getDocs(q);
+
+  if (snap.empty) {
+    alert("No records found for this upload.");
+    return;
+  }
+
+  let count = 0;
+
+  for (const doc of snap.docs) {
+    await deleteDoc(doc.ref);
+    count++;
+  }
+
+  alert(`🗑️ Deleted ${count} players from upload ${uploadId}`);
+  loadPlayers(); // refresh UI
+}
 
 /* =============================
    SEARCH
