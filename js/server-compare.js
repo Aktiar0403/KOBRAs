@@ -376,13 +376,12 @@ function bindSearch(inputEl, selectEl, values) {
       });
   };
 }
-return players.reduce((max, p) =>
-  getEffectivePowerValue(p) > getEffectivePowerValue(max) ? p : max
-);
+
 
 function getTopPlayer(players) {
   if (!players.length) return null;
+
   return players.reduce((max, p) =>
-    p.totalPower > max.totalPower ? p : max
+    getEffectivePowerValue(p) > getEffectivePowerValue(max) ? p : max
   );
 }
