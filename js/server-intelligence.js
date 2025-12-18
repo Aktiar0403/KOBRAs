@@ -5,6 +5,9 @@ import {
   collection,
   getDocs,
   addDoc,
+  query,
+  where,
+  updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -550,36 +553,72 @@ excelInput.onchange = async (e) => {
 
       let imported = 0;
 
-      for (const row of rows) {
-        if (row.length < 5) continue;
+    const uploadId = `upload-${Date.now()}`;
 
-        const [rank, alliance, name, warzone, power] = row;
+for (const row of rows) {
+  if (row.length < 5) continue;
 
-        const uploadId = `upload-${Date.now()}`;
+  const [rank, alliance, name, warzone, power] = row;
 
-await addDoc(collection(db, "server_players"), {
-  rank,
-  alliance,
-  name,
-  warzone,
-  totalPower,
+  const cleanName = String(name || "").trim();
+  const wz = Number(warzone);
+  const pwr = Number(power);
 
-  // Phase 1 metadata
-  basePower: totalPower,
-  powerSource: "confirmed",
-  lastConfirmedAt: serverTimestamp(),
-  snapshotStatus: "present",
-  growthModel: "tiered-percent-v1",
-  uploadId,
+  if (!cleanName || !wz || !pwr) continue;
 
-  importedAt: serverTimestamp()
-});
-        imported++;
-      }
+  // 🔍 Check if player already exists (name + warzone)
+  const q = query(
+    collection(db, "server_players"),
+    where("name", "==", cleanName),
+    where("warzone", "==", wz)
+  );
 
-      alert(`✅ Imported ${imported} players from Excel`);
-      excelInput.value = "";
-      loadPlayers();
+  const snap = await getDocs(q);
+
+  if (!snap.empty) {
+    // 🔁 UPDATE existing player
+    const docRef = snap.docs[0].ref;
+
+    await updateDoc(docRef, {
+      rank: Number(rank), // snapshot rank (admin-only)
+      alliance: String(alliance || "").trim(),
+      totalPower: pwr,
+
+      // Phase 1 metadata refresh
+      basePower: pwr,
+      powerSource: "confirmed",
+      lastConfirmedAt: serverTimestamp(),
+      snapshotStatus: "present",
+      uploadId: uploadId
+    });
+
+  } else {
+    // 🆕 ADD new player
+    await addDoc(collection(db, "server_players"), {
+      rank: Number(rank),
+      alliance: String(alliance || "").trim(),
+      name: cleanName,
+      warzone: wz,
+      totalPower: pwr,
+
+      // Phase 1 metadata
+      basePower: pwr,
+      powerSource: "confirmed",
+      lastConfirmedAt: serverTimestamp(),
+      snapshotStatus: "present",
+      growthModel: "tiered-percent-v1",
+      uploadId: uploadId,
+
+      importedAt: serverTimestamp()
+    });
+  }
+
+  imported++;
+}
+
+         alert(`✅ Imported ${imported} players from Excel`);
+         excelInput.value = "";
+          loadPlayers();
 
     } catch (err) {
       console.error("Excel import failed:", err);
