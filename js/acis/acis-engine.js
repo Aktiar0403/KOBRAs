@@ -21,8 +21,9 @@ import {
    FIRST SQUAD POWER (FSP)
    Empirical, non-linear estimate
 ============================= */
-function estimateFirstSquadPower(totalPower) {
-  const tp = Number(totalPower || 0);
+function estimateFirstSquadPower(effectivePower) {
+  const tp = Number(effectivePower || 0);
+
 
   if (tp <= 150e6) return tp * 0.37;
   if (tp <= 220e6) return tp * 0.34;
@@ -63,8 +64,9 @@ function computePositionFactor(power, cls) {
 /* =============================
    EFFECTIVE POWER CALCULATION
 ============================= */
-function computeEffectivePower(player, cls) {
-  const raw = player.totalPower;
+function computeCombatPower(player, cls) {
+  const raw = player.effectivePower;
+
   const base = CLASS_BASE_WEIGHTS[cls];
   const pos = computePositionFactor(raw, cls);
 
@@ -77,13 +79,15 @@ function computeEffectivePower(player, cls) {
 function createPlankton(warzoneFloorPower) {
   const rawPower = warzoneFloorPower * ASSUMPTION_FACTOR;
 
-  return {
-    name: "Assumed",
-    totalPower: rawPower,
-    class: "PLANKTON",
-    effectivePower: rawPower * CLASS_BASE_WEIGHTS.PLANKTON,
-    firstSquadPower: rawPower * 0.33 // conservative filler
-  };
+ const eff = rawPower * CLASS_BASE_WEIGHTS.PLANKTON;
+
+return {
+  name: "Assumed",
+  effectivePower: eff,
+  class: "PLANKTON",
+  firstSquadPower: eff * 0.33
+};
+
 }
 
 /* =============================
@@ -119,9 +123,9 @@ export function processAlliance(allianceData) {
 
   /* -------- ACTIVE REAL PLAYERS -------- */
   activeReal.forEach(p => {
-    const cls = classifyPower(p.totalPower);
-    const eff = computeEffectivePower(p, cls);
-    const fsp = estimateFirstSquadPower(p.totalPower);
+   const cls = classifyPower(p.effectivePower);
+const eff = computeCombatPower(p, cls);
+const fsp = estimateFirstSquadPower(p.effectivePower);
 
     tierCounts[cls]++;
     activePower += eff;
@@ -153,8 +157,9 @@ export function processAlliance(allianceData) {
   /* -------- BENCH (REAL ONLY) -------- */
   if (benchAvailable) {
     benchReal.forEach(p => {
-      const cls = classifyPower(p.totalPower);
-      const eff = computeEffectivePower(p, cls);
+    const cls = classifyPower(p.effectivePower);
+const eff = computeCombatPower(p, cls);
+
 
       tierCounts[cls]++;
       benchPower += eff;

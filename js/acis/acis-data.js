@@ -13,6 +13,30 @@ import {
   BENCH_SIZE,
   MAX_ANALYZED_PLAYERS
 } from "./acis-config.js";
+/* =============================
+   PHASE 4 — EFFECTIVE POWER
+============================= */
+function getEffectivePower(p) {
+  const base = Number(p.basePower ?? p.totalPower ?? 0);
+
+  if (p.powerSource === "confirmed") return base;
+
+  if (!p.lastConfirmedAt || !p.lastConfirmedAt.toMillis) {
+    return base;
+  }
+
+  const weeks =
+    Math.floor((Date.now() - p.lastConfirmedAt.toMillis()) / (1000 * 60 * 60 * 24 * 7));
+
+  if (weeks <= 0) return base;
+
+  let rate = 0.03;
+  if (base >= 400_000_000) rate = 0.007;
+  else if (base >= 200_000_000) rate = 0.018;
+  else if (base >= 100_000_000) rate = 0.024;
+
+  return Math.round(base * Math.pow(1 + rate, weeks));
+}
 
 /* =============================
    GROUP PLAYERS BY ALLIANCE
@@ -39,12 +63,13 @@ function computeWarzoneFloor(players) {
   let min = Infinity;
 
   players.forEach(p => {
-    const power = Number(p.totalPower || 0);
+    const power = getEffectivePower(p);
     if (power > 0 && power < min) min = power;
   });
 
   return min === Infinity ? 0 : min;
 }
+
 
 /* =============================
    DETERMINE DOMINANT WARZONE
@@ -85,6 +110,10 @@ export function prepareAllianceData(players) {
     );
     const warzoneFloorPower =
       computeWarzoneFloor(warzonePlayers);
+alliancePlayers = alliancePlayers.map(p => ({
+  ...p,
+  effectivePower: getEffectivePower(p)
+}));
 
     /* ---------- SORT PLAYERS BY POWER ---------- */
     const sorted = [...alliancePlayers].sort(

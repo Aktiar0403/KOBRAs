@@ -369,6 +369,26 @@ function renderAlliancePie(a) {
     }
   });
 }
+// Phase 4 — effective power for showdown
+function getEffectivePowerValue(p) {
+  if (p.powerSource === "confirmed") return p.basePower;
+
+  if (!p.lastConfirmedAt || !p.lastConfirmedAt.toMillis) {
+    return p.basePower;
+  }
+
+  const weeks =
+    Math.floor((Date.now() - p.lastConfirmedAt.toMillis()) / (1000 * 60 * 60 * 24 * 7));
+
+  if (weeks <= 0) return p.basePower;
+
+  let rate = 0.03;
+  if (p.basePower >= 400_000_000) rate = 0.007;
+  else if (p.basePower >= 200_000_000) rate = 0.018;
+  else if (p.basePower >= 100_000_000) rate = 0.024;
+
+  return Math.round(p.basePower * Math.pow(1 + rate, weeks));
+}
 
 /* =============================
    HELPERS
@@ -376,7 +396,7 @@ function renderAlliancePie(a) {
 function computeTotalAlliancePower(a) {
   return a.activePlayers
     .filter(p => !p.assumed)
-    .reduce((s, p) => s + p.totalPower, 0);
+   .reduce((s, p) => s + getEffectivePowerValue(p), 0);
 }
 function formatBig(v) {
   if (!v) return "0";

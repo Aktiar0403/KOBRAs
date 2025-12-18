@@ -2,6 +2,41 @@ import { db } from "./firebase-config.js";
 import { collection, getDocs } from
   "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+  /* =============================
+   PHASE 4 — POWER COMPUTATION
+============================= */
+
+function getWeeklyGrowthRate(basePower) {
+  if (basePower < 50_000_000) return 0.03;
+  if (basePower < 100_000_000) return 0.024;
+  if (basePower < 200_000_000) return 0.018;
+  if (basePower < 400_000_000) return 0.012;
+  return 0.007;
+}
+
+function weeksBetween(timestamp) {
+  if (!timestamp || !timestamp.toMillis) return 0;
+  const diffMs = Date.now() - timestamp.toMillis();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
+}
+
+function computeEffectivePower(p) {
+  if (p.powerSource === "confirmed") {
+    return p.basePower;
+  }
+
+  const weeks = weeksBetween(p.lastConfirmedAt);
+  if (weeks <= 0) return p.basePower;
+
+  const rate = getWeeklyGrowthRate(p.basePower);
+  return Math.round(p.basePower * Math.pow(1 + rate, weeks));
+}
+
+function getEffectivePowerValue(p) {
+  return computeEffectivePower(p);
+}
+
+
   function estimateFirstSquad(totalPower) {
   const m = totalPower / 1_000_000;
 
@@ -50,7 +85,16 @@ const TIERS = {
 
 async function loadPlayers() {
   const snap = await getDocs(collection(db,"server_players"));
-  allPlayers = snap.docs.map(d => d.data());
+  allPlayers = snap.docs.map(doc => {
+  const d = doc.data();
+  return {
+    ...d,
+    basePower: Number(d.basePower ?? d.totalPower ?? 0),
+    powerSource: d.powerSource || "confirmed",
+    lastConfirmedAt: d.lastConfirmedAt || d.importedAt
+  };
+});
+
   populateSelectors();
 }
 
@@ -83,15 +127,16 @@ function populateSelectors() {
 
 function getTop10(players) {
   return [...players]
-    .sort((a, b) => b.totalPower - a.totalPower)
+    .sort((a, b) => getEffectivePowerValue(b) - getEffectivePowerValue(a))
     .slice(0, 10);
 }
+
 
 function analyze(players) {
   const stats = { mega:0, whale:0, shark:0, piranha:0, shrimp:0, total:0 };
 
   players.forEach(p => {
-    const pw = p.totalPower;
+    const pw = getEffectivePowerValue(p);
     stats.total += pw;
     if (TIERS.mega(pw)) stats.mega++;
     else if (TIERS.whale(pw)) stats.whale++;
@@ -213,8 +258,8 @@ function renderTop10(labelA, listA, labelB, listB) {
     const a = listA[i];
     const b = listB[i];
 
-    const aPower = a?.totalPower || 0;
-    const bPower = b?.totalPower || 0;
+    const aPower = a ? getEffectivePowerValue(a) : 0;
+const bPower = b ? getEffectivePowerValue(b) : 0;
 
     let medalA = "";
     let medalB = "";
@@ -331,9 +376,9 @@ function bindSearch(inputEl, selectEl, values) {
       });
   };
 }
-function sumPower(players) {
-  return players.reduce((s, p) => s + p.totalPower, 0);
-}
+return players.reduce((max, p) =>
+  getEffectivePowerValue(p) > getEffectivePowerValue(max) ? p : max
+);
 
 function getTopPlayer(players) {
   if (!players.length) return null;

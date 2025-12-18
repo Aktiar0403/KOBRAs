@@ -203,7 +203,7 @@ function renderTop5Elite(players) {
 
   // Sort by TOTAL POWER (global, not filtered)
   const top5 = [...players]
-    .sort((a, b) => b.getEffectivePowerValue - a.getEffectivePowerValue)
+ .sort((a, b) => getEffectivePowerValue(b) - getEffectivePowerValue(a))
     .slice(0, 5);
 
   grid.innerHTML = "";
@@ -222,7 +222,7 @@ function renderTop5Elite(players) {
         <span class="warzone">WZ-${p.warzone}</span>
       </div>
 
-      <div class="glory-power">⚡ ${formatPowerM(p.effectivePower)}</div>
+      <div class="glory-power">⚡ ${formatPowerM(getEffectivePowerValue(p))}</div>
     `;
 
     grid.appendChild(card);
@@ -268,14 +268,19 @@ async function loadPlayers() {
 
     allPlayers = snap.docs.map(doc => {
       const d = doc.data();
-      return {
-        id: doc.id,
-        rank: Number(d.rank ?? 0),
-        name: d.name || "",
-        alliance: d.alliance || "",
-        warzone: Number(d.warzone),
-        totalPower: Number(d.totalPower ?? 0)
-      };
+    return {
+  id: doc.id,
+  rank: Number(d.rank ?? 0),
+  name: d.name || "",
+  alliance: d.alliance || "",
+  warzone: Number(d.warzone),
+
+  totalPower: Number(d.totalPower ?? 0), // keep for admin
+  basePower: Number(d.basePower ?? d.totalPower ?? 0),
+  powerSource: d.powerSource || "confirmed",
+  lastConfirmedAt: d.lastConfirmedAt || d.importedAt
+};
+
     });
 
     console.log("✅ Loaded players:", allPlayers.length);
@@ -342,7 +347,9 @@ function applyFilters() {
   }
 
   // Rank by POWER
-  filteredPlayers.sort((a, b) => b.totalPower - a.totalPower);
+  filteredPlayers.sort((a, b) => {
+  return getEffectivePowerValue(b) - getEffectivePowerValue(a);
+});
 
   renderTable(filteredPlayers);
   updatePowerSegments(filteredPlayers);
@@ -489,7 +496,8 @@ function updatePowerSegments(players) {
   let mega = 0, whale = 0, shark = 0, piranha = 0, shrimp = 0;
 
   players.forEach(p => {
-    const power = p.effectivePower;
+    const power = getEffectivePowerValue(p);
+
     if (power >= 230_000_000) mega++;
     else if (power >= 180_000_000) whale++;
     else if (power >= 160_000_000) shark++;
@@ -519,8 +527,9 @@ function renderAllianceDominance(players) {
   let total = 0;
 
   players.forEach(p => {
-    map[p.alliance] = (map[p.alliance] || 0) + p.effectivePower;
-    total += p.effectivePower;
+ const power = getEffectivePowerValue(p);
+map[p.alliance] = (map[p.alliance] || 0) + power;
+total += power;
   });
 
   Object.entries(map)
@@ -532,7 +541,9 @@ function renderAllianceDominance(players) {
     const pct = ((power / total) * 100).toFixed(1);
 
     const members = players.filter(p => p.alliance === alliance);
-    const topPlayer = members.sort((a,b)=>b.totalPower-a.totalPower)[0];
+    const topPlayer = members.sort(
+  (a,b)=>getEffectivePowerValue(b)-getEffectivePowerValue(a)
+)[0];
 
     const card = document.createElement("div");
     card.className = "dominance-card";
