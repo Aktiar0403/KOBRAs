@@ -12,6 +12,60 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+/* =============================
+   PHASE 4 — POWER COMPUTATION
+============================= */
+
+// Decide weekly growth % based on base power
+function getWeeklyGrowthRate(basePower) {
+  if (basePower < 50_000_000) return 0.03;   // 3.0%
+  if (basePower < 100_000_000) return 0.024; // 2.4%
+  if (basePower < 200_000_000) return 0.018; // 1.8%
+  if (basePower < 400_000_000) return 0.012; // 1.2%
+  return 0.007;                              // 0.7%
+}
+
+// How many full weeks since last confirmation
+function weeksBetween(timestamp) {
+  if (!timestamp || !timestamp.toMillis) return 0;
+
+  const diffMs = Date.now() - timestamp.toMillis();
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24 * 7));
+}
+
+// Final computed power shown to users
+function computeEffectivePower(player) {
+  // If power is confirmed, show exact
+  if (player.powerSource === "confirmed") {
+    return {
+      value: player.basePower,
+      tag: "confirmed"
+    };
+  }
+
+  const weeks = weeksBetween(player.lastConfirmedAt);
+  if (weeks <= 0) {
+    return {
+      value: player.basePower,
+      tag: "estimated"
+    };
+  }
+
+  const rate = getWeeklyGrowthRate(player.basePower);
+  const grown = player.basePower * Math.pow(1 + rate, weeks);
+
+  return {
+    value: Math.round(grown),
+    tag: "estimated"
+  };
+}
+
+// Always use this for power everywhere (Phase 4 helper)
+function getEffectivePowerValue(p) {
+  return computeEffectivePower(p).value;
+}
+
+
 const loaderStart = Date.now();
 let fakeProgress = 0;
 let dataReady = false;
@@ -149,7 +203,7 @@ function renderTop5Elite(players) {
 
   // Sort by TOTAL POWER (global, not filtered)
   const top5 = [...players]
-    .sort((a, b) => b.totalPower - a.totalPower)
+    .sort((a, b) => b.getEffectivePowerValue - a.getEffectivePowerValue)
     .slice(0, 5);
 
   grid.innerHTML = "";
@@ -168,7 +222,7 @@ function renderTop5Elite(players) {
         <span class="warzone">WZ-${p.warzone}</span>
       </div>
 
-      <div class="glory-power">⚡ ${formatPowerM(p.totalPower)}</div>
+      <div class="glory-power">⚡ ${formatPowerM(p.effectivePower)}</div>
     `;
 
     grid.appendChild(card);
@@ -311,37 +365,44 @@ if (activeWarzone !== "ALL") {
 function renderTable(players) {
   tableBody.innerHTML = "";
 
- players.forEach((p, index) => {
-  const tr = document.createElement("tr");
-  const powerValue = Math.round(p.totalPower / 1_000_000);
-  const powerHTML = `
-    <span class="power-num">${powerValue}</span><small class="power-m">M</small>
-  `;
-  const firstSquad = estimateFirstSquad(p.totalPower);
+  players.forEach((p, index) => {
+    const tr = document.createElement("tr");
 
+    const powerData = computeEffectivePower(p);
+    const effectivePower = powerData.value;
 
-   tr.innerHTML = `
-  <td class="col-rank rank-num">${index + 1}</td>
+    const powerValue = Math.round(effectivePower / 1_000_000);
+    const powerHTML = `
+      <span class="power-num">${powerValue}</span>
+      <small class="power-m">M</small>
+      <span class="power-tag">
+        ${powerData.tag === "confirmed" ? "✅" : "⚙️"}
+      </span>
+    `;
 
-  <td class="col-name">
-    ${p.name}
-  </td>
+    const firstSquad = estimateFirstSquad(effectivePower);
 
-  <td class="col-power desktop-only">
-    <span class="power">${powerHTML}</span>
-    <div class="sub-power">⚔️ S1 ${firstSquad}</div>
-  </td>
+    tr.innerHTML = `
+      <td class="col-rank rank-num">${index + 1}</td>
 
-  <td class="col-meta">
-    <span class="alliance">${p.alliance}</span>
-    <span class="sep">•</span>
-    <span class="power mobile-only">
-      ${powerHTML}
-      <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
-    </span>
-  </td>
-`;
+      <td class="col-name">
+        ${p.name}
+      </td>
 
+      <td class="col-power desktop-only">
+        <span class="power">${powerHTML}</span>
+        <div class="sub-power">⚔️ S1 ${firstSquad}</div>
+      </td>
+
+      <td class="col-meta">
+        <span class="alliance">${p.alliance}</span>
+        <span class="sep">•</span>
+        <span class="power mobile-only">
+          ${powerHTML}
+          <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
+        </span>
+      </td>
+    `;
 
     tableBody.appendChild(tr);
   });
@@ -428,7 +489,7 @@ function updatePowerSegments(players) {
   let mega = 0, whale = 0, shark = 0, piranha = 0, shrimp = 0;
 
   players.forEach(p => {
-    const power = p.totalPower;
+    const power = p.effectivePower;
     if (power >= 230_000_000) mega++;
     else if (power >= 180_000_000) whale++;
     else if (power >= 160_000_000) shark++;
@@ -458,8 +519,8 @@ function renderAllianceDominance(players) {
   let total = 0;
 
   players.forEach(p => {
-    map[p.alliance] = (map[p.alliance] || 0) + p.totalPower;
-    total += p.totalPower;
+    map[p.alliance] = (map[p.alliance] || 0) + p.effectivePower;
+    total += p.effectivePower;
   });
 
   Object.entries(map)
