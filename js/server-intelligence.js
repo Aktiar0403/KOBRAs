@@ -844,13 +844,13 @@ function openEditPower(playerId) {
 }
 
 
+window.openEditPower = openEditPower;
 
 function closeEditPowerModal() {
   editingPlayer = null;
   document.getElementById("editPowerModal")
     .classList.add("hidden");
 }
-window.openEditPower = openEditPower;
 window.closeEditPowerModal = closeEditPowerModal;
 
 const epNewPowerInput = document.getElementById("epNewPower");
