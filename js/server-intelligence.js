@@ -359,9 +359,6 @@ if (activeWarzone === "ALL") {
   );
 
   filteredPlayers = filteredPlayers.slice(0, 100);
-<div class="table-context">
-  🌍 Showing Top 50 Players (Global)
-</div>
 
 } else {
   // 🎯 WARZONE SELECTED
