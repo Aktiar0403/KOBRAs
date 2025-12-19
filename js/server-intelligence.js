@@ -434,6 +434,13 @@ function renderTable(players) {
           ${powerHTML}
           <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
         </span>
+
+         <button
+    class="edit-power-btn"
+    onclick="openEditPower('${p.id}')"
+    title="Edit player power (admin)"
+  >✏️</button>
+
       </td>
     `;
 
@@ -786,3 +793,24 @@ function updateOverviewStats(players) {
   document.getElementById("totalWarzones").textContent = warzones.size;
   document.getElementById("totalAlliances").textContent = alliances.size;
 }
+function openEditPower(playerId) {
+  const player = allPlayers.find(p => p.id === playerId);
+
+  if (!player) {
+    alert("❌ Player not found");
+    return;
+  }
+
+  console.log("🛠️ Admin edit requested:", {
+    id: player.id,
+    name: player.name,
+    warzone: player.warzone,
+    power: player.totalPower,
+    source: player.powerSource
+  });
+
+  alert(
+    `Editing power for:\n\n${player.name}\nPower: ${Math.round(player.totalPower / 1e6)}M`
+  );
+}
+window.openEditPower = openEditPower;
