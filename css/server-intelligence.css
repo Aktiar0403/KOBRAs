@@ -1491,3 +1491,63 @@ thead th {
     font-size: 12px;
   }
 }
+.desktop-only { display: table-cell; }
+.mobile-only { display: none; }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: block; }
+
+  table thead { display: none; }
+  table, tbody, tr, td { display: block; width: 100%; }
+
+  .mobile-cell {
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .m-line-1 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .m-rank {
+    width: 22px;
+    color: #00ffc8;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .m-name {
+    flex: 1;
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .m-power {
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  .m-line-2 {
+    display: flex;
+    justify-content: space-between;
+    margin-left: 22px;
+    margin-top: 2px;
+    font-size: 12px;
+    color: #93a3a6;
+  }
+
+  .m-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .m-status.confirmed { color: #7dffb3; }
+  .m-status.estimated { color: #9aa18a; }
+}

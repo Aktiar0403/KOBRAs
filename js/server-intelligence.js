@@ -416,35 +416,55 @@ function renderTable(players) {
     const firstSquad = estimateFirstSquad(effectivePower);
 
     tr.innerHTML = `
-  <td class="col-rank">${index + 1}</td>
+      <!-- DESKTOP COLUMNS -->
+      <td class="col-rank desktop-only">${index + 1}</td>
 
-  <td class="col-name">
-    <strong>${p.name}</strong>
-  </td>
+      <td class="col-name desktop-only">
+        <strong>${p.name}</strong>
+      </td>
 
-  <td class="col-meta">
-    ${p.alliance} <span class="muted">(${p.warzone})</span>
-  </td>
+      <td class="col-meta desktop-only">
+        ${p.alliance} <span class="muted">(${p.warzone})</span>
+      </td>
 
-  <td class="col-power">
-    ${powerM}M
-  </td>
+      <td class="col-power desktop-only">
+        ${powerM}M
+      </td>
 
-  <td class="col-squad">
-    ⚔️ ${firstSquad}
-  </td>
+      <td class="col-squad desktop-only">
+        ⚔️ ${firstSquad}
+      </td>
 
-  <td class="col-status ${powerData.tag}">
-    ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
-  </td>
-`;
+      <td class="col-status desktop-only ${powerData.tag}">
+        ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
+      </td>
 
+      <!-- MOBILE CARD -->
+      <td class="mobile-only mobile-cell">
+        <div class="m-line-1">
+          <span class="m-rank">${index + 1}</span>
+          <span class="m-name">${p.name}</span>
+          <span class="m-power">${powerM}M</span>
+        </div>
+
+        <div class="m-line-2">
+          <div class="m-left">
+            ${p.warzone} • ${p.alliance}
+          </div>
+
+          <div class="m-right">
+            ⚔️ ${firstSquad}
+            <span class="m-status ${powerData.tag}">
+              ${statusIcon}
+            </span>
+          </div>
+        </div>
+      </td>
+    `;
 
     tableBody.appendChild(tr);
   });
 }
-
-
 
 
 
