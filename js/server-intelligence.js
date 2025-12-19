@@ -14,6 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let editingPlayer = null;
+const IS_ADMIN_PAGE = window.location.pathname.includes("admin");
 
 
 /* =============================
@@ -196,6 +197,10 @@ const dominanceGrid = $("dominanceGrid");
 const pasteData = $("pasteData");
 const saveBtn = $("saveBtn");
 const dominanceSection = document.getElementById("dominanceSection");
+if (IS_ADMIN_PAGE) {
+  document.getElementById("editHeader").style.display = "";
+}
+
 if (dominanceSection) dominanceSection.style.display = "none";
 
 /* =============================

@@ -1573,3 +1573,12 @@ thead th {
   color: #7dffb3;
   transform: scale(1.1);
 }
+.desktop-only {
+  display: table-cell;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
