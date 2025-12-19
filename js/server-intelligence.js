@@ -473,7 +473,8 @@ function renderTable(players) {
 
    ${IS_ADMIN_PAGE ? `
   <td class="col-edit desktop-only">
-    <button class="edit-btn" onclick="openEditPlayer('${p.id}')">✏️</button>
+    <button class="edit-btn" onclick="openEditPower('${p.id}')">✏️</button>
+
   </td>
 ` : ""}
 
