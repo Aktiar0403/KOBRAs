@@ -830,3 +830,53 @@ function closeEditPowerModal() {
 }
 window.openEditPower = openEditPower;
 window.closeEditPowerModal = closeEditPowerModal;
+
+const epNewPowerInput = document.getElementById("epNewPower");
+const epSaveBtn = document.getElementById("epSaveBtn");
+const epHint = document.getElementById("epHint");
+
+epNewPowerInput.addEventListener("input", () => {
+  if (!editingPlayer) return;
+
+  const newPower = Number(epNewPowerInput.value);
+  const currentPower = editingPlayer.totalPower;
+
+  // ❌ Invalid number
+  if (!newPower || newPower <= 0) {
+    epSaveBtn.disabled = true;
+    epHint.textContent = "❌ Enter a valid power number";
+    return;
+  }
+
+  // ❌ Same as current
+  if (newPower === currentPower) {
+    epSaveBtn.disabled = true;
+    epHint.textContent = "⚠️ New power is same as current";
+    return;
+  }
+
+  // ⚠️ Too small (typo protection)
+  if (newPower < currentPower * 0.5) {
+    epSaveBtn.disabled = true;
+    epHint.textContent =
+      "⚠️ Power too low. Check for missing zeros.";
+    return;
+  }
+
+  // ✅ Valid
+  epSaveBtn.disabled = false;
+  epHint.textContent = "✅ Ready to save";
+});
+
+epSaveBtn.onclick = () => {
+  if (!editingPlayer) return;
+
+  const newPower = Number(epNewPowerInput.value);
+
+  alert(
+    `Preview only (Phase 5.3)\n\n` +
+    `Player: ${editingPlayer.name}\n` +
+    `Old Power: ${Math.round(editingPlayer.totalPower / 1e6)}M\n` +
+    `New Power: ${Math.round(newPower / 1e6)}M`
+  );
+};
