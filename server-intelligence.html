@@ -285,6 +285,54 @@
     });
   });
 </script>
+<!-- EDIT POWER MODAL -->
+<div id="editPowerModal" class="modal hidden">
+  <div class="modal-card">
+
+    <div class="modal-header">
+      <h3>Edit Player Power</h3>
+      <button class="modal-close" onclick="closeEditPowerModal()">✕</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="modal-row">
+        <span class="label">Player</span>
+        <span id="epPlayerName">—</span>
+      </div>
+
+      <div class="modal-row">
+        <span class="label">Warzone</span>
+        <span id="epWarzone">—</span>
+      </div>
+
+      <div class="modal-row">
+        <span class="label">Current Power</span>
+        <span id="epCurrentPower">—</span>
+      </div>
+
+      <div class="modal-row">
+        <label class="label">New Power</label>
+        <input
+          id="epNewPower"
+          type="number"
+          placeholder="Enter new power"
+        />
+      </div>
+
+      <div class="modal-hint" id="epHint">
+        Enter new power to continue
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditPowerModal()">Cancel</button>
+      <button class="btn-primary" id="epSaveBtn" disabled>
+        Save (disabled)
+      </button>
+    </div>
+
+  </div>
+</div>
 
 </body>
 </html>

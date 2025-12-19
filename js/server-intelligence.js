@@ -12,6 +12,9 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+let editingPlayer = null;
+
+
 /* =============================
    PHASE 4 — POWER COMPUTATION
 ============================= */
@@ -801,16 +804,29 @@ function openEditPower(playerId) {
     return;
   }
 
-  console.log("🛠️ Admin edit requested:", {
-    id: player.id,
-    name: player.name,
-    warzone: player.warzone,
-    power: player.totalPower,
-    source: player.powerSource
-  });
+  editingPlayer = player;
 
-  alert(
-    `Editing power for:\n\n${player.name}\nPower: ${Math.round(player.totalPower / 1e6)}M`
-  );
+  document.getElementById("epPlayerName").textContent = player.name;
+  document.getElementById("epWarzone").textContent = `WZ-${player.warzone}`;
+  document.getElementById("epCurrentPower").textContent =
+    Math.round(player.totalPower / 1e6) + "M";
+
+  document.getElementById("epNewPower").value = "";
+  document.getElementById("epHint").textContent =
+    "Enter new power to continue";
+
+  document.getElementById("epSaveBtn").disabled = true;
+
+  document.getElementById("editPowerModal")
+    .classList.remove("hidden");
+}
+
+
+
+function closeEditPowerModal() {
+  editingPlayer = null;
+  document.getElementById("editPowerModal")
+    .classList.add("hidden");
 }
 window.openEditPower = openEditPower;
+window.closeEditPowerModal = closeEditPowerModal;
