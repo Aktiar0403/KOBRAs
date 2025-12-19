@@ -339,7 +339,7 @@ if (activeWarzone === "ALL") {
     getEffectivePowerValue(b) - getEffectivePowerValue(a)
   );
 
-  filteredPlayers = filteredPlayers.slice(0, 50);
+  filteredPlayers = filteredPlayers.slice(0, 100);
 
 } else {
   // 🎯 WARZONE SELECTED
