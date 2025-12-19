@@ -15,7 +15,33 @@ import {
 const IS_ADMIN_PAGE = window.location.pathname.includes("admin");
 let editingPlayer = null;
 
+function openEditPower(playerId) {
+  const player = allPlayers.find(p => p.id === playerId);
 
+  if (!player) {
+    alert("❌ Player not found");
+    return;
+  }
+
+  editingPlayer = player;
+
+  document.getElementById("epPlayerName").textContent = player.name;
+  document.getElementById("epWarzone").textContent = `WZ-${player.warzone}`;
+  document.getElementById("epCurrentPower").textContent =
+    Math.round(player.totalPower / 1e6) + "M";
+
+  document.getElementById("epNewPower").value = "";
+  document.getElementById("epHint").textContent =
+    "Enter new power to continue";
+
+  document.getElementById("epSaveBtn").disabled = true;
+
+  document.getElementById("editPowerModal")
+    .classList.remove("hidden");
+}
+
+
+window.openEditPower = openEditPower;
 /* =============================
    PHASE 4 — POWER COMPUTATION
 ============================= */
@@ -418,6 +444,7 @@ function renderTable(players) {
       powerData.tag === "confirmed" ? "✅" : "⚙️";
 
     const firstSquad = estimateFirstSquad(effectivePower);
+    
 
     tr.innerHTML = `
       <!-- DESKTOP COLUMNS -->
@@ -442,9 +469,13 @@ function renderTable(players) {
       <td class="col-status desktop-only ${powerData.tag}">
         ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
       </td>
-      <td class="col-edit desktop-only">
-          <button class="edit-btn" onclick="openEditPlayer('${p.id}')">✏️</button>
-        </td>
+
+
+   ${IS_ADMIN_PAGE ? `
+  <td class="col-edit desktop-only">
+    <button class="edit-btn" onclick="openEditPlayer('${p.id}')">✏️</button>
+  </td>
+` : ""}
 
 
       <!-- MOBILE CARD -->
@@ -818,33 +849,7 @@ function updateOverviewStats(players) {
   document.getElementById("totalWarzones").textContent = warzones.size;
   document.getElementById("totalAlliances").textContent = alliances.size;
 }
-function openEditPower(playerId) {
-  const player = allPlayers.find(p => p.id === playerId);
 
-  if (!player) {
-    alert("❌ Player not found");
-    return;
-  }
-
-  editingPlayer = player;
-
-  document.getElementById("epPlayerName").textContent = player.name;
-  document.getElementById("epWarzone").textContent = `WZ-${player.warzone}`;
-  document.getElementById("epCurrentPower").textContent =
-    Math.round(player.totalPower / 1e6) + "M";
-
-  document.getElementById("epNewPower").value = "";
-  document.getElementById("epHint").textContent =
-    "Enter new power to continue";
-
-  document.getElementById("epSaveBtn").disabled = true;
-
-  document.getElementById("editPowerModal")
-    .classList.remove("hidden");
-}
-
-
-window.openEditPower = openEditPower;
 
 function closeEditPowerModal() {
   editingPlayer = null;
