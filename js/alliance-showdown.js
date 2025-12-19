@@ -62,8 +62,23 @@ const BarValuePlugin = {
 ============================= */
 async function loadServerPlayers() {
   const snap = await getDocs(collection(db, "server_players"));
-  return snap.docs.map(d => d.data());
+
+  return snap.docs.map(doc => {
+    const d = doc.data();
+
+    // 🔁 Backward compatibility for old records
+    const base = Number(d.basePower ?? d.totalPower ?? 0);
+
+    return {
+      ...d,
+      basePower: base,
+      powerSource: d.powerSource || "confirmed",
+      lastConfirmedAt: d.lastConfirmedAt || d.importedAt,
+      effectivePower: base
+    };
+  });
 }
+
 
 /* =============================
    INIT
