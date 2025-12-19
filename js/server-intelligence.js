@@ -438,6 +438,12 @@ function renderTable(players) {
       <td class="col-status desktop-only ${powerData.tag}">
         ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
       </td>
+      <td class="col-edit desktop-only">
+          <button class="edit-btn" onclick="openEditPlayer('${p.id}')">
+                   ✏️
+                </button>
+        </td>
+
 
       <!-- MOBILE CARD -->
       <td class="mobile-only mobile-cell">

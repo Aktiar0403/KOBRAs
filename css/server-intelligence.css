@@ -1531,6 +1531,7 @@ thead th {
   .m-power {
     font-weight: 700;
     font-size: 15px;
+    color:#00ffae;
   }
 
   .m-line-2 {
@@ -1550,4 +1551,25 @@ thead th {
 
   .m-status.confirmed { color: #7dffb3; }
   .m-status.estimated { color: #9aa18a; }
+}
+.desktop-only {
+  display: table-cell;
+}
+
+@media (max-width: 768px) {
+  .desktop-only {
+    display: none !important;
+  }
+}
+.edit-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #00ffc8;
+  font-size: 14px;
+}
+
+.edit-btn:hover {
+  color: #7dffb3;
+  transform: scale(1.1);
 }
