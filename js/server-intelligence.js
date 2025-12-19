@@ -868,15 +868,45 @@ epNewPowerInput.addEventListener("input", () => {
   epHint.textContent = "✅ Ready to save";
 });
 
-epSaveBtn.onclick = () => {
+epSaveBtn.onclick = async () => {
   if (!editingPlayer) return;
 
   const newPower = Number(epNewPowerInput.value);
+  if (!newPower || newPower <= 0) return;
 
-  alert(
-    `Preview only (Phase 5.3)\n\n` +
-    `Player: ${editingPlayer.name}\n` +
-    `Old Power: ${Math.round(editingPlayer.totalPower / 1e6)}M\n` +
-    `New Power: ${Math.round(newPower / 1e6)}M`
+  const ok = confirm(
+    `Confirm power update?\n\n` +
+    `${editingPlayer.name}\n` +
+    `Old: ${Math.round(editingPlayer.totalPower / 1e6)}M\n` +
+    `New: ${Math.round(newPower / 1e6)}M`
   );
+
+  if (!ok) return;
+
+  try {
+    const ref = doc(db, "server_players", editingPlayer.id);
+
+    await updateDoc(ref, {
+      totalPower: newPower,
+      basePower: newPower,
+      powerSource: "confirmed",
+      lastConfirmedAt: serverTimestamp(),
+      overrideAt: serverTimestamp()
+    });
+
+    // 🔁 Update local cache (IMPORTANT)
+    editingPlayer.totalPower = newPower;
+    editingPlayer.basePower = newPower;
+    editingPlayer.powerSource = "confirmed";
+    editingPlayer.lastConfirmedAt = new Date();
+
+    closeEditPowerModal();
+    applyFilters(); // re-render table
+
+    alert("✅ Power updated successfully");
+
+  } catch (err) {
+    console.error("Power update failed:", err);
+    alert("❌ Failed to update power. Check console.");
+  }
 };
