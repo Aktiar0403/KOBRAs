@@ -14,7 +14,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 let editingPlayer = null;
-const IS_ADMIN_PAGE = window.location.pathname.includes("admin");
 
 
 /* =============================
@@ -444,9 +443,7 @@ function renderTable(players) {
         ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
       </td>
       <td class="col-edit desktop-only">
-          <button class="edit-btn" onclick="openEditPlayer('${p.id}')">
-                   ✏️
-                </button>
+          <button class="edit-btn" onclick="openEditPlayer('${p.id}')">✏️</button>
         </td>
 
 
