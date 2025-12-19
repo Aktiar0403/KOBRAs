@@ -301,6 +301,8 @@ async function loadPlayers() {
     // 🏆 TOP 5 ELITE
     renderTop5Elite(allPlayers);
     
+    updateLastUpdated(allPlayers);
+
 
     // 🟢 Stage 4: Ready
     setProgress(100);
