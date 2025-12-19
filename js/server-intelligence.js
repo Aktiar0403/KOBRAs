@@ -412,9 +412,17 @@ function renderTable(players) {
     const powerHTML = `
       <span class="power-num">${powerValue}</span>
       <small class="power-m">M</small>
-      <span class="power-tag">
-        ${powerData.tag === "confirmed" ? "✅" : "⚙️"}
-      </span>
+      <span
+  class="power-tag ${powerData.tag}"
+  title="${
+    powerData.tag === "confirmed"
+      ? "Admin verified power"
+      : "Estimated based on weekly growth"
+  }"
+>
+  ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
+</span>
+
     `;
 
     const firstSquad = estimateFirstSquad(effectivePower);
