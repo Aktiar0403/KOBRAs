@@ -232,23 +232,35 @@ function renderTop5Elite(players) {
 
 function updateLastUpdated(players) {
   const el = document.getElementById("lastUpdated");
-  if (!el || !players.length) return;
+  if (!el || !players.length) {
+    if (el) el.textContent = "—";
+    return;
+  }
 
-  const latest = players
-    .map(p => p.importedAt?.toDate?.())
-    .filter(Boolean)
-    .sort((a, b) => b - a)[0];
+  const dates = players
+    .map(p => {
+      return (
+        p.lastConfirmedAt?.toDate?.() ||
+        p.overrideAt?.toDate?.() ||
+        p.importedAt?.toDate?.() ||
+        null
+      );
+    })
+    .filter(Boolean);
 
-  if (!latest) {
+  if (!dates.length) {
     el.textContent = "Unknown";
     return;
   }
+
+  const latest = dates.sort((a, b) => b - a)[0];
 
   el.textContent = latest.toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short"
   });
 }
+
 startFakeProgress();
 
 /* =============================
@@ -300,7 +312,7 @@ async function loadPlayers() {
 
     // 🏆 TOP 5 ELITE
     renderTop5Elite(allPlayers);
-    
+
     updateLastUpdated(allPlayers);
 
 
