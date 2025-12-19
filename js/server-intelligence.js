@@ -332,24 +332,36 @@ function applyFilters() {
     );
   }
 
-  // Warzone
-  if (activeWarzone !== "ALL") {
-    filteredPlayers = filteredPlayers.filter(
-      p => p.warzone === Number(activeWarzone)
-    );
-  }
+ // 🔑 WARZONE LOGIC
+if (activeWarzone === "ALL") {
+  // 🌍 LANDING: GLOBAL TOP 50 ONLY
+  filteredPlayers.sort((a, b) =>
+    getEffectivePowerValue(b) - getEffectivePowerValue(a)
+  );
 
-  // Alliance
+  filteredPlayers = filteredPlayers.slice(0, 50);
+
+} else {
+  // 🎯 WARZONE SELECTED
+  filteredPlayers = filteredPlayers.filter(
+    p => p.warzone === Number(activeWarzone)
+  );
+
+  // 🧬 ALLIANCE FILTER (only inside warzone)
   if (activeAlliance !== "ALL") {
     filteredPlayers = filteredPlayers.filter(
       p => p.alliance === activeAlliance
     );
   }
 
-  // Rank by POWER
-  filteredPlayers.sort((a, b) => {
-  return getEffectivePowerValue(b) - getEffectivePowerValue(a);
-});
+  // Rank inside warzone / alliance
+  filteredPlayers.sort((a, b) =>
+    getEffectivePowerValue(b) - getEffectivePowerValue(a)
+  );
+}
+
+
+
 
   renderTable(filteredPlayers);
   updatePowerSegments(filteredPlayers);
