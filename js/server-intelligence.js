@@ -355,9 +355,13 @@ if (activeWarzone === "ALL") {
   // 🌍 LANDING: GLOBAL TOP 50 ONLY
   filteredPlayers.sort((a, b) =>
     getEffectivePowerValue(b) - getEffectivePowerValue(a)
+  
   );
 
   filteredPlayers = filteredPlayers.slice(0, 100);
+<div class="table-context">
+  🌍 Showing Top 50 Players (Global)
+</div>
 
 } else {
   // 🎯 WARZONE SELECTED
@@ -412,16 +416,17 @@ function renderTable(players) {
     const powerHTML = `
       <span class="power-num">${powerValue}</span>
       <small class="power-m">M</small>
+      ;
       <span
-  class="power-tag ${powerData.tag}"
-  title="${
-    powerData.tag === "confirmed"
+      class="power-tag ${powerData.tag}"
+      title="${
+       powerData.tag === "confirmed"
       ? "Admin verified power"
       : "Estimated based on weekly growth"
-  }"
+         }"
 >
-  ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
-</span>
+        ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
+       </span>
 
     `;
 
