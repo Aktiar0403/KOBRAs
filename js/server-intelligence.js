@@ -416,28 +416,29 @@ function renderTable(players) {
     const firstSquad = estimateFirstSquad(effectivePower);
 
     tr.innerHTML = `
-      <!-- RANK -->
-      <td class="col-rank rank-num">${index + 1}</td>
+  <td class="col-rank">${index + 1}</td>
 
-      <!-- NAME + META -->
-      <td class="col-identity">
-        <div class="player-name">${p.name}</div>
-        <div class="player-meta">
-          ${p.warzone} • ${p.alliance}
-        </div>
-      </td>
+  <td class="col-name">
+    <strong>${p.name}</strong>
+  </td>
 
-      <!-- POWER -->
-      <td class="col-power">
-        <div class="power-main ${powerData.tag}">
-          ${powerM}M
-          <span class="power-status">${statusIcon}</span>
-        </div>
-        <div class="power-sub">
-          ⚔️ S1 ${firstSquad}
-        </div>
-      </td>
-    `;
+  <td class="col-meta">
+    ${p.alliance} <span class="muted">(${p.warzone})</span>
+  </td>
+
+  <td class="col-power">
+    ${powerM}M
+  </td>
+
+  <td class="col-squad">
+    ⚔️ ${firstSquad}
+  </td>
+
+  <td class="col-status ${powerData.tag}">
+    ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
+  </td>
+`;
+
 
     tableBody.appendChild(tr);
   });

@@ -1444,3 +1444,50 @@ thead th {
   opacity: 0.7;
   margin-top: 2px;
 }
+@media (max-width: 768px) {
+  table thead {
+    display: none;
+  }
+
+  table tr {
+    display: block;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  table td {
+    display: block;
+    padding: 2px 0;
+  }
+
+  .col-name {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .col-meta {
+    font-size: 12px;
+    color: #93a3a6;
+  }
+
+  .col-power {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+
+  .col-squad {
+    font-size: 12px;
+    opacity: 0.75;
+  }
+
+  .col-status.confirmed {
+    color: #7dffb3;
+    font-size: 12px;
+  }
+
+  .col-status.estimated {
+    color: #d6c48a;
+    font-size: 12px;
+  }
+}
