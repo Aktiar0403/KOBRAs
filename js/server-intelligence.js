@@ -3,6 +3,7 @@ console.log("✅ Server Intelligence JS loaded");
 import { db } from "./firebase-config.js";
 import {
   collection,
+  doc,
   getDocs,
   addDoc,
   query,
