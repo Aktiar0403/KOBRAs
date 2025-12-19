@@ -12,8 +12,10 @@ import {
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
 const IS_ADMIN_PAGE = window.location.pathname.includes("admin");
 let editingPlayer = null;
+
 
 function openEditPower(playerId) {
   const player = allPlayers.find(p => p.id === playerId);
@@ -22,6 +24,7 @@ function openEditPower(playerId) {
     alert("❌ Player not found");
     return;
   }
+  
 
   editingPlayer = player;
 
@@ -40,8 +43,8 @@ function openEditPower(playerId) {
     .classList.remove("hidden");
 }
 
-
 window.openEditPower = openEditPower;
+
 /* =============================
    PHASE 4 — POWER COMPUTATION
 ============================= */
@@ -470,11 +473,9 @@ function renderTable(players) {
         ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
       </td>
 
-
-   ${IS_ADMIN_PAGE ? `
+ ${IS_ADMIN_PAGE ? `
   <td class="col-edit desktop-only">
     <button class="edit-btn" onclick="openEditPower('${p.id}')">✏️</button>
-
   </td>
 ` : ""}
 
