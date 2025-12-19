@@ -408,59 +408,41 @@ function renderTable(players) {
 
     const powerData = computeEffectivePower(p);
     const effectivePower = powerData.value;
+    const powerM = Math.round(effectivePower / 1_000_000);
 
-    const powerValue = Math.round(effectivePower / 1_000_000);
-    const powerHTML = `
-      <span class="power-num">${powerValue}</span>
-      <small class="power-m">M</small>
-      ;
-      <span
-      class="power-tag ${powerData.tag}"
-      title="${
-       powerData.tag === "confirmed"
-      ? "Admin verified power"
-      : "Estimated based on weekly growth"
-         }"
->
-        ${powerData.tag === "confirmed" ? "✅ Confirmed" : "⚙️ Estimated"}
-       </span>
-
-    `;
+    const statusIcon =
+      powerData.tag === "confirmed" ? "✅" : "⚙️";
 
     const firstSquad = estimateFirstSquad(effectivePower);
 
     tr.innerHTML = `
+      <!-- RANK -->
       <td class="col-rank rank-num">${index + 1}</td>
 
-      <td class="col-name">
-        ${p.name}
+      <!-- NAME + META -->
+      <td class="col-identity">
+        <div class="player-name">${p.name}</div>
+        <div class="player-meta">
+          ${p.warzone} • ${p.alliance}
+        </div>
       </td>
 
-      <td class="col-power desktop-only">
-        <span class="power">${powerHTML}</span>
-        <div class="sub-power">⚔️ S1 ${firstSquad}</div>
-      </td>
-
-      <td class="col-meta">
-        <span class="alliance">${p.alliance}</span>
-        <span class="sep">•</span>
-        <span class="power mobile-only">
-          ${powerHTML}
-          <span class="s1-inline">⚔️ S1 ${firstSquad}</span>
-        </span>
-
-         <button
-    class="edit-power-btn"
-    onclick="openEditPower('${p.id}')"
-    title="Edit player power (admin)"
-  >✏️</button>
-
+      <!-- POWER -->
+      <td class="col-power">
+        <div class="power-main ${powerData.tag}">
+          ${powerM}M
+          <span class="power-status">${statusIcon}</span>
+        </div>
+        <div class="power-sub">
+          ⚔️ S1 ${firstSquad}
+        </div>
       </td>
     `;
 
     tableBody.appendChild(tr);
   });
 }
+
 
 
 
