@@ -365,7 +365,7 @@ if (activeWarzone === "ALL") {
 
   renderTable(filteredPlayers);
   updatePowerSegments(filteredPlayers);
-updateOverviewStats(filteredPlayers);
+updateOverviewStats(allPlayers);
   const dominanceSection = document.getElementById("dominanceSection");
 
 if (activeWarzone !== "ALL") {
